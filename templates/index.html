@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SwiNOG · Pi Timer WiFi</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header><strong>SwiNOG <span> / PI TIMER WIFI</span></strong><span id="connection">Verbinde …</span></header>
+  <main>
+    <nav aria-label="Timerdauer">
+      <p>REDEZEIT</p>
+      {% for minutes in presets %}<button class="preset" data-minutes="{{minutes}}">{{minutes}} <small>min</small></button>{% endfor %}
+    </nav>
+    <section class="timer" aria-label="Countdown">
+      <div id="phase">BEREIT</div>
+      <output id="countdown" aria-label="Verbleibende Zeit">00:00</output>
+      <button id="stop">STOP</button>
+      <p id="feedback" role="status">Zugriffsschlüssel eingeben, um den Timer zu bedienen.</p>
+    </section>
+    <aside>
+      <p>VERBINDUNGEN</p>
+      <div class="status"><i id="node-dot"></i><div><strong>ESP32 · WLAN</strong><small id="node-state">Unbekannt</small></div></div>
+      <div class="status"><i id="ble-dot"></i><div><strong>Luxafor · BLE</strong><small id="ble-state">Unbekannt</small></div></div>
+      <div class="legend">Grün · über 5 min<br>Gelb · bis 5 min<br>Orange · bis 1 min<br>Rot · Zeit abgelaufen<br>Blinkend · 30 s überzogen</div>
+      <button id="settings">Zugriffsschlüssel</button>
+    </aside>
+  </main>
+  <dialog id="login">
+    <form id="login-form">
+      <h2>Timer verbinden</h2>
+      <p>Schlüssel aus der .env-Datei auf dem Raspberry Pi.</p>
+      <label for="token">Zugriffsschlüssel</label>
+      <input id="token" type="password" autocomplete="off" required minlength="20">
+      <button type="submit">Verbinden</button>
+      <p id="login-error" role="alert"></p>
+    </form>
+  </dialog>
+</body>
+</html>

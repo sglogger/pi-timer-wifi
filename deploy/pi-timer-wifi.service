@@ -1,0 +1,21 @@
+[Unit]
+Description=SwiNOG Pi Timer WiFi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pitimer
+WorkingDirectory=/home/pitimer/pi-timer-wifi
+EnvironmentFile=/home/pitimer/pi-timer-wifi/.env
+ExecStart=/home/pitimer/pi-timer-wifi/.venv/bin/python /home/pitimer/pi-timer-wifi/server.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target
