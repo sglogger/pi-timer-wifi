@@ -106,6 +106,73 @@ werden, statt `10.42.0.1` die dortige Pi-IP verwenden; Port `8000` bleibt gleich
 Der Zugriff erfolgt innerhalb desselben lokalen Netzes. Für die normale
 Bedienung muss kein Port am Internetrouter freigegeben werden.
 
+## Mehrere Rednergeräte an einem Pi
+
+**Mehrere ESP32 können denselben Countdown anzeigen und jeweils eine eigene
+Luxafor-Lampe steuern.** Jeder ESP32 holt den gemeinsamen Sollzustand vom Pi.
+Start und STOP gelten damit für alle verbundenen Geräte; eine Geräteauswahl oder
+unabhängige Timer pro Redner/Raum gibt es in dieser Version nicht. Die Anzeigen
+werden per Polling synchronisiert, nicht auf die Millisekunde gleichzeitig.
+
+**Grenze der aktuellen Statusanzeige:** Der Server speichert nur die zuletzt
+eingegangene ESP32-Meldung, ohne Geräte-ID. WLAN-/BLE-Status und „Timer synchronisiert“
+beziehen sich deshalb bei mehreren Geräten auf den jeweils zuletzt meldenden
+ESP32. Das bestätigt **nicht**, dass alle Geräte verbunden sind oder STOP übernommen
+haben. Die Anzeige kann zwischen Gerätestatus wechseln; ein ausgefallenes Gerät
+kann durch Meldungen eines anderen verdeckt werden. Für verlässliche zentrale
+Überwachung mehrerer Rednergeräte muss die Software zunächst um Geräte-IDs und
+eine getrennte Statusanzeige erweitert werden.
+
+### Zusätzliches Gerät einrichten
+
+1. Für jedes Rednergerät einen eigenen **ESP32-C6-LCD-1.47** und ein eigenes
+   **Luxafor Bluetooth Pro** direkt daneben vorsehen. Nicht mehrere ESP32 auf
+   dieselbe Lampe konfigurieren.
+2. Jeden ESP32 nach [Installation, Schritte 5 und 6](docs/INSTALLATION.md)
+   mit MicroPython, aioble und den Timerdateien installieren. Geräte zunächst
+   einzeln per USB anschließen, damit die Konfiguration auf dem richtigen Board landet.
+3. Auf allen ESP32 dieselben Werte für `WIFI_SSID`, `WIFI_PASSWORD`,
+   `SERVER_IP = "10.42.0.1"`, `SERVER_PORT = 8000` und `API_TOKEN` verwenden.
+   WLAN-Passwort und API-Schlüssel stammen weiterhin vom selben Pi.
+4. **Pro ESP32 die zugehörige Luxafor eindeutig auswählen:** mit `firmware/scan.py`
+   scannen, dabei zur Zuordnung zunächst nur die betreffende Lampe einschalten.
+   Bei mehreren gleich benannten Lampen deren jeweilige `LUXAFOR_MAC` eintragen.
+   Die MAC muss stabil bleiben; bei wechselnden BLE-Adressen ist ein eindeutiger
+   Gerätename nötig. Die gemeinsame Beispielkonfiguration nicht unverändert
+   einschließlich der Lampenzuordnung auf alle Boards kopieren.
+5. Die jeweilige `config.py` auf das passende Board übertragen, neu starten und
+   ESP32/Lampe als Paar beschriften. Der Pi-Hotspot muss nur einmal eingerichtet
+   werden; zusätzliche ESP32 benötigen keine manuelle IP-Vergabe oder Registrierung.
+6. Alle Geräte gleichzeitig einschalten. Start, Farbwechsel und STOP **an jedem
+   Display und jeder Lampe einzeln** prüfen. Ein Gerät absichtlich ausschalten und
+   wieder verbinden; anschließend Kaltstart ohne Internet und Reichweite mit allen
+   vorgesehenen Geräten plus Handy testen.
+
+Zwei simulierte Knoten erhalten denselben Timerzustand und STOP; auch die oben
+beschriebene Beschränkung der Statusanzeige wurde geprüft. Ein Mehrgerätebetrieb
+auf der echten Hardware und eine maximale Teilnehmerzahl sind noch nicht getestet.
+Mit jedem ESP32 kommen ungefähr zwei Sync-Abfragen pro Sekunde hinzu; auch Handys
+und Laptops belegen WLAN-Verbindungen. Die passende Gerätezahl muss mit dem
+tatsächlichen Pi, dessen WLAN-Treiber und der Funkumgebung geprüft werden.
+
+### Dynamische IP-Vergabe auf dem Hotspot
+
+**Ja: Der Pi-Hotspot vergibt automatisch IP-Adressen per DHCP**, auch ohne Internet.
+Das Setup verwendet NetworkManager mit `ipv4.method=shared`.
+
+| Gerät | IP-Konfiguration |
+|---|---|
+| Pi / Hotspot / Timer-Server | Fest `10.42.0.1`, Netz `10.42.0.0/24` |
+| Jeder ESP32 | Eigene dynamische Adresse aus diesem Netz per DHCP |
+| Handy, Tablet, Laptop | Ebenfalls DHCP; IP-Einstellung auf „automatisch“ lassen |
+
+Die ESP32-Firmware verwendet bereits die automatische IP-Konfiguration. In
+`config.py` wird nur die feste **Server-Adresse** eingetragen, keine eigene
+ESP32-Adresse. Die Client-Adressen dürfen nach einer Wiederverbindung wechseln:
+Alle ESP32 verbinden sich von sich aus zum Pi, der ihre IPs nicht kennen muss.
+Keine eigene DHCP-/dnsmasq-Instanz zusätzlich zur NetworkManager-Konfiguration
+starten. Details: [Direktes WLAN](deploy/direct-wifi.md).
+
 ## Verhalten bei Ausfällen
 
 - **WLAN / Server nicht erreichbar:** ESP32 zählt weiter und steuert das Licht
