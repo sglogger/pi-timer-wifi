@@ -49,6 +49,19 @@ hier gelten die Grenzen aus dieser Tabelle.
 
 ## Inbetriebnahme
 
+**Hier starten: [Schritt-für-Schritt-Installation](docs/INSTALLATION.md)** — vom
+frischen Pi-OS über ESP32-Flashen bis zum ersten vollständig offline laufenden Timer.
+
+| Anleitung | Inhalt |
+|---|---|
+| [Kompilieren](docs/BUILD.md) | Anwendung prüfen, fertige Firmware oder vollständiger MicroPython-/ESP-IDF-Eigenbau |
+| [Installieren und einrichten](docs/INSTALLATION.md) | Pi-OS, Touch-Kiosk, Server, Flashen, WLAN, Konfiguration und Ersttest |
+| [Betrieb und Wartung](docs/BETRIEB.md) | Einschalten, Statusanzeigen, Diagnose, Updates, Sicherung und Rollback |
+| [Direktes WLAN](deploy/direct-wifi.md) | Pi-Hotspot, feste IP, Autostart und alternative WLAN-Betriebsart |
+| [Hardware-Abnahme](docs/acceptance.md) | Kaltstart, Funkunterbrechungen und Reichweitentest |
+
+Kurzablauf:
+
 1. Vorab mit Internet: [Headend installieren](deploy/README.md), Zugriffsschlüssel erzeugen.
 2. [Direktes WLAN auf dem Pi vorbereiten](deploy/direct-wifi.md), Passwort übernehmen.
 3. [ESP32 vorbereiten](firmware/README.md): Hotspot-Daten, Pi-IP `10.42.0.1` und Luxafor auswählen.

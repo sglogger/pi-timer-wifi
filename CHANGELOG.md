@@ -1,5 +1,14 @@
 # Änderungen
 
+## Aufbau- und Betriebsanleitungen (28.09.2026)
+
+- Durchgehende Erstinstallation: Pi OS Lite, Touch-Display/Kiosk, Server-Dienst,
+  ESP32-Sicherung/Flashen, Konfiguration und Offline-Inbetriebnahme.
+- Build-Anleitung mit Syntaxprüfung und optionalem MicroPython-Eigenbau
+  (`v1.28.0`, ESP-IDF `v5.5.1`, Board `ESP32_GENERIC_C6`).
+- Betriebshandbuch für Statusanzeigen, Diagnose, Updates, Sicherungen und Rollback.
+- X11-Kiosk-Startdatei für frische Pi-OS-Lite-Installationen.
+
 ## Direktes WLAN (28.09.2026)
 
 - Standardaufbau für Veranstaltungen ohne Infrastruktur: Pi Zero 2 W stellt das

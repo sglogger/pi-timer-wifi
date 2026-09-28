@@ -1,5 +1,10 @@
 # ESP32-C6-LCD-1.47
 
+Für die vollständige Erstinstallation einschließlich Sicherung und Flash-Befehlen
+der [Schritt-für-Schritt-Anleitung](../docs/INSTALLATION.md) folgen.
+Eigenbau der MicroPython-Laufzeit: [Build-Anleitung](../docs/BUILD.md).
+Die folgenden Schritte dienen als Kurzreferenz für ein bereits vorbereitetes Board.
+
 Ziel ist dasselbe Waveshare-Board wie im ursprünglichen Projekt (172 × 320 Pixel,
 ST7789, Querformat). MicroPython bleibt erhalten; der ESP32 wird jetzt WLAN-Client
 und BLE-Central statt BLE-Peripheral. Standardmäßig verbindet er sich direkt mit

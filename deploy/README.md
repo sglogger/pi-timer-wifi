@@ -1,5 +1,9 @@
 # Raspberry Pi / Waveshare Headend
 
+Frisches Pi-System einschließlich Display, Console Autologin und Browser-Kiosk:
+[vollständige Installationsanleitung](../docs/INSTALLATION.md).
+Der folgende Kurzablauf setzt ein vorbereitetes Betriebssystem voraus.
+
 Auf dem vorhandenen Pi Zero 2 W mit Zero-DISP-7A kann das bisherige Raspberry Pi OS
 weiterlaufen. Display-Konfiguration und Browser werden nicht verändert.
 
