@@ -20,7 +20,7 @@ Im Projektverzeichnis; Python 3.11 oder neuer:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m compileall -q server.py firmware tools deploy
+.venv/bin/python -m compileall -q server.py native_client.py native_ui.py firmware tools deploy
 .venv/bin/python -m pip install mpy-cross==1.29.0.post2
 .venv/bin/python tools/check_firmware.py
 ```
@@ -33,6 +33,19 @@ Compiler laufen und löscht dessen temporäre `.mpy`-Ergebnisse wieder.
 **Diese Prüfung erzeugt kein flashbares `.bin` und führt keine Hardware aus.**
 Die `.pyc`-Dateien von CPython gehören nicht auf den ESP32. Der Syntax-Compiler
 1.29.0.post2 ist das Werkzeug der CI und keine Festlegung der ESP32-Laufzeitversion.
+
+Die native Pi-App wird ebenfalls direkt als Python-Quelltext ausgeführt.
+Auf dem Pi zusätzlich `sudo apt install python3-tk fonts-dejavu-core` installieren;
+keine Browser-Engine und kein separater App-Compiler nötig. Linux-GUI-Prüfung auf
+einem Entwicklungsrechner (nicht in einer bereits laufenden Touch-Sitzung nötig):
+
+```sh
+sudo apt install python3-tk fonts-dejavu-core xvfb
+xvfb-run -a -s '-screen 0 1024x600x24' /usr/bin/python3 tests/ui_smoke.py
+```
+
+Diese Prüfung läuft auch als eigener GitHub-CI-Job und kontrolliert Layout,
+Touch-Zielgrößen und Tastenfunktionen. Sie ersetzt keinen Test auf dem Pi-Display.
 
 ## B. Fertige ESP32-C6-Basisfirmware verwenden — empfohlen
 

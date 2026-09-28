@@ -16,7 +16,7 @@ Vortrag erstmals installieren.
 
 | Bezeichnung in dieser Anleitung | Gerät / Umgebung | Aufgabe |
 |---|---|---|
-| **Pi** | Terminal auf dem Raspberry Pi, Benutzer `pitimer` | Server, Touch-Browser, Hotspot |
+| **Pi** | Terminal auf dem Raspberry Pi, Benutzer `pitimer` | Server, native Touch-App, Hotspot |
 | **Rechner** | Mac oder Linux-PC mit Internet und USB-Datenkabel | ESP32 flashen und Dateien übertragen |
 | **ESP32** | MicroPython auf dem kleinen Waveshare-Board | Countdown, Display, BLE |
 
@@ -37,8 +37,8 @@ MicroPython-Binärdatei; die Timer-Quelldateien werden direkt ausgeführt.
   Die Variante **ESP32-C6-Touch-LCD-1.47** verwendet einen anderen Display-Controller
   und andere Pins; dafür ist diese Firmware nicht vorgesehen.
 - Luxafor **Bluetooth Pro**, geladen und direkt neben dem ESP32.
-- Für die erste Einrichtung Tastatur am Pi oder SSH; zum Eingeben des API-Schlüssels
-  im lokalen Browser eine Tastatur bereithalten.
+- Für die erste Einrichtung Tastatur am Pi oder SSH. Die native App liest den
+  API-Schlüssel automatisch aus `.env`; im täglichen Betrieb ist keine Eingabe nötig.
 - Internet während der Vorbereitung für apt, pip, Git und aioble.
 
 Bei einem bestehenden Timer zuerst Konfigurationen und Daten sichern. Das alte
@@ -52,7 +52,8 @@ Im [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
 
 1. Zielgerät **Raspberry Pi Zero 2 W** auswählen.
 2. **Raspberry Pi OS Lite (64-bit), Bookworm oder neuer** wählen. Der schlanke
-   X11-Browser wird unten separat installiert.
+   X11-Unterbau mit nativer Tk-App wird unten separat installiert. Ein vorhandenes
+   Raspberry Pi OS mit Desktop ist ebenfalls möglich; siehe Schritt 3.
 3. Die richtige microSD auswählen. Alle darauf vorhandenen Daten werden ersetzt.
 4. Benutzer `pitimer`, eigenes Passwort und Hostname `pi-timer` konfigurieren.
 5. WLAN für die **Vorbereitung** eintragen und SSH aktivieren.
@@ -67,8 +68,8 @@ nicht verfügbar ist, die vom Heimrouter zugeteilte IP statt des Namens verwende
 ```sh
 sudo apt update
 sudo apt full-upgrade -y
-sudo apt install -y git python3-venv network-manager dnsmasq-base curl \
-  xserver-xorg x11-xserver-utils xinit openbox falkon dbus-x11
+sudo apt install -y git gh python3-venv python3-tk fonts-dejavu-core network-manager dnsmasq-base curl \
+  xserver-xorg x11-xserver-utils xinit
 sudo reboot
 ```
 
@@ -104,6 +105,18 @@ Siehe [Raspberry Pi: KMS-Anzeigemodus](https://www.raspberrypi.com/documentation
 
 ## 2. Timer-Server installieren — Pi
 
+Das Repository bleibt bis zur Hardware-Abnahme **privat**. Auf jedem Rechner,
+der es klont, zuerst GitHub-Zugriff einrichten. Auf dem Pi ist `gh` oben installiert;
+am Mac/Linux-Rechner bei Bedarf die [GitHub CLI](https://cli.github.com/) installieren:
+
+```sh
+gh auth login
+gh auth setup-git
+```
+
+Ein Konto mit Zugriff auf `sglogger/pi-timer-wifi` verwenden. Alternativ einen
+bereits eingerichteten SSH-Schlüssel und die SSH-Clone-URL verwenden.
+
 Als Benutzer `pitimer` im Home-Verzeichnis, nicht als root:
 
 ```sh
@@ -115,15 +128,16 @@ cd pi-timer-wifi
 
 Ergebnis: Python-Umgebung `.venv`, installierte Serverpakete und `.env` mit einem
 zufälligen API-Schlüssel. Bei erneutem `install.sh` bleibt eine vorhandene `.env`
-erhalten. Schlüssel lokal anzeigen und für Browser/ESP32 notieren:
+erhalten. Schlüssel lokal anzeigen und für den ESP32 notieren:
 
 ```sh
 cat .env
 ```
 
 Der Wert hinter `PI_TIMER_TOKEN=` ist der API-Schlüssel. Er wird ohne diesen
-Variablennamen in den Browser bzw. als `API_TOKEN` in die ESP32-Konfiguration
-übernommen. Noch nicht mit dem später erzeugten WLAN-Passwort verwechseln.
+Variablennamen als `API_TOKEN` in die ESP32-Konfiguration übernommen. Die native
+Pi-App lädt ihn beim Start automatisch aus `.env`. Die optionale Weboberfläche
+fragt ihn beim ersten Öffnen einer Browser-Sitzung ab. Noch nicht mit dem später erzeugten WLAN-Passwort verwechseln.
 
 Bei Migration den alten Timer-Dienst gezielt stoppen, da beide Port 8000 verwenden:
 
@@ -160,17 +174,29 @@ systemctl is-active pi-timer-wifi
 
 Erwartet: `active`. Fehler mit `journalctl -u pi-timer-wifi -n 50 --no-pager` lesen.
 
-## 3. Touch-Browser und Autologin — Pi
+## 3. Native Touch-App und Autologin — Pi
 
-Bei vorhandenem Kiosk genügt die URL `http://localhost:8000`. Die folgenden Schritte
-sind für eine frische **Lite-Installation** mit X11 vorgesehen, nicht für einen
-bereits laufenden Desktop-/Wayland-Autostart.
+Standard ist **Tkinter direkt auf X11**, ohne Browser, Desktop-Shell oder Windowmanager.
+Die App verwendet nur Python-Standardbibliothek und das Systempaket `python3-tk`.
+Zuerst prüfen:
+
+```sh
+.venv/bin/python -c 'import tkinter; print("Tk", tkinter.TkVersion)'
+```
+
+Bei Importfehler `sudo apt install python3-tk` ausführen und `./install.sh` mit dem
+System-`python3` erneut starten. Tkinter wird nicht mit pip installiert.
+
+Die folgenden Autostart-Schritte gelten für eine frische **Lite-Installation**.
+Bei vorhandenem Desktop dort `./run-native.sh` starten und dessen Autostart benutzen;
+nicht zusätzlich eine zweite X11-Sitzung starten. Details und `.desktop`-Beispiel:
+[Native Oberfläche](NATIVE_UI.md). Bestehenden Browser-Kiosk zuerst deaktivieren.
 
 Als `pitimer`, aus `/home/pitimer/pi-timer-wifi`:
 
 ```sh
 test ! -f ~/.xinitrc || cp -n ~/.xinitrc ~/.xinitrc.before-pi-timer
-install -m 755 deploy/kiosk.xinitrc ~/.xinitrc
+install -m 755 deploy/native.xinitrc ~/.xinitrc
 ```
 
 In `~/.bash_profile` genau einmal diesen Block ergänzen. Vorhandenen Inhalt und
@@ -188,9 +214,14 @@ von der OS-Version ab. Lokal auf dem Pi testen: aus der Textkonsole `startx`
 aufrufen oder neu starten. X11 nicht über eine reine SSH-Sitzung mit `startx` starten.
 
 Erwartet: Timer-Oberfläche im Vollbild, alle sieben Zeitknöpfe und Stop bedienbar.
-API-Schlüssel eingeben. Der Browser speichert ihn pro Sitzung; nach Browser-/Pi-
-Neustart ist die Eingabe erneut erforderlich. Mit Alt-F4 kann der Browser beendet
-werden; für Wartung ist eine zweite Textkonsole über Ctrl-Alt-F2 möglich.
+Die App übernimmt `.env` automatisch. F11 schaltet Vollbild um, Esc verlässt das
+Vollbild. Für Wartung ist eine zweite Textkonsole über Ctrl-Alt-F2 möglich.
+Das Schließen/Neustarten der App stoppt einen laufenden Timer nicht; dafür STOP
+verwenden. Der separate Server-Dienst läuft weiter. Beim Server-Neustart dagegen
+wird der Timer zurückgesetzt.
+
+Die alternative Weboberfläche bleibt unter `http://localhost:8000` verfügbar.
+Für einen Browser-Kiosk siehe [NATIVE_UI.md](NATIVE_UI.md#optionale-weboberfläche).
 
 ## 4. Eigenes WLAN vorbereiten — Pi
 
@@ -369,12 +400,12 @@ Die Lichtfarbe zusätzlich mit den Augen prüfen: BLE-Verbindung ist keine LED-R
 1. 10 Minuten starten: ESP32 zählt, Lampe grün.
 2. 5 Minuten starten: gelb; 1 Minute starten: orange.
 3. Die Minute ablaufen lassen: bei Null rot, 30 Sekunden später rot blinkend.
-4. Stop: Lampe aus, ESP32 READY, Browser 00:00; Übernahme muss bestätigt sein.
+4. Stop: Lampe aus, ESP32 READY, Pi-App 00:00; Übernahme muss bestätigt sein.
 5. Luxafor kurz aus/einschalten: WLAN/Countdown laufen weiter, BLE verbindet erneut.
 6. Netzwerk kurz unterbrechen: ESP32 zählt lokal weiter; Stop während Ausfall wird
-   erst nach Wiederverbindung übernommen und muss im Browser als ausstehend erkennbar sein.
+   erst nach Wiederverbindung übernommen und muss in der Pi-App als ausstehend erkennbar sein.
 7. Beide Geräte vollständig ausschalten und ohne Heimnetz/Internet einschalten.
-   Beide Einschaltreihenfolgen testen. Browser-Schlüssel nach Kaltstart erneut eingeben.
+   Beide Einschaltreihenfolgen testen. Native App startet ohne Schlüsseleingabe.
 8. Auf tatsächlichen 20–30 m mit Personen im Raum mindestens eine Stunde prüfen.
 
 Vollständige Abnahmeliste: [acceptance.md](acceptance.md).

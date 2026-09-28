@@ -1,5 +1,15 @@
 # Änderungen
 
+## Native Pi-Oberfläche (28.09.2026)
+
+- Tkinter-Touch-App als Standard für den Pi Zero 2 W, direkt auf X11 ohne Browser.
+- Lokaler Schlüssel wird aus `.env` geladen; keine Eingabe nach dem Einschalten.
+- Separater Timer-Dienst erhält den Countdown beim Neustart der Oberfläche.
+- Serieller HTTP-Worker, begrenzte Warteschlangen und keine automatischen Start-Wiederholungen.
+- Tests für Offline-Anzeige, veraltete Antworten, verlorene Start-Antworten und
+  nativen HTTP-Transport; eigener Linux-CI-Test für 1024×600-Layout und Touch-Tasten.
+- Installations-/Betriebsanleitungen auf native App umgestellt; Desktop und Web optional.
+
 ## Aufbau- und Betriebsanleitungen (28.09.2026)
 
 - Durchgehende Erstinstallation: Pi OS Lite, Touch-Display/Kiosk, Server-Dienst,

@@ -3,7 +3,7 @@
 Der Raspberry Pi Zero 2 W im Waveshare-Headend stellt ein eigenes 2.4-GHz-WLAN
 bereit. Der ESP32-C6 verbindet sich damit und erreicht den Timer auf `10.42.0.1:8000`.
 Vor Ort werden kein Router, kein gemeinsames Veranstaltungs-WLAN und kein Internet
-benötigt. Der Touch-Browser auf dem Pi verwendet weiterhin `http://localhost:8000`.
+benötigt. Die native Touch-App auf dem Pi verwendet `http://127.0.0.1:8000`.
 
 ```text
 Waveshare / Pi Zero 2 W       ESP32-C6             Luxafor Bluetooth Pro
@@ -99,7 +99,8 @@ Synchronisation. Luxafor-Dongle/andere BLE-Clients trennen und BLE separat prüf
 Beide Geräte ausschalten, vorhandene Ethernet-/USB-Netzwerkverbindungen entfernen,
 dann Pi und ESP32 neu starten. In beiden Einschaltreihenfolgen testen. Hotspot,
 DHCP, Server und ESP32 müssen ohne Eingriff zusammenfinden. Nach Neustart des
-Kiosk-Browsers ist der API-Schlüssel erneut einzugeben (Speicherung nur pro Sitzung).
+optionalen Kiosk-Browsers ist der API-Schlüssel erneut einzugeben. Die native
+App liest den Schlüssel automatisch aus `.env`.
 
 Ein Minuten-Timer muss vollständig bis rot/blinkend laufen und Stop bestätigen.
 Danach mit 20–30 m Abstand und Personen im Raum testen. Der integrierte Pi-Hotspot

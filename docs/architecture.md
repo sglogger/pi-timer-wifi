@@ -21,6 +21,12 @@ gestörter Funkumgebung ist eine kabelgebundene Bühnenanbindung die weitere Opt
 
 ## Warum HTTP-Polling
 
+Am Headend läuft standardmäßig eine native Tkinter-Touch-App direkt auf X11.
+Sie verwendet dieselbe API wie die optionale Weboberfläche. Der einzelne
+Timer-Server läuft unabhängig als Dienst; ein Fensterneustart ändert seinen
+Zustand nicht. HTTP läuft in einem Hintergrundthread, Tk ausschließlich im
+GUI-Thread. Details: [Native Oberfläche](NATIVE_UI.md).
+
 Ein Pi und ein ESP32 benötigen keinen Broker. Eine kleine JSON-Abfrage alle
 500 ms genügt für Start/Stop eines Vortragstimers. Der normale Übertragungsweg
 braucht bis zu einem Pollintervall plus Netzwerklaufzeit. Bei Verbindungsfehlern
@@ -67,7 +73,7 @@ MicroPython-Tick-Wrap wird durch regelmäßiges `ticks_diff` berücksichtigt.
 
 Die Übernahme erscheint erst in der folgenden Gerätemeldung als bestätigt.
 Geräte gelten nach 5 s ohne Meldung als offline. Ein HTTP-Timeout nach Start/Stop
-kann trotzdem bedeuten, dass der Server den Befehl übernommen hat; der Browser
+kann trotzdem bedeuten, dass der Server den Befehl übernommen hat; die Bedienoberfläche
 fragt danach den Zustand ab, statt einen Start blind zu wiederholen.
 
 ## Grenzen

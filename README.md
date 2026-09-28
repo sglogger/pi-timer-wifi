@@ -30,7 +30,9 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
   die nach einem Ausfall veraltete Starts nachliefert.
 - Lokaler monotoner Countdown und Farbwechsel laufen bei WLAN-Ausfall weiter.
 - Automatische WLAN-/BLE-Wiederverbindung, frischer Zustand nach Reconnect.
-- Touch-Oberfläche zeigt getrennt Headend, ESP32-Synchronisation und Luxafor-BLE.
+- **Native Tkinter-Touch-App als Standard am Pi Zero 2 W**: keine Browser-Engine,
+  automatische Anmeldung aus `.env`, große Zeit-/Stop-Tasten. Weboberfläche optional.
+- Oberfläche zeigt getrennt Headend, ESP32-Synchronisation und Luxafor-BLE.
 - Presets: 30, 25, 20, 15, 10, 5 und 1 Minute. API: 1–120 Minuten.
 - Kein Cloud-Dienst, kein MQTT-Broker und keine NTP-Abhängigkeit für den Countdown.
 
@@ -55,7 +57,8 @@ frischen Pi-OS über ESP32-Flashen bis zum ersten vollständig offline laufenden
 | Anleitung | Inhalt |
 |---|---|
 | [Kompilieren](docs/BUILD.md) | Anwendung prüfen, fertige Firmware oder vollständiger MicroPython-/ESP-IDF-Eigenbau |
-| [Installieren und einrichten](docs/INSTALLATION.md) | Pi-OS, Touch-Kiosk, Server, Flashen, WLAN, Konfiguration und Ersttest |
+| [Installieren und einrichten](docs/INSTALLATION.md) | Pi-OS, native Touch-App, Server, Flashen, WLAN, Konfiguration und Ersttest |
+| [Native Oberfläche](docs/NATIVE_UI.md) | Schlanker X11-Betrieb, Desktop-Alternative, Ressourcenprüfung |
 | [Betrieb und Wartung](docs/BETRIEB.md) | Einschalten, Statusanzeigen, Diagnose, Updates, Sicherung und Rollback |
 | [Direktes WLAN](deploy/direct-wifi.md) | Pi-Hotspot, feste IP, Autostart und alternative WLAN-Betriebsart |
 | [Hardware-Abnahme](docs/acceptance.md) | Kaltstart, Funkunterbrechungen und Reichweitentest |
@@ -92,7 +95,7 @@ Python 3.11 oder neuer:
 ```sh
 ./install.sh
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m compileall -q server.py firmware tools
+.venv/bin/python -m compileall -q server.py native_client.py native_ui.py firmware tools
 ./run.sh
 ```
 

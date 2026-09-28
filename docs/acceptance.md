@@ -7,10 +7,12 @@ Start/Stop-Ersetzung, Gerätemeldungen, API-Eingaben, Zugriffsschlüssel,
 Offline-Countdown, Reconnect, Server-Neustart, Tick-Wrap und HTTP-Transport.
 Diese Tests ersetzen keinen Funk-/Hardwaretest.
 
-Entwicklungsprüfung am 28.09.2026: **32 Tests erfolgreich** unter Python 3.14,
+Entwicklungsprüfung am 28.09.2026: **42 Tests erfolgreich** unter Python 3.14,
 einschließlich eines simulierten GATT-Geräts, echter lokaler TCP-Verbindungen und
 Hotspot-Vorbereitung mit simuliertem NetworkManager. Der Hotspot-Test prüft auch,
 dass bestehende Profile erhalten bleiben und das Setup keine Verbindung aktiviert.
+Zusätzlich geprüft: native Statusanzeige, abgelaufene Bedienanfragen, alte
+Antworten sowie ein verlorenes Start-Ergebnis ohne erneuten Startversuch.
 Alle acht Firmware-Quelldateien wurden mit mpy-cross 1.29.0.post2 kompiliert.
 Browserprüfung mit simuliertem Knoten: Anmeldung, Start, Ein-Minuten-Preset,
 Neuladen mit laufendem Timer, bestätigter Stop und getrennte BLE-Statusanzeige.
@@ -38,7 +40,11 @@ diese Version als Prototyp behandeln.
       Farbe wechselt lokal, Headend meldet ESP32 offline.
 - [ ] Während Ausfall Stop am Pi: als unbestätigt/offline angezeigt; nach
       WLAN-Rückkehr wird Stop angewendet, kein alter Start nachgeliefert.
-- [ ] Browser neu laden: aktueller Timer wird übernommen.
+- [ ] Native App: sieben Zeitknöpfe und STOP bei 1024×600 vollständig sichtbar und bedienbar.
+- [ ] Native App nach Kaltstart ohne Tastatur/Schlüsseleingabe bereit.
+- [ ] App bei laufendem Timer schließen und neu starten: aktueller Countdown bleibt erhalten.
+- [ ] CPU/RAM/Swap und Startzeit auf dem Pi erfassen; nach einer Stunde erneut messen.
+- [ ] Optionale Weboberfläche neu laden: aktueller Timer wird übernommen.
 - [ ] Pi-Server neu starten: neue Sitzung/Stop wird übernommen.
 - [ ] ESP32 neu starten: bei Verbindung aktueller Countdown, ohne Verbindung READY.
 - [ ] 20–30 m mit Personen im Raum: mindestens 1 h laufen lassen, Start-/Stop-

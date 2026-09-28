@@ -1,24 +1,30 @@
 # Raspberry Pi / Waveshare Headend
 
-Frisches Pi-System einschließlich Display, Console Autologin und Browser-Kiosk:
+Frisches Pi-System einschließlich Display, Console Autologin und nativer Touch-App:
 [vollständige Installationsanleitung](../docs/INSTALLATION.md).
 Der folgende Kurzablauf setzt ein vorbereitetes Betriebssystem voraus.
 
 Auf dem vorhandenen Pi Zero 2 W mit Zero-DISP-7A kann das bisherige Raspberry Pi OS
-weiterlaufen. Display-Konfiguration und Browser werden nicht verändert.
+weiterlaufen. Die Display-Konfiguration bleibt nutzbar; den bisherigen Browser-Kiosk
+durch die [native App](../docs/NATIVE_UI.md) ersetzen.
 
 ```sh
-sudo apt install python3-venv git
+sudo apt install python3-venv python3-tk fonts-dejavu-core git gh
+# Privates Repository: GitHub-Zugriff einmalig einrichten.
+gh auth login
+gh auth setup-git
 git clone https://github.com/sglogger/pi-timer-wifi.git
 cd pi-timer-wifi
 ./install.sh
 ./run.sh
 ```
 
-Browser: `http://localhost:8000`. Den Wert `PI_TIMER_TOKEN` aus `.env` eingeben.
-Der Schlüssel bleibt nur für diese Browser-Sitzung gespeichert. Nach einem
-Browser-Neustart erneut eingeben. Für den Direktbetrieb stellt der Pi sein eigenes
-WLAN unter der festen Adresse `10.42.0.1` bereit, siehe [Direktes WLAN](direct-wifi.md).
+Native Touch-App: in einer grafischen Sitzung im zweiten Terminal
+`./run-native.sh` starten. Der Schlüssel wird aus `.env` geladen. Ohne Desktop
+X11/Autostart nach der [Installationsanleitung](../docs/INSTALLATION.md) einrichten.
+Die optionale Weboberfläche unter `http://localhost:8000` fragt den Schlüssel pro
+Browser-Sitzung ab. Der Pi stellt sein eigenes WLAN unter `10.42.0.1` bereit,
+siehe [Direktes WLAN](direct-wifi.md).
 Die Installation und Paketdownloads vorab mit Internet durchführen; der Betrieb
 vor Ort benötigt keinen Internetanschluss.
 
@@ -38,7 +44,8 @@ sudo systemctl enable --now pi-timer-wifi
 journalctl -u pi-timer-wifi -f
 ```
 
-Der bestehende Kiosk kann weiter `http://localhost:8000` öffnen. Der Server läuft
+Die native App startet separat über `deploy/native.xinitrc` bzw. den Desktop.
+Der Server läuft
 mit Waitress in **einem Prozess**; mehrere Worker-Prozesse würden getrennte Timer
 erzeugen und sind nicht unterstützt. Ein Server-Neustart erzeugt eine neue Sitzung
 mit gestopptem Timer. Das Gerät übernimmt diesen Zustand bei nächster Verbindung.

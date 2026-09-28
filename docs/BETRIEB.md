@@ -7,12 +7,12 @@ Internetverbindung nötig, sofern Installation und Test vorher abgeschlossen wur
 
 1. Pi/Waveshare, ESP32 und Luxafor mit Strom versorgen. Luxafor nah beim ESP32
    platzieren; Pi so aufstellen, dass der WLAN-Weg möglichst frei ist.
-2. Pi bootet in das eigene WLAN `SwiNOG-Timer`; Server und Kiosk starten automatisch,
+2. Pi bootet in das eigene WLAN `SwiNOG-Timer`; Server und native App starten automatisch,
    wenn die Autostart-Schritte der Installation abgeschlossen wurden.
-3. Im Browser den API-Schlüssel aus der Pi-`.env` eingeben. Er wird nur während
-   der Browser-Sitzung gespeichert. Danach Tastatur bei Bedarf entfernen.
+3. Die native App lädt den API-Schlüssel automatisch aus `.env`. Nur bei Nutzung
+   der optionalen Weboberfläche den Schlüssel pro Browser-Sitzung eingeben.
 4. „Timer synchronisiert“ und Luxafor-BLE-Verbindung abwarten. Beide anzeigen lassen;
-   „Headend verbunden“ allein bestätigt nur den Kontakt Browser → Pi.
+   „Headend verbunden“ allein bestätigt nur den Kontakt Oberfläche → Pi.
 5. Kurz Start/Stop testen und die Lampe mit den Augen kontrollieren.
 
 Zeitknopf startet einen **neuen** Timer und ersetzt einen laufenden. Stop löscht
@@ -24,7 +24,7 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 
 | Anzeige / Ereignis | Bedeutung und Vorgehen |
 |---|---|
-| Headend verbunden | Browser erreicht Server; noch keine Gerätebestätigung |
+| Headend verbunden | Oberfläche erreicht Server; noch keine Gerätebestätigung |
 | Timer synchronisiert | ESP32 hat aktuelle Sitzung/Revision gemeldet |
 | Übertragung ausstehend | Start/Stop am Pi vorhanden, ESP32 hat ihn noch nicht bestätigt |
 | ESP32 offline | Mehr als 5 s keine Gerätemeldung; lokaler Countdown kann weiterlaufen |
@@ -101,7 +101,9 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | Luxafor nicht gefunden | Name/MAC exakt? Dongle und andere BLE-Clients getrennt? Lampe geladen? |
 | GATT-Authentifizierungsfehler | `LUXAFOR_PAIR = True` testen, Konfiguration übertragen und neu starten |
 | Display dunkel/verschoben/falsche Farben | Richtiges Board ohne Touch? Stromversorgung und Display-Pins prüfen; nicht durch WLAN-Änderungen lösen |
-| Browser zeigt „nicht erreichbar“ | Dienst/Port 8000 prüfen; danach Browserseite neu laden |
+| App zeigt „Server offline“ | Dienst/Port 8000 und `.env` prüfen; App verbindet automatisch neu |
+| `No module named tkinter` | Systempaket `python3-tk` installieren, venv mit System-Python erstellen |
+| Keine Touch-App nach Boot | Console Autologin, `~/.bash_profile`, `~/.xinitrc` und darin Projektpfad prüfen |
 | Kiosk startet nicht | Lokal tty1 angemeldet? `.bash_profile`, `.xinitrc`, X11/Falkon installiert? Vorhandenen Desktop-Autostart prüfen |
 
 ## Software aktualisieren — vor der Veranstaltung mit Internet
@@ -139,6 +141,9 @@ git pull --ff-only
 .venv/bin/python -m unittest discover -s tests -v
 sudo systemctl start pi-timer-wifi
 ```
+
+Anschließend auch die native App schließen und neu starten, damit sie den neuen
+Code lädt. Bei geänderter `native.xinitrc` die lokale Kopie prüfen/aktualisieren.
 
 Bei lokalen Änderungen oder fehlgeschlagenem Pull zuerst diese Änderungen klären;
 kein `git reset --hard`. Bei Testfehlern die neue Version nicht in den Einsatz
