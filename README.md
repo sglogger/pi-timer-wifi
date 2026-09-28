@@ -14,6 +14,8 @@ flowchart LR
   C["Luxafor Bluetooth Pro"]
   A <-->|"Direktes WLAN / HTTP · ohne Router oder Internet"| B
   B -->|"BLE · direkt daneben"| C
+  D["Handy / Tablet / Laptop\nWeboberfläche im Browser"]
+  D <-->|"WLAN · Timer bedienen"| A
 ```
 
 **Stand: erste implementierte Version, noch nicht auf der konkreten Hardware
@@ -33,6 +35,8 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 - **Native Tkinter-Touch-App als Standard am Pi Zero 2 W**: keine Browser-Engine,
   automatische Anmeldung aus `.env`, große Zeit-/Stop-Tasten. Weboberfläche optional.
 - Oberfläche zeigt getrennt Headend, ESP32-Synchronisation und Luxafor-BLE.
+- Handy, Tablet oder Laptop können denselben Timer über die Weboberfläche im
+  Pi-WLAN steuern, auch gleichzeitig mit der nativen Touch-App.
 - Presets: 30, 25, 20, 15, 10, 5 und 1 Minute. API: 1–120 Minuten.
 - Kein Cloud-Dienst, kein MQTT-Broker und keine NTP-Abhängigkeit für den Countdown.
 
@@ -71,6 +75,36 @@ Kurzablauf:
 4. Hotspot aktivieren; Luxafor-Dongle abziehen und belegende Luxafor-Apps schließen.
 5. [Hardware-Abnahme](docs/acceptance.md) einschließlich Kaltstart ohne Internet
    und 20–30-m-Reichweitentest durchführen.
+
+## Mit Handy, Tablet oder Laptop über WLAN steuern
+
+Die Weboberfläche ist bereits enthalten und passt sich kleinen Bildschirmen an.
+Eine zusätzliche Handy-App oder Internetverbindung ist nicht erforderlich.
+Voraussetzung: Pi-Hotspot und Timer-Server sind nach der
+[Installationsanleitung](docs/INSTALLATION.md) eingerichtet und laufen.
+
+1. Auf dem Handy, Tablet oder Laptop das WLAN **`SwiNOG-Timer`** auswählen.
+2. Mit dem bei der [Hotspot-Einrichtung](deploy/direct-wifi.md) erzeugten
+   **WLAN-Passwort** verbinden. Meldet das Gerät „WLAN ohne Internet“, trotzdem
+   mit diesem WLAN verbunden bleiben.
+3. Im Browser **[http://10.42.0.1:8000](http://10.42.0.1:8000)** öffnen.
+4. Den **Zugriffsschlüssel** eingeben: den Wert hinter `PI_TIMER_TOKEN=` aus der
+   `.env`-Datei im Projektverzeichnis auf dem Pi. Dieser Schlüssel ist unabhängig
+   vom WLAN-Passwort. Er bleibt für die Browser-Sitzung gespeichert; bei einer
+   neuen Sitzung gegebenenfalls erneut eingeben.
+5. Eine Zeit wählen oder **STOP** drücken. Countdown, ESP32-Synchronisation und
+   Luxafor-BLE-Status werden auch auf dem mobilen Gerät angezeigt.
+
+Die native App am Pi und alle verbundenen Browser bedienen **denselben Timer**.
+Änderungen werden laufend abgeglichen; der zuletzt vom Server angenommene
+Start-/Stop-Befehl gilt. Das Schließen des Browsers oder Trennen des Handys vom
+WLAN stoppt den Timer nicht. Zum Beenden ausdrücklich **STOP** drücken und die
+ESP32-Bestätigung abwarten.
+
+Falls Pi und Handy alternativ in einem vorhandenen gemeinsamen WLAN betrieben
+werden, statt `10.42.0.1` die dortige Pi-IP verwenden; Port `8000` bleibt gleich.
+Der Zugriff erfolgt innerhalb desselben lokalen Netzes. Für die normale
+Bedienung muss kein Port am Internetrouter freigegeben werden.
 
 ## Verhalten bei Ausfällen
 
