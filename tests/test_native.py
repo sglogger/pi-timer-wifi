@@ -46,7 +46,7 @@ class ViewTests(unittest.TestCase):
         self.view.accept((1, self.clock(), old, None))
         self.assertEqual(self.view.render()['text'], '00:00')
         self.assertEqual(self.view.render()['phase'], 'off')
-        self.assertIn('warte auf ESP32', self.view.render()['message'])
+        self.assertIn('ESP32 offline', self.view.render()['message'])
 
     def test_no_node_does_not_crash_or_claim_connection(self):
         self.refresh()

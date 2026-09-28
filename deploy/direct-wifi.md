@@ -133,6 +133,12 @@ sudo nmcli --ask device wifi connect 'NAME-DES-WLANS' ifname wlan0
 Für Timerbetrieb im gemeinsamen WLAN müssen auch ESP32-SSID/Passwort und `SERVER_IP`
 angepasst werden. Die Pi-IP in diesem WLAN per DHCP-Reservierung stabil halten.
 Der ESP32 braucht lediglich WLAN-Zugang zum Pi; auch dieses Netz braucht kein Internet.
+
+**Sicherheit:** Die API läuft über unverschlüsseltes HTTP. Im eigenen Hotspot schützt
+WPA2 den Zugriffsschlüssel; in einem gemeinsamen WLAN kann jeder Teilnehmer desselben
+Netzes den Schlüssel mitlesen und den Timer steuern. Gemeinsames WLAN deshalb nur in
+vertrauenswürdigen Netzen verwenden und den Schlüssel danach in `.env` und
+`firmware/config.py` erneuern.
 Für Rückkehr zum Direktbetrieb die ESP32-Hotspot-Werte wiederherstellen und Schritt 2
 ausführen. Es findet kein automatischer Wechsel zwischen den Betriebsarten statt.
 

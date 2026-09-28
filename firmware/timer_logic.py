@@ -1,17 +1,15 @@
 """Pure timer rules shared by host tests and MicroPython firmware."""
 
+# Upper bound (inclusive, ms) per phase; the web UI receives these via the server.
+THRESHOLDS = (("overdue", -30000), ("red", 0), ("orange", 60000), ("yellow", 300000))
+
 
 def phase(remaining_ms):
     if remaining_ms is None:
         return "off"
-    if remaining_ms <= -30000:
-        return "overdue"
-    if remaining_ms <= 0:
-        return "red"
-    if remaining_ms <= 60000:
-        return "orange"
-    if remaining_ms <= 300000:
-        return "yellow"
+    for name, limit in THRESHOLDS:
+        if remaining_ms <= limit:
+            return name
     return "green"
 
 

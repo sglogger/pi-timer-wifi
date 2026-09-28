@@ -196,7 +196,7 @@ Python 3.11 oder neuer:
 ```sh
 ./install.sh
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m compileall -q server.py native_client.py native_ui.py firmware tools
+.venv/bin/python -m compileall -q server.py ui_config.py native_client.py native_ui.py firmware tools
 ./run.sh
 ```
 
@@ -215,6 +215,7 @@ Die Simulation meldet absichtlich keine bestehende Luxafor-Verbindung.
 
 - `native_ui.py` / `native_client.py`: native Touch-App und lokaler API-Client.
 - `server.py`: threadsicherer Timer, REST-API und optionale Weboberfläche.
+- `ui_config.py`: Presets, Farben und Beschriftungen für Web- und Touch-App.
 - `firmware/`: MicroPython mit aioble, asynchronem HTTP und Waveshare-Display.
 - [Architektur und Protokoll](docs/architecture.md).
 - [BLE-Protokoll, Herkunft und Grenzen](docs/ble-protocol.md).

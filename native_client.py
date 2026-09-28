@@ -130,7 +130,7 @@ class ViewState:
             remaining -= int((now - self.sampled_at) * 1000)
         node = state.get('node') if state else None
         online = bool(fresh and node and node['online'] and
-                      node['age_s'] + (now - self.received_at) < 5)
+                      node['age_s'] + (now - self.sampled_at) < 5)
         applied = online and node['applied']
         ble = online and node['report']['ble_connected']
         message = (self.error or 'Warte auf Timer-Server') if state is None else (
@@ -139,8 +139,6 @@ class ViewState:
                            'Warte auf ESP32-Bestätigung' if not applied else
                            'Timer synchronisiert – Luxafor nicht verbunden' if not ble else
                            'Timer synchronisiert – BLE verbunden'))
-        if fresh and state is not None and node is None:
-            message = 'Gespeichert – warte auf ESP32-Bestätigung'
         return dict(text=clock_text(remaining) if remaining is not None else '00:00',
                     phase=phase(remaining), server=bool(fresh), node=online, ble=bool(ble),
                     node_text='Timer synchronisiert' if applied else 'Übertragung ausstehend' if online else 'Offline / unbekannt',

@@ -6,11 +6,9 @@ import tkinter as tk
 from tkinter import font
 
 from native_client import Client, Transport, ViewState
+from ui_config import COLORS, LABELS, PRESETS
 
-PRESETS = (30, 25, 20, 15, 10, 5, 1)
-BG, PANEL, TEXT, MUTED = '#111820', '#202d38', '#eaf0f3', '#a7b5bf'
-COLORS = dict(off=TEXT, green='#4ce7a0', yellow='#f9dd69', orange='#ffad60', red='#ff6e79', overdue='#ff6e79')
-LABELS = dict(off='BEREIT', green='REDEZEIT', yellow='LETZTE 5 MINUTEN', orange='LETZTE MINUTE', red='ZEIT ABGELAUFEN', overdue='ÜBERZOGEN')
+BG, PANEL, TEXT, MUTED = '#111820', '#202d38', COLORS['off'], '#a7b5bf'
 
 
 class TimerWindow:

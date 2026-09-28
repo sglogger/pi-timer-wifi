@@ -34,6 +34,7 @@ class Display:
         if key == self.previous:
             return
         self.previous = key
+        # RGB565, byte-swapped for the SPI transfer; MADCTL BGR swaps red/blue.
         colors = {"off": 0xFFFF, "green": 0xE007, "yellow": 0xFF07,
                   "orange": 0x5F03, "red": 0x1F00, "overdue": 0x1F00}
         color = 0 if blink else colors[current]

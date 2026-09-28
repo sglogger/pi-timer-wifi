@@ -6,9 +6,8 @@ import time
 import uuid
 
 from flask import Flask, jsonify, render_template, request
-from firmware.timer_logic import phase
-
-PRESETS = (30, 25, 20, 15, 10, 5, 1)
+from firmware.timer_logic import THRESHOLDS, phase
+from ui_config import COLORS, LABELS, PRESETS
 
 
 class Timer:
@@ -26,11 +25,20 @@ class Timer:
         return {"protocol": 1, "session": self.session, "revision": self.revision,
                 "remaining_ms": remaining, "phase": phase(remaining)}
 
+    def _with_node(self, state):
+        age = None if self.seen is None else self.clock() - self.seen
+        online = age is not None and age < 5
+        state["node"] = {"online": online, "age_s": age, "report": self.node,
+                         "applied": bool(online and self.node["session"] == self.session
+                                         and self.node["revision"] == self.revision)}
+        return state
+
     def command(self, minutes=None):
+        # Includes node status so UIs keep showing the device while awaiting its ack.
         with self.lock:
             self.deadline = None if minutes is None else self.clock() + minutes * 60
             self.revision += 1
-            return self._snapshot()
+            return self._with_node(self._snapshot())
 
     def sync(self, report):
         with self.lock:
@@ -40,13 +48,7 @@ class Timer:
 
     def snapshot(self):
         with self.lock:
-            state = self._snapshot()
-            age = None if self.seen is None else self.clock() - self.seen
-            online = age is not None and age < 5
-            state["node"] = {"online": online, "age_s": age, "report": self.node,
-                             "applied": bool(online and self.node["session"] == self.session
-                                             and self.node["revision"] == self.revision)}
-            return state
+            return self._with_node(self._snapshot())
 
 
 def create_app(token=None, timer=None):
@@ -75,7 +77,8 @@ def create_app(token=None, timer=None):
 
     @app.get("/")
     def index():
-        return render_template("index.html", presets=PRESETS)
+        ui = dict(thresholds=THRESHOLDS, colors=COLORS, labels=LABELS)
+        return render_template("index.html", presets=PRESETS, ui=ui)
 
     @app.get("/api/state")
     def state():
@@ -83,7 +86,7 @@ def create_app(token=None, timer=None):
 
     @app.post("/api/start")
     def start():
-        body = request.get_json()
+        body = request.get_json(silent=True)
         minutes = body.get("minutes") if isinstance(body, dict) else None
         if type(minutes) is not int or not 1 <= minutes <= 120:
             return jsonify(error="Dauer muss 1–120 ganze Minuten betragen"), 400
@@ -95,7 +98,7 @@ def create_app(token=None, timer=None):
 
     @app.post("/api/device/sync")
     def sync():
-        body = request.get_json()
+        body = request.get_json(silent=True)
         if not isinstance(body, dict):
             return jsonify(error="Ungültiger Gerätestatus"), 400
         valid = (type(body.get("revision")) is int and body["revision"] >= -1

@@ -7,6 +7,8 @@ from http_sync import exchange
 from luxafor import Luxafor
 from display import Display
 
+# Allocate the ~110 KB framebuffer before Wi-Fi/BLE fragment the heap.
+display = Display()
 replica = Replica(time.ticks_ms, time.ticks_diff)
 light = Luxafor(config, replica)
 wlan = network.WLAN(network.STA_IF)
@@ -41,7 +43,6 @@ async def sync_loop():
 
 
 async def render_loop():
-    display = Display()
     while True:
         remaining = replica.advance()
         online = replica.last_sync is not None and time.ticks_diff(time.ticks_ms(), replica.last_sync) < 5000
@@ -54,7 +55,8 @@ async def main():
     parts = config.SERVER_IP.split(".")
     if len(parts) != 4 or any(not p.isdigit() or not 0 <= int(p) <= 255 for p in parts):
         raise ValueError("SERVER_IP must be numeric IPv4")
-    if not config.API_TOKEN.isalnum() or len(config.API_TOKEN) < 20:
+    # MicroPython's str has no isalnum().
+    if len(config.API_TOKEN) < 20 or not all(c.isalpha() or c.isdigit() for c in config.API_TOKEN):
         raise ValueError("Invalid API_TOKEN")
     await asyncio.gather(sync_loop(), light.run(), render_loop())
 

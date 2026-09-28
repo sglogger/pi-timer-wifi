@@ -161,5 +161,23 @@ class APITests(unittest.TestCase):
         self.assertNotEqual(old['session'], new['session'])
         self.assertIsNone(new['remaining_ms'])
 
+    def test_command_response_keeps_node_status(self):
+        self.client.post('/api/device/sync', headers=self.headers,
+                         json=dict(session=None, revision=-1, ble_connected=True, ble_status='OK'))
+        node = self.client.post('/api/start', json={'minutes':5}, headers=self.headers).json['node']
+        self.assertTrue(node['online'])
+        self.assertFalse(node['applied'])
+
+    def test_invalid_json_returns_json_error(self):
+        for path in ('/api/start', '/api/device/sync'):
+            response = self.client.post(path, data='{', content_type='application/json', headers=self.headers)
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('error', response.json)
+
+    def test_page_embeds_shared_ui_config(self):
+        page = self.client.get('/').get_data(as_text=True)
+        self.assertIn('id="ui-config"', page)
+        self.assertIn('[["overdue", -30000]', page)
+
     def test_response_is_never_cached(self):
         self.assertEqual(self.client.get('/api/state', headers=self.headers).headers['Cache-Control'], 'no-store')

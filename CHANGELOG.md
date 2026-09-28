@@ -1,5 +1,18 @@
 # Änderungen
 
+## Review-Korrekturen (28.09.2026)
+
+- ESP32-Start repariert: MicroPython kennt `str.isalnum()` nicht; die Token-Prüfung
+  in `firmware/main.py` brach dadurch beim Booten ab.
+- Display-Framebuffer wird vor WLAN/BLE belegt, damit der Speicher noch nicht zerstückelt ist.
+- Weboberfläche: Ein falsch eingegebener Schlüssel ersetzt einen gültigen nicht mehr.
+  Ein abgelehnter Schlüssel beendet die Abfragen, damit sich der Anmeldedialog nicht ständig neu öffnet.
+- Start/Stop-Antworten enthalten den ESP32-Status; die Anzeige springt nicht mehr kurz auf «offline».
+- Ungültiges JSON ergibt eine JSON-Fehlerantwort statt Flasks HTML-Seite.
+- Phasen-Schwellen, Presets, Farben und Beschriftungen an einer Stelle
+  (`firmware/timer_logic.py`, `ui_config.py`); die Weboberfläche übernimmt sie vom Server.
+- Hinweis zur Token-Sicherheit im gemeinsamen WLAN.
+
 ## Native Pi-Oberfläche (28.09.2026)
 
 - Tkinter-Touch-App als Standard für den Pi Zero 2 W, direkt auf X11 ohne Browser.

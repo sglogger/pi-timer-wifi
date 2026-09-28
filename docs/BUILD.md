@@ -20,7 +20,7 @@ Im Projektverzeichnis; Python 3.11 oder neuer:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m compileall -q server.py native_client.py native_ui.py firmware tools deploy
+.venv/bin/python -m compileall -q server.py ui_config.py native_client.py native_ui.py firmware tools deploy
 .venv/bin/python -m pip install mpy-cross==1.29.0.post2
 .venv/bin/python tools/check_firmware.py
 ```

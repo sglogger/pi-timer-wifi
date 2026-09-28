@@ -29,8 +29,7 @@ class ST7789(framebuf.FrameBuffer):
         self.reset.value(1)
         time.sleep_ms(50)
 
-        # MADCTL (0x36): 0x60 ist Landscape für dieses Display
-        #madctl = 0x60 if rotation == 1 else 0x00
+        # MADCTL (0x36): 0x60 = Landscape, 0x08 = BGR-Farbreihenfolge
         madctl = 0x68 if rotation == 1 else 0x08
 
         for cmd, data in [

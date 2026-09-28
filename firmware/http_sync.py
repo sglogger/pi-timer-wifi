@@ -30,5 +30,5 @@ async def exchange(host, port, token, report):
             raise ValueError("Invalid HTTP body size")
         return json.loads(await reader.readexactly(length))
     finally:
+        # Synchronous close only: awaiting wait_closed() could let cleanup hang.
         writer.close()
-        # Closing is synchronous on MicroPython; don't allow cleanup to hang.

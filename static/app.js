@@ -1,5 +1,7 @@
 "use strict";
 const $ = id => document.getElementById(id);
+const ui = JSON.parse($('ui-config').textContent);
+class Unauthorized extends Error {}
 let token = sessionStorage.getItem("pi-timer-token") || "";
 let snapshot = null;
 let sampledAt = 0;
@@ -8,23 +10,27 @@ let commandBusy = false;
 let generation = 0;
 let polling = false;
 
-async function api(path, body) {
+async function api(path, body, key = token) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 2500);
   try {
     const response = await fetch(path, {
       method: body === undefined ? "GET" : "POST",
-      headers: {Authorization: `Bearer ${token}`, "Content-Type": "application/json"},
+      headers: {Authorization: `Bearer ${key}`, "Content-Type": "application/json"},
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal, cache: "no-store"
     });
-    if (response.status === 401) {
-      if (!$('login').open) $('login').showModal();
-      throw new Error("Zugriffsschlüssel fehlt oder ist ungültig.");
-    }
+    if (response.status === 401) throw new Unauthorized("Zugriffsschlüssel fehlt oder ist ungültig.");
     if (!response.ok) throw new Error(`Serverfehler (${response.status})`);
     return await response.json();
   } finally { clearTimeout(timeout); }
+}
+
+// Stop polling with a rejected key, so a dismissed dialog stays closed.
+function rejectToken() {
+  token = "";
+  try { sessionStorage.removeItem('pi-timer-token'); } catch (error) {}
+  if (!$('login').open) $('login').showModal();
 }
 
 function accept(data, started) {
@@ -43,7 +49,8 @@ async function poll() {
     const data = await api('/api/state');
     if (version === generation) accept(data, started);
   } catch (error) {
-    $('connection').textContent = "Server nicht erreichbar";
+    if (error instanceof Unauthorized) rejectToken();
+    else $('connection').textContent = "Server nicht erreichbar";
     $('feedback').textContent = error.message;
   } finally { polling = false; }
 }
@@ -58,6 +65,7 @@ async function command(path, body) {
     accept(await api(path, body), started);
     $('feedback').textContent = "Gespeichert – warte auf ESP32-Bestätigung …";
   } catch (error) {
+    if (error instanceof Unauthorized) rejectToken();
     $('feedback').textContent = `Befehl unbestätigt: ${error.message} Status wird neu abgefragt.`;
   } finally {
     commandBusy = false;
@@ -71,20 +79,17 @@ function render() {
   const now = performance.now();
   const fresh = now - lastSuccess < 4000;
   const remaining = snapshot.remaining_ms === null ? null : snapshot.remaining_ms - (now - sampledAt);
-  let phase = 'off';
-  if (remaining !== null) phase = remaining <= -30000 ? 'overdue' : remaining <= 0 ? 'red' : remaining <= 60000 ? 'orange' : remaining <= 300000 ? 'yellow' : 'green';
-  const colors = {off:'#eaf0f3',green:'#4ce7a0',yellow:'#f9dd69',orange:'#ffad60',red:'#ff6e79',overdue:'#ff6e79'};
-  const labels = {off:'BEREIT',green:'REDEZEIT',yellow:'LETZTE 5 MINUTEN',orange:'LETZTE MINUTE',red:'ZEIT ABGELAUFEN',overdue:'ÜBERZOGEN'};
+  const hit = remaining === null ? ['off'] : ui.thresholds.find(([, limit]) => remaining <= limit);
+  const phase = hit ? hit[0] : 'green';
   const seconds = remaining === null ? 0 : Math.ceil(remaining / 1000);
   const abs = Math.abs(seconds);
   $('countdown').textContent = `${seconds < 0 ? '-' : ''}${String(Math.floor(abs/60)).padStart(2,'0')}:${String(abs%60).padStart(2,'0')}`;
-  $('countdown').style.color = colors[phase];
+  $('countdown').style.color = ui.colors[phase];
   $('countdown').classList.toggle('overdue', phase === 'overdue');
-  $('phase').textContent = labels[phase];
+  $('phase').textContent = ui.labels[phase];
   $('connection').textContent = fresh ? 'Headend verbunden' : 'Server offline · lokale Anzeige';
-  // A command response has no node report; only a fresh GET can confirm delivery.
   const node = snapshot.node;
-  const online = fresh && node?.online && node.age_s + (now - lastSuccess)/1000 < 5;
+  const online = fresh && node?.online && node.age_s + (now - sampledAt)/1000 < 5;
   $('node-dot').className = online ? 'ok' : 'bad';
   $('node-state').textContent = online ? (node.applied ? 'Timer synchronisiert' : 'Übertragung ausstehend') : 'Offline / noch keine Meldung';
   const ble = online && node.report?.ble_connected;
@@ -104,11 +109,13 @@ $('stop').onclick = () => command('/api/stop', {});
 $('settings').onclick = () => $('login').showModal();
 $('login-form').onsubmit = async event => {
   event.preventDefault();
-  token = $('token').value.trim();
+  // Keep the working key until the new one has been accepted.
+  const candidate = $('token').value.trim();
   try {
     const started = performance.now();
-    const data = await api('/api/state');
-    sessionStorage.setItem('pi-timer-token', token);
+    const data = await api('/api/state', undefined, candidate);
+    token = candidate;
+    try { sessionStorage.setItem('pi-timer-token', token); } catch (error) {}
     $('login-error').textContent = '';
     $('token').value = '';
     $('login').close();
