@@ -3,13 +3,16 @@
 Neufassung von [sglogger/pi-timer](https://github.com/sglogger/pi-timer) für den
 SwiNOG-Konferenztimer: Die lange Funkstrecke läuft über WLAN. Der ESP32-C6 neben
 dem Redner zeigt die Zeit und steuert das **Luxafor Bluetooth Pro direkt per BLE**.
+Der Pi stellt standardmäßig sein eigenes WLAN bereit: **kein Router, kein
+Veranstaltungs-WLAN und kein Internet vor Ort nötig**. Ein vorhandenes gemeinsames
+WLAN ist als alternative Konfiguration möglich.
 
 ```mermaid
 flowchart LR
-  A["Raspberry Pi Zero 2 W\nWaveshare Zero-DISP-7A\nTouch-Bedienung + Timer-Server"]
+  A["Raspberry Pi Zero 2 W\nWaveshare Zero-DISP-7A\nTimer-Server + WLAN-Hotspot\n10.42.0.1"]
   B["ESP32-C6-LCD-1.47\nCountdown + lokale Farbsteuerung"]
   C["Luxafor Bluetooth Pro"]
-  A <-->|"WLAN / HTTP · 20–30 m über Access Point"| B
+  A <-->|"Direktes WLAN / HTTP · ohne Router oder Internet"| B
   B -->|"BLE · direkt daneben"| C
 ```
 
@@ -22,6 +25,7 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 ## Was sich ändert
 
 - Kein Bluetooth zwischen Regie und Redner mehr, kein Luxafor-Dongle am Headend.
+- Eigenes WPA2-WLAN auf dem Pi; ESP32 verbindet sich direkt mit `SwiNOG-Timer`.
 - ESP32 holt alle 500 ms den vollständigen Timerzustand. Keine Befehlswarteschlange,
   die nach einem Ausfall veraltete Starts nachliefert.
 - Lokaler monotoner Countdown und Farbwechsel laufen bei WLAN-Ausfall weiter.
@@ -45,10 +49,12 @@ hier gelten die Grenzen aus dieser Tabelle.
 
 ## Inbetriebnahme
 
-1. [Headend installieren](deploy/README.md), Zugriffsschlüssel erzeugen.
-2. [ESP32 vorbereiten](firmware/README.md), WLAN, Pi-IP und Luxafor auswählen.
-3. Luxafor-Dongle abziehen und Luxafor-Apps schließen, die die BLE-Verbindung belegen.
-4. [Hardware-Abnahme](docs/acceptance.md) einschließlich Reichweitentest durchführen.
+1. Vorab mit Internet: [Headend installieren](deploy/README.md), Zugriffsschlüssel erzeugen.
+2. [Direktes WLAN auf dem Pi vorbereiten](deploy/direct-wifi.md), Passwort übernehmen.
+3. [ESP32 vorbereiten](firmware/README.md): Hotspot-Daten, Pi-IP `10.42.0.1` und Luxafor auswählen.
+4. Hotspot aktivieren; Luxafor-Dongle abziehen und belegende Luxafor-Apps schließen.
+5. [Hardware-Abnahme](docs/acceptance.md) einschließlich Kaltstart ohne Internet
+   und 20–30-m-Reichweitentest durchführen.
 
 ## Verhalten bei Ausfällen
 

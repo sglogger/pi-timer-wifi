@@ -13,8 +13,10 @@ cd pi-timer-wifi
 
 Browser: `http://localhost:8000`. Den Wert `PI_TIMER_TOKEN` aus `.env` eingeben.
 Der Schlüssel bleibt nur für diese Browser-Sitzung gespeichert. Nach einem
-Browser-Neustart erneut eingeben. Für die ESP32-Verbindung eine feste DHCP-Zuweisung
-für den Pi einrichten und die IPv4-Adresse in `firmware/config.py` übernehmen.
+Browser-Neustart erneut eingeben. Für den Direktbetrieb stellt der Pi sein eigenes
+WLAN unter der festen Adresse `10.42.0.1` bereit, siehe [Direktes WLAN](direct-wifi.md).
+Die Installation und Paketdownloads vorab mit Internet durchführen; der Betrieb
+vor Ort benötigt keinen Internetanschluss.
 
 ## Autostart
 
@@ -39,11 +41,15 @@ mit gestopptem Timer. Das Gerät übernimmt diesen Zustand bei nächster Verbind
 
 ## Netzwerk
 
-Empfohlen: eigener 2.4-GHz-Access-Point mit guter Sicht zur Bühne und Regie,
-WPA2/WPA3-Personal, kein Captive Portal und keine Client-Isolation.
-Der ESP32 muss den Pi auf TCP 8000 erreichen können. Kein Internet und kein
-MQTT-Broker notwendig. Die 20–30 m müssen mit WLAN vor Ort getestet werden;
-Wände, Menschen und überfüllte Kanäle können auch WLAN stören.
+Standard: **Pi als 2.4-GHz-Hotspot, ESP32 direkt verbunden**. Die
+[Einrichtungsanleitung](direct-wifi.md) umfasst WPA2, DHCP, feste Pi-IP, Autostart
+und Rückkehr zum normalen WLAN. Ein externer Access Point ist nicht erforderlich.
+
+Alternativ beide Geräte in ein vorhandenes gemeinsames WLAN einbinden: kein
+Captive Portal, keine Client-Isolation, feste DHCP-Zuweisung für den Pi und diese
+Pi-Adresse in `firmware/config.py`. Der ESP32 muss den Pi auf TCP 8000 erreichen.
+Auch dieses Netz braucht kein Internet. Die 20–30 m müssen in beiden Varianten
+vor Ort getestet werden; Wände, Menschen und belegte Kanäle können WLAN stören.
 
 HTTP überträgt den gemeinsamen Zugriffsschlüssel unverschlüsselt im lokalen Netz.
 Deshalb nur in einem vertrauenswürdigen Veranstaltungsnetz betreiben; Port 8000

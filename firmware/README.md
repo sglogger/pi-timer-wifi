@@ -2,7 +2,9 @@
 
 Ziel ist dasselbe Waveshare-Board wie im ursprünglichen Projekt (172 × 320 Pixel,
 ST7789, Querformat). MicroPython bleibt erhalten; der ESP32 wird jetzt WLAN-Client
-und BLE-Central statt BLE-Peripheral.
+und BLE-Central statt BLE-Peripheral. Standardmäßig verbindet er sich direkt mit
+dem [WLAN-Hotspot des Pi](../deploy/direct-wifi.md); Internet wird im Betrieb nicht
+benötigt. Firmware und Bibliotheken vor der Veranstaltung installieren.
 
 ## 1. MicroPython und aioble
 
@@ -34,8 +36,10 @@ Dann:
 ```
 
 Der Scan zeigt Name, MAC und Empfangsstärke. `config.example.py` nach `config.py`
-kopieren, WLAN-Daten, numerische Pi-IPv4 und denselben API-Schlüssel wie `.env`
-eintragen. Für `LUXAFOR_NAME` den **exakten** Namen aus dem Scan verwenden
+kopieren. Für Direktbetrieb `WIFI_SSID = "SwiNOG-Timer"`, das vom Hotspot-Setup
+ausgegebene WLAN-Passwort, `SERVER_IP = "10.42.0.1"` und denselben API-Schlüssel
+wie `.env` eintragen. Ein vorhandenes gemeinsames WLAN bleibt möglich: dessen
+SSID/Passwort und die dortige Pi-IP eintragen. Für `LUXAFOR_NAME` den **exakten** Namen aus dem Scan verwenden
 (typischerweise beginnt er mit `LUX DOT`). Bei gleichen Namen `LUXAFOR_MAC`
 eintragen; sie hat Vorrang. Es wird niemals automatisch das erstbeste BLE-Gerät
 angesteuert. Bei wechselnder privater MAC den eindeutigen Namen benutzen.

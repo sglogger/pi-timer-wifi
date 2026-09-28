@@ -3,11 +3,19 @@
 ## Strecke und Zuständigkeit
 
 Der Pi besitzt den Sollzustand. Auf dem ESP32 werden Zeit und Farbe aus einer
-lokalen Replik berechnet. WLAN überbrückt die Entfernung über einen Access Point;
+lokalen Replik berechnet. Der Pi arbeitet standardmäßig selbst als Access Point;
+der ESP32 verbindet sich direkt mit ihm. Ein zusätzlicher Router oder Internet
+ist nicht nötig. Pi-Adresse: `10.42.0.1`; der ESP32 erhält seine Adresse per DHCP.
 BLE wird auf die kurze Strecke zum Luxafor begrenzt. Der ESP32-C6 unterstützt BLE,
 kein Bluetooth Classic. Die Bluetooth-Pro-Referenz verwendet BLE-GATT.
 
-Ein dedizierter AP ist für eine Konferenz vorhersehbarer als ein offenes Gastnetz.
+Die Rollen sind Pi = AP/Server und ESP32 = Station/BLE-Central. Es handelt sich
+um einen normalen WLAN-Hotspot, nicht IBSS-Ad-hoc oder Wi-Fi Direct. Die
+NetworkManager-Konfiguration ist in [Direktes WLAN](../deploy/direct-wifi.md)
+beschrieben. Gemeinsames WLAN ist eine alternative Konfiguration mit anderen
+Zugangsdaten und anderer Pi-IP; ein automatischer Wechsel wird nicht vorgenommen.
+
+Der AP am Pi macht die Konferenz unabhängig vom Veranstaltungsnetz.
 WLAN verbessert die Architektur, garantiert aber keine Reichweite. Bei stark
 gestörter Funkumgebung ist eine kabelgebundene Bühnenanbindung die weitere Option.
 
@@ -70,3 +78,6 @@ fragt danach den Zustand ab, statt einen Start blind zu wiederholen.
 - Serverzustand liegt im RAM und wird bei Prozess-Neustart auf Stop gesetzt.
 - BLE Write-without-response bestätigt nur das lokale Absenden, keine LED-Farbe.
 - Kein garantierter Stop bei vollständigem Netzwerkausfall.
+- Pakete und Firmware werden vorab mit Internet vorbereitet; der Veranstaltungsbetrieb
+  und der Countdown benötigen kein Internet. Ein Pi-Neustart unterbricht im
+  Direktbetrieb sowohl den Server als auch dessen WLAN; der ESP32 verbindet sich erneut.
