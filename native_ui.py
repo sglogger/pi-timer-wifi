@@ -50,6 +50,9 @@ class TimerWindow:
             self.buttons.append(button)
         center = tk.Frame(body, bg=BG)
         center.grid(row=0, column=1, sticky='nsew')
+        # The available screen width determines text size, never vice versa.
+        # Otherwise font/wrap changes can repeatedly resize the parent frame.
+        center.grid_propagate(False)
         center.grid_columnconfigure(0, weight=1)
         center.grid_rowconfigure(0, weight=1)
         center.grid_rowconfigure(4, weight=1)

@@ -112,7 +112,8 @@ Die Simulation meldet absichtlich keine bestehende Luxafor-Verbindung.
 
 ## Aufbau und Quellen
 
-- `server.py`: threadsicherer Timer, REST-API und Touch-Oberfläche.
+- `native_ui.py` / `native_client.py`: native Touch-App und lokaler API-Client.
+- `server.py`: threadsicherer Timer, REST-API und optionale Weboberfläche.
 - `firmware/`: MicroPython mit aioble, asynchronem HTTP und Waveshare-Display.
 - [Architektur und Protokoll](docs/architecture.md).
 - [BLE-Protokoll, Herkunft und Grenzen](docs/ble-protocol.md).

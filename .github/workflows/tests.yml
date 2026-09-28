@@ -20,10 +20,11 @@ jobs:
       - run: python tools/check_firmware.py
   native-ui:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y python3-tk python3-pil xvfb fonts-dejavu-core
-      - run: xvfb-run -a -s '-screen 0 1024x600x24' /usr/bin/python3 tests/ui_smoke.py
+      - run: timeout 30s xvfb-run -a -s '-screen 0 1024x600x24' /usr/bin/python3 tests/ui_smoke.py
         env:
           UI_SCREENSHOT: native-ui.png
       - uses: actions/upload-artifact@v4
