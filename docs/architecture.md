@@ -19,6 +19,20 @@ Der AP am Pi macht die Konferenz unabhängig vom Veranstaltungsnetz.
 WLAN verbessert die Architektur, garantiert aber keine Reichweite. Bei stark
 gestörter Funkumgebung ist eine kabelgebundene Bühnenanbindung die weitere Option.
 
+## Luxafor Orb am Headend
+
+Der Timer-Server steuert eine per USB angeschlossene Luxafor Orb direkt (`orb.py`,
+pyusb, Gerät `04d8:f372`). Ein Hintergrundthread leitet alle 200 ms die Phase aus
+demselben Timerzustand ab, den auch der ESP32 erhält, und sendet nur bei einem
+Phasenwechsel. Die USB-Befehle entsprechen `luxafor-linux.py` aus dem ursprünglichen
+Projekt (Farbe `[1, 255, r, g, b, 0, 0]`, Überzeit als Strobe `[3, 255, 255, 0, 0, 15, 0, 30]`).
+Statt einzeln geplanter Befehle folgt die Orb so jedem Start, Stop und Ersatz-Start.
+Alle 2 s wird geprüft, ob sich die angeschlossenen Lampen geändert haben; nach
+erneutem Einstecken erhält die Orb die aktuelle Farbe. Fehlen pyusb, libusb oder
+die Orb, läuft der Timer unverändert weiter. `/api/state`, `/api/start` und
+`/api/stop` enthalten `"orb": {"connected": …, "status": …}`; `PI_TIMER_ORB=0` schaltet
+die Ansteuerung ab. Die Orb meldet keine sichtbare LED-Farbe zurück.
+
 ## Warum HTTP-Polling
 
 Am Headend läuft standardmäßig eine native Tkinter-Touch-App direkt auf X11.

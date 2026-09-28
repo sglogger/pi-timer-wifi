@@ -3,6 +3,8 @@
 Neufassung von [sglogger/pi-timer](https://github.com/sglogger/pi-timer) für den
 SwiNOG-Konferenztimer: Die lange Funkstrecke läuft über WLAN. Der ESP32-C6 neben
 dem Redner zeigt die Zeit und steuert das **Luxafor Bluetooth Pro direkt per BLE**.
+Am Headend zeigt eine per USB-Kabel angeschlossene **Luxafor Orb** weiterhin
+dieselben Farben wie im ursprünglichen Projekt.
 Der Pi stellt standardmäßig sein eigenes WLAN bereit: **kein Router, kein
 Veranstaltungs-WLAN und kein Internet vor Ort nötig**. Ein vorhandenes gemeinsames
 WLAN ist als alternative Konfiguration möglich.
@@ -16,6 +18,8 @@ flowchart LR
   B -->|"BLE · direkt daneben"| C
   D["Handy / Tablet / Laptop\nWeboberfläche im Browser"]
   D <-->|"WLAN · Timer bedienen"| A
+  E["Luxafor Orb"]
+  A -->|"USB-Kabel"| E
 ```
 
 **Stand: erste implementierte Version, noch nicht auf der konkreten Hardware
@@ -27,6 +31,9 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 ## Was sich ändert
 
 - Kein Bluetooth zwischen Regie und Redner mehr, kein Luxafor-Dongle am Headend.
+- Luxafor Orb am Headend per USB wie bisher: gleiche Farben und USB-Befehle wie
+  `luxafor-linux.py`, jetzt direkt im Timer-Server statt über geplante Einzelbefehle.
+  Wird automatisch erkannt, auch nach Abziehen und erneutem Einstecken.
 - Eigenes WPA2-WLAN auf dem Pi; ESP32 verbindet sich direkt mit `SwiNOG-Timer`.
 - ESP32 holt alle 500 ms den vollständigen Timerzustand. Keine Befehlswarteschlange,
   die nach einem Ausfall veraltete Starts nachliefert.
@@ -34,7 +41,7 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 - Automatische WLAN-/BLE-Wiederverbindung, frischer Zustand nach Reconnect.
 - **Native Tkinter-Touch-App als Standard am Pi Zero 2 W**: keine Browser-Engine,
   automatische Anmeldung aus `.env`, große Zeit-/Stop-Tasten. Weboberfläche optional.
-- Oberfläche zeigt getrennt Headend, ESP32-Synchronisation und Luxafor-BLE.
+- Oberfläche zeigt getrennt Headend, ESP32-Synchronisation, Luxafor-BLE und Luxafor-USB.
 - Handy, Tablet oder Laptop können denselben Timer über die Weboberfläche im
   Pi-WLAN steuern, auch gleichzeitig mit der nativen Touch-App.
 - Presets: 30, 25, 20, 15, 10, 5 und 1 Minute. API: 1–120 Minuten.
@@ -49,9 +56,30 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 | Ab 30 Sekunden Überzeit | Rot blinkend |
 | Stop | Licht aus, Display READY |
 
+Die Orb am Headend folgt denselben Grenzen. Beim Überziehen sendet der Server wie
+im ursprünglichen Projekt einen roten Luxafor-Strobe (Geschwindigkeit 15, 30 Wiederholungen).
+
 Ein kurzer Timer beginnt sofort in seiner passenden Warnfarbe. Im bisherigen
 Projekt unterschieden sich manche Grenzwerte zwischen Browser, ESP32 und Licht;
 hier gelten die Grenzen aus dieser Tabelle.
+
+## Hardware
+
+| Komponente | Rolle |
+|---|---|
+| Raspberry Pi Zero 2 W | Timer-Server, WLAN-Hotspot, native Touch-App |
+| [Waveshare Zero-DISP-7A](https://www.waveshare.com/zero-disp-7a.htm) ([Wiki](https://www.waveshare.com/wiki/Zero-DISP-7A)) | 7-Zoll-Touchdisplay als Träger für den Pi |
+| [Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/wiki/ESP32-C6-LCD-1.47) | Countdown-Anzeige beim Redner, steuert die Lampe per BLE |
+| Luxafor Bluetooth Pro | Farbsignal beim Redner |
+| Luxafor Orb | Farbsignal am Headend, per USB-Kabel am Zero-DISP-7A |
+
+![Vorderseite: Touchdisplay, ESP32-C6-LCD-1.47 und Luxafor Bluetooth Pro](images/front.jpg "Vorderseite")
+![Rückseite: Zero-DISP-7A mit Raspberry Pi Zero 2 W](images/back.jpg "Rückseite")
+
+Die Fotos stammen aus dem [ursprünglichen Projekt](https://github.com/sglogger/pi-timer)
+und zeigen dessen Bluetooth-Aufbau mit der früheren Browser-Oberfläche. Die Luxafor
+Orb bleibt; der USB-Dongle für die Luxafor Bluetooth Pro wird in dieser WLAN-Version
+nicht mehr benötigt.
 
 ## Inbetriebnahme
 
@@ -198,7 +226,7 @@ Python 3.11 oder neuer:
 ```sh
 ./install.sh
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m compileall -q server.py ui_config.py native_client.py native_ui.py firmware tools
+.venv/bin/python -m compileall -q server.py orb.py ui_config.py native_client.py native_ui.py firmware tools
 ./run.sh
 ```
 
@@ -220,6 +248,7 @@ Die Simulation meldet absichtlich keine bestehende Luxafor-Verbindung.
 
 - `native_ui.py` / `native_client.py`: native Touch-App und lokaler API-Client.
 - `server.py`: threadsicherer Timer, REST-API und optionale Weboberfläche.
+- `orb.py`: Luxafor Orb per USB am Headend (pyusb, Befehle aus `luxafor-linux.py`).
 - `ui_config.py`: Presets, Farben und Beschriftungen für Web- und Touch-App.
 - `firmware/`: MicroPython mit aioble, asynchronem HTTP und Waveshare-Display.
 - [Architektur und Protokoll](docs/architecture.md).

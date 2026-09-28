@@ -16,8 +16,13 @@ gh auth setup-git
 git clone https://github.com/sglogger/pi-timer-wifi.git
 cd pi-timer-wifi
 ./install.sh
+sudo cp deploy/99-luxafor.rules /etc/udev/rules.d/  # Luxafor Orb per USB
+sudo udevadm control --reload-rules && sudo udevadm trigger
 ./run.sh
 ```
+
+Die Luxafor Orb am Headend steuert der Server selbst; Details in der
+[Installationsanleitung](../docs/INSTALLATION.md#luxafor-orb-am-headend).
 
 Native Touch-App: in einer grafischen Sitzung im zweiten Terminal
 `./run-native.sh` starten. Der Schlüssel wird aus `.env` geladen. Ohne Desktop

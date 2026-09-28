@@ -1,4 +1,4 @@
-"""WLAN headend. One process owns the timer; no hardware access on the Pi."""
+"""WLAN headend. One process owns the timer and the optional Luxafor USB light (orb.py)."""
 import os
 import secrets
 import threading
@@ -7,6 +7,7 @@ import uuid
 
 from flask import Flask, jsonify, render_template, request
 from firmware.timer_logic import THRESHOLDS, phase
+from orb import Orb
 from ui_config import COLORS, LABELS, LEGEND, PRESETS
 
 
@@ -52,13 +53,18 @@ class Timer:
             return self._with_node(self._snapshot())
 
 
-def create_app(token=None, timer=None):
+def create_app(token=None, timer=None, orb=None):
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 4096
     token = token if token is not None else os.environ.get("PI_TIMER_TOKEN", "")
     if len(token) < 20 or not token.isascii() or not token.isalnum():
         raise ValueError("Set PI_TIMER_TOKEN to at least 20 ASCII letters/digits")
     timer = timer or Timer()
+
+    def respond(state):
+        if orb is not None:
+            state["orb"] = orb.report()
+        return jsonify(state)
 
     @app.before_request
     def authenticate():
@@ -83,7 +89,7 @@ def create_app(token=None, timer=None):
 
     @app.get("/api/state")
     def state():
-        return jsonify(timer.snapshot())
+        return respond(timer.snapshot())
 
     @app.post("/api/start")
     def start():
@@ -91,11 +97,11 @@ def create_app(token=None, timer=None):
         minutes = body.get("minutes") if isinstance(body, dict) else None
         if type(minutes) is not int or not 1 <= minutes <= 120:
             return jsonify(error="Dauer muss 1–120 ganze Minuten betragen"), 400
-        return jsonify(timer.command(minutes))
+        return respond(timer.command(minutes))
 
     @app.post("/api/stop")
     def stop():
-        return jsonify(timer.command())
+        return respond(timer.command())
 
     @app.post("/api/device/sync")
     def sync():
@@ -117,5 +123,10 @@ def create_app(token=None, timer=None):
 
 if __name__ == "__main__":
     from waitress import serve
-    serve(create_app(), host=os.environ.get("PI_TIMER_HOST", "0.0.0.0"),
+    timer = Timer()
+    orb = None if os.environ.get("PI_TIMER_ORB", "1") == "0" else Orb(timer)
+    app = create_app(timer=timer, orb=orb)
+    if orb is not None:
+        orb.thread.start()
+    serve(app, host=os.environ.get("PI_TIMER_HOST", "0.0.0.0"),
           port=int(os.environ.get("PI_TIMER_PORT", "8000")), threads=4)

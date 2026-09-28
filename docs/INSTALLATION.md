@@ -32,14 +32,25 @@ MicroPython-Binärdatei; die Timer-Quelldateien werden direkt ausgeführt.
 
 ## 0. Hardware und Vorbereitung
 
-- Raspberry Pi Zero 2 W im Waveshare **Zero-DISP-7A**, microSD und passende Stromversorgung.
+- Raspberry Pi Zero 2 W im Waveshare **Zero-DISP-7A**
+  ([Produkt](https://www.waveshare.com/zero-disp-7a.htm), [Wiki](https://www.waveshare.com/wiki/Zero-DISP-7A)),
+  microSD und passende Stromversorgung.
 - Waveshare **ESP32-C6-LCD-1.47**, USB-Datenkabel und Stromversorgung.
   Die Variante **ESP32-C6-Touch-LCD-1.47** verwendet einen anderen Display-Controller
   und andere Pins; dafür ist diese Firmware nicht vorgesehen.
 - Luxafor **Bluetooth Pro**, geladen und direkt neben dem ESP32.
+- Optional **Luxafor Orb** mit USB-Kabel am Zero-DISP-7A (USB-A-Buchse) als
+  Farbsignal am Headend, wie im ursprünglichen Projekt.
 - Für die erste Einrichtung Tastatur am Pi oder SSH. Die native App liest den
   API-Schlüssel automatisch aus `.env`; im täglichen Betrieb ist keine Eingabe nötig.
 - Internet während der Vorbereitung für apt, pip, Git und aioble.
+
+![Rückseite: Zero-DISP-7A mit Raspberry Pi Zero 2 W](../images/back.jpg "Rückseite")
+
+Das Foto zeigt den Aufbau des [ursprünglichen Projekts](https://github.com/sglogger/pi-timer):
+Der Pi Zero 2 W sitzt rechts auf der Rückseite des Zero-DISP-7A, die Luxafor Orb
+steckt per USB-Kabel am Board. Der USB-Dongle für die Luxafor Bluetooth Pro wird
+in dieser Version nicht verwendet; ihn abziehen, da er die Lampe sonst belegen kann.
 
 Bei einem bestehenden Timer zuerst Konfigurationen und Daten sichern. Das alte
 Repository bleibt erhalten; trotzdem überschreiben ein neues SD-Image und
@@ -56,8 +67,9 @@ Im [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
    Raspberry Pi OS mit Desktop ist ebenfalls möglich; siehe Schritt 3.
 3. Die richtige microSD auswählen. Alle darauf vorhandenen Daten werden ersetzt.
 4. Benutzer `pitimer`, eigenes Passwort und Hostname `pi-timer` konfigurieren.
-5. WLAN für die **Vorbereitung** eintragen und SSH aktivieren.
-6. Land/Zeitzone setzen, z. B. CH und Europe/Zurich beim Einsatz in der Schweiz.
+5. WLAN für die **Vorbereitung** eintragen und SSH aktivieren. Raspberry Pi
+   Connect deaktiviert lassen; es wird nicht benötigt.
+6. Land/Zeitzone/Tastatur setzen, z. B. CH, Europe/Zurich und `ch` beim Einsatz in der Schweiz.
 7. Image schreiben, microSD einsetzen, Pi starten.
 
 Am Pi anmelden oder vom Rechner `ssh pitimer@pi-timer.local` verwenden. Wenn mDNS
@@ -69,7 +81,7 @@ nicht verfügbar ist, die vom Heimrouter zugeteilte IP statt des Namens verwende
 sudo apt update
 sudo apt full-upgrade -y
 sudo apt install -y git gh python3-venv python3-tk fonts-dejavu-core network-manager dnsmasq-base curl \
-  xserver-xorg x11-xserver-utils xinit
+  xserver-xorg x11-xserver-utils xinit libusb-1.0-0
 sudo reboot
 ```
 
@@ -99,9 +111,22 @@ video=HDMI-A-1:1024x600M@60D
 
 Danach neu starten und Darstellung/Touch-Zuordnung prüfen. `HDMI-A-1` ist der
 typische Ausgang; bei abweichender Hardware den tatsächlich verbundenen Ausgang
-verwenden. Die ältere Waveshare-Anleitung enthält `hdmi_cvt`/`hdmi_group` für den
-Legacy-Grafikpfad; diese Angaben nicht zusätzlich blind mit KMS mischen.
-Siehe [Raspberry Pi: KMS-Anzeigemodus](https://www.raspberrypi.com/documentation/computers/configuration.html#set-the-kms-display-mode).
+verwenden. Siehe [Raspberry Pi: KMS-Anzeigemodus](https://www.raspberrypi.com/documentation/computers/configuration.html#set-the-kms-display-mode).
+
+**Nur ohne KMS (Legacy-Grafikpfad):** Die Waveshare-Anleitung, nach der das
+ursprüngliche Projekt eingerichtet wurde, ergänzt stattdessen am Ende von
+`config.txt` im Boot-Verzeichnis der microSD (`/boot/firmware/config.txt`):
+
+```text
+hdmi_force_hotplug=1
+config_hdmi_boost=10
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt 1024 600 60 6 0 0 0
+```
+
+Diese Angaben wirken nur mit dem Legacy-Grafiktreiber. Entweder diesen Block oder
+den `video=`-Eintrag verwenden, nicht beides blind mischen.
 
 ## 2. Timer-Server installieren — Pi
 
@@ -139,6 +164,25 @@ Variablennamen als `API_TOKEN` in die ESP32-Konfiguration übernommen. Die nativ
 Pi-App lädt ihn beim Start automatisch aus `.env`. Die optionale Weboberfläche
 fragt ihn beim ersten Öffnen einer Browser-Sitzung ab. Noch nicht mit dem später erzeugten WLAN-Passwort verwechseln.
 
+### Luxafor Orb am Headend
+
+Die Orb wird vom Timer-Server selbst angesteuert (`orb.py`), ohne Root-Rechte.
+Dafür einmalig die USB-Berechtigung einrichten; sie ersetzt die Regel, die das
+alte `install.sh` angelegt hat:
+
+```sh
+sudo cp deploy/99-luxafor.rules /etc/udev/rules.d/99-luxafor.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+groups | grep -qw plugdev || sudo usermod -aG plugdev "$USER"
+```
+
+Die Regel gibt Luxafor-USB-Geräten (`04d8:f372`) der Gruppe `plugdev` Schreibzugriff.
+Nach `usermod` neu anmelden. Die Orb einstecken und prüfen: `lsusb | grep -i 04d8:f372`.
+Mehrere angeschlossene Luxafor-USB-Lampen zeigen alle dieselbe Farbe. Ohne Orb
+läuft der Timer normal; die Oberfläche zeigt dann „Luxafor USB nicht gefunden“.
+Wer keine Orb verwendet, kann die Ansteuerung mit `PI_TIMER_ORB=0` in `.env` abschalten.
+
 Bei Migration den alten Timer-Dienst gezielt stoppen, da beide Port 8000 verwenden:
 
 ```sh
@@ -156,7 +200,7 @@ Nur den tatsächlich identifizierten alten Timer-Dienst mit `sudo systemctl disa
 In einem zweiten Pi-Terminal: `curl -I http://127.0.0.1:8000/` muss HTTP 200 liefern.
 Alternativ vom Rechner `http://PI-IP:8000` öffnen und API-Schlüssel eingeben.
 Ohne ESP32 sind die Gerätestatus noch offline. Ein Test-Start darf trotzdem im
-Browser zählen; danach Stop drücken. Den manuell laufenden Server mit Ctrl-C
+Browser zählen; eine angeschlossene Orb leuchtet dabei bereits grün. Danach Stop drücken. Den manuell laufenden Server mit Ctrl-C
 beenden, bevor der Dienst gestartet wird.
 
 ### Server-Autostart
@@ -397,11 +441,12 @@ Die Lichtfarbe zusätzlich mit den Augen prüfen: BLE-Verbindung ist keine LED-R
 
 ## 8. Erster vollständiger Funktionstest
 
-1. 10 Minuten starten: ESP32 zählt, Lampe grün.
-2. 5 Minuten starten: gelb; 1 Minute starten: orange.
+1. 10 Minuten starten: ESP32 zählt, Lampe und Orb grün.
+2. 5 Minuten starten: gelb; 1 Minute starten: orange (Lampe und Orb).
 3. Die Minute ablaufen lassen: bei Null rot, 30 Sekunden später rot blinkend.
-4. Stop: Lampe aus, ESP32 READY, Pi-App 00:00; Übernahme muss bestätigt sein.
+4. Stop: Lampe und Orb aus, ESP32 READY, Pi-App 00:00; Übernahme muss bestätigt sein.
 5. Luxafor kurz aus/einschalten: WLAN/Countdown laufen weiter, BLE verbindet erneut.
+   Orb abziehen und wieder einstecken: nach wenigen Sekunden wieder aktuelle Farbe.
 6. Netzwerk kurz unterbrechen: ESP32 zählt lokal weiter; Stop während Ausfall wird
    erst nach Wiederverbindung übernommen und muss in der Pi-App als ausstehend erkennbar sein.
 7. Beide Geräte vollständig ausschalten und ohne Heimnetz/Internet einschalten.

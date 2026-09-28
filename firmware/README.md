@@ -11,6 +11,13 @@ und BLE-Central statt BLE-Peripheral. Standardmäßig verbindet er sich direkt m
 dem [WLAN-Hotspot des Pi](../deploy/direct-wifi.md); Internet wird im Betrieb nicht
 benötigt. Firmware und Bibliotheken vor der Veranstaltung installieren.
 
+![ESP32-C6-LCD-1.47 und Luxafor Bluetooth Pro vor dem Touchdisplay](../images/front.jpg "Vorderseite")
+
+Unten im Bild: ESP32-C6-LCD-1.47 mit Countdown und daneben die Luxafor Bluetooth Pro.
+Das Foto stammt aus dem [ursprünglichen Projekt](https://github.com/sglogger/pi-timer);
+die Browser-Oberfläche am Touchdisplay gehört zum alten Aufbau. Die Luxafor Orb
+oben rechts hängt per USB am Headend und wird vom Pi angesteuert, nicht vom ESP32.
+
 ## 1. MicroPython und aioble
 
 Passende Firmware von [MicroPython ESP32_GENERIC_C6](https://micropython.org/download/ESP32_GENERIC_C6/)

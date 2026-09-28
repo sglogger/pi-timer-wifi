@@ -38,7 +38,8 @@ class WindowTests(unittest.TestCase):
                 window.view.accept((0, window.view.clock(), {'remaining_ms': remaining}, None))
                 window.tick()
                 root.update()
-                for widget in window.buttons + [window.countdown, window.feedback, window.ble_detail]:
+                for widget in window.buttons + [window.countdown, window.feedback, window.ble_detail,
+                                                window.orb_detail]:
                     self.assertGreaterEqual(widget.winfo_rootx(), root.winfo_rootx())
                     self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
                                          root.winfo_rootx() + 1024)

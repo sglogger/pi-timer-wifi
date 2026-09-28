@@ -1,5 +1,15 @@
 # Änderungen
 
+## Luxafor Orb am Headend (28.09.2026)
+
+- Luxafor Orb per USB am Pi funktioniert wie im ursprünglichen Projekt: gleiche Farben
+  und USB-Befehle wie `luxafor-linux.py`, jetzt direkt im Timer-Server (`orb.py`).
+- Orb folgt jedem Start, Stop und Ersatz-Start; nach erneutem Einstecken erhält sie
+  die aktuelle Farbe. Ohne Orb, pyusb oder libusb läuft der Timer normal weiter.
+- Touch-App und Weboberfläche zeigen den Status „Luxafor · USB“; `PI_TIMER_ORB=0` schaltet ab.
+- udev-Regel `deploy/99-luxafor.rules` (Gruppe `plugdev` statt Vollzugriff für alle).
+- Hardwarefotos aus dem ursprünglichen Projekt in README und Anleitungen übernommen.
+
 ## MicroPython-Laufzeittest (28.09.2026)
 
 - Neuer CI-Job führt die Firmware auf dem MicroPython-Unix-Port v1.28.0 aus

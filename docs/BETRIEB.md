@@ -6,7 +6,8 @@ Internetverbindung nötig, sofern Installation und Test vorher abgeschlossen wur
 ## Start vor einer Veranstaltung
 
 1. Pi/Waveshare, ESP32 und Luxafor mit Strom versorgen. Luxafor nah beim ESP32
-   platzieren; Pi so aufstellen, dass der WLAN-Weg möglichst frei ist.
+   platzieren; Pi so aufstellen, dass der WLAN-Weg möglichst frei ist. Luxafor Orb
+   per USB-Kabel am Zero-DISP-7A anschließen.
 2. Pi bootet in das eigene WLAN `SwiNOG-Timer`; Server und native App starten automatisch,
    wenn die Autostart-Schritte der Installation abgeschlossen wurden.
 3. Die native App lädt den API-Schlüssel automatisch aus `.env`. Nur bei Nutzung
@@ -30,6 +31,8 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 | ESP32 offline | Mehr als 5 s keine Gerätemeldung; lokaler Countdown kann weiterlaufen |
 | Luxafor/BLE offline | Licht kann alte Farbe behalten; Timer/WLAN separat prüfen |
 | BLE verbunden; Befehl gesendet | Befehl an GATT geschickt, tatsächliche LED-Farbe visuell prüfen |
+| Luxafor · USB: Verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
+| Luxafor USB nicht gefunden | Orb nicht eingesteckt/erkannt; Timer läuft trotzdem, alle 2 s neue Suche |
 | Pi startet neu | Hotspot fällt kurz aus, Server startet mit Stop; ESP32 übernimmt nach Reconnect |
 | ESP32 startet neu | Ohne Pi noch kein gültiger Countdown; nach Sync aktueller Sollzustand |
 
@@ -100,6 +103,8 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | HTTP-Verbindung verweigert / Timeout | Pi-IP/Port, Timer-Dienst und lokale Firewall prüfen |
 | Luxafor nicht gefunden | Name/MAC exakt? Dongle und andere BLE-Clients getrennt? Lampe geladen? |
 | GATT-Authentifizierungsfehler | `LUXAFOR_PAIR = True` testen, Konfiguration übertragen und neu starten |
+| Orb: „USB: Access denied“ | udev-Regel `deploy/99-luxafor.rules` installiert? Benutzer in `plugdev`? Orb neu einstecken |
+| Orb: „USB: No backend available“ | `sudo apt install libusb-1.0-0`, dann Dienst neu starten |
 | Display dunkel/verschoben/falsche Farben | Richtiges Board ohne Touch? Stromversorgung und Display-Pins prüfen; nicht durch WLAN-Änderungen lösen |
 | App zeigt „Server offline“ | Dienst/Port 8000 und `.env` prüfen; App verbindet automatisch neu |
 | `No module named tkinter` | Systempaket `python3-tk` installieren, venv mit System-Python erstellen |

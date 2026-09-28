@@ -96,6 +96,9 @@ function render() {
   const ble = online && node.report?.ble_connected;
   $('ble-dot').className = ble ? 'ok' : 'bad';
   $('ble-state').textContent = online ? node.report.ble_status : 'Status unbekannt';
+  const orb = snapshot.orb;
+  $('orb-dot').className = fresh && orb?.connected ? 'ok' : 'bad';
+  $('orb-state').textContent = !fresh ? 'Status unbekannt' : orb ? orb.status : 'Deaktiviert';
   if (node && !commandBusy) {
     $('feedback').textContent = !fresh ? 'Serververbindung unterbrochen. Bedienung und Zustand sind unbestätigt.' :
       !online ? 'ESP32 offline. Start/Stop wird erst beim Wiederverbinden übernommen.' :

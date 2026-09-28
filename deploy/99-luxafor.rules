@@ -1,0 +1,2 @@
+# Luxafor USB lights (Orb, Flag, ...): lets the timer service write without root.
+SUBSYSTEM=="usb", ATTR{idVendor}=="04d8", ATTR{idProduct}=="f372", MODE="0660", GROUP="plugdev"

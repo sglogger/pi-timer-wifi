@@ -133,6 +133,7 @@ class ViewState:
                       node['age_s'] + (now - self.sampled_at) < 5)
         applied = online and node['applied']
         ble = online and node['report']['ble_connected']
+        orb = state.get('orb') if state else None
         message = (self.error or 'Warte auf Timer-Server') if state is None else (
             self.error or ('Server offline – Zustand unbestätigt' if not fresh else
                            'ESP32 offline – Start/Stop erst nach Wiederverbindung' if not online else
@@ -143,4 +144,6 @@ class ViewState:
                     phase=phase(remaining), server=bool(fresh), node=online, ble=bool(ble),
                     node_text='Timer synchronisiert' if applied else 'Übertragung ausstehend' if online else 'Offline / unbekannt',
                     ble_text=node['report']['ble_status'] if online else 'Status unbekannt',
+                    orb=bool(fresh and orb and orb['connected']),
+                    orb_text=('Status unbekannt' if not fresh else orb['status'] if orb else 'Deaktiviert'),
                     message=message)

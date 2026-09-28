@@ -22,6 +22,11 @@ Browserprüfung mit simuliertem Knoten: Anmeldung, Start, Ein-Minuten-Preset,
 Neuladen mit laufendem Timer, bestätigter Stop und getrennte BLE-Statusanzeige.
 Eine Ausführung auf ESP32-C6 und Luxafor wurde dabei nicht durchgeführt.
 
+Luxafor Orb am Headend (28.09.2026, **53 Tests erfolgreich**): `tests/test_orb.py`
+prüft die USB-Befehle gegen `luxafor-linux.py`, Phasenwechsel, Senden nur bei
+Änderung, Abziehen/Einstecken, mehrere Lampen, fehlendes pyusb/libusb und den
+Orb-Status in der API. USB ist dabei nachgebildet; eine echte Orb wurde nicht angesteuert.
+
 Ein zusätzlicher nativer GUI-Test (`tests/ui_smoke.py`) prüft die 1024×600-
 Darstellung einschließlich negativer dreistelliger Minutenanzeige, alle acht
 Touch-Tasten, deren Mindesthöhe und das Schließen ohne STOP. Er läuft separat
@@ -41,6 +46,9 @@ diese Version als Prototyp behandeln.
 - [ ] Umgekehrte Einschaltreihenfolge: ESP32 zuerst, Pi später; automatische Verbindung.
 - [ ] Pi-Neustart: Hotspot und Timer-Dienst starten erneut, ESP32 übernimmt neue Sitzung/Stop.
 - [ ] Luxafor ohne Dongle gefunden, GATT verbunden, Aus funktioniert.
+- [ ] Luxafor Orb per USB am Headend: Farben wie Bluetooth Pro, Blinken bei Überzeit, Aus bei Stop.
+- [ ] Orb bei laufendem Timer abziehen und wieder einstecken: aktuelle Farbe kehrt zurück.
+- [ ] Orb nach Kaltstart ohne Anmeldung/Root-Rechte angesteuert (udev-Regel, `plugdev`).
 - [ ] Start 10 min: grün; Start 5 min: gelb; Start 1 min: orange.
 - [ ] 1-min-Timer ablaufen lassen: rot bei 0, blinkend nach weiteren 30 s.
 - [ ] Stop während Blinken: Licht aus, Display READY, Übernahme bestätigt.
