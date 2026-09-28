@@ -40,6 +40,10 @@ class HTTPTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ValueError, 'size'):
             await self.exchange_with(b'HTTP/1.0 200 OK\r\nContent-Length: 10000\r\n\r\n')
 
+    async def test_oversized_header(self):
+        with self.assertRaisesRegex(ValueError, 'header'):
+            await self.exchange_with(b'HTTP/1.0 200 OK\r\nX-Pad: ' + b'x' * 3000 + b'\r\n\r\n')
+
     async def test_incomplete_body(self):
         with self.assertRaises(asyncio.IncompleteReadError):
             await self.exchange_with(b'HTTP/1.0 200 OK\r\nContent-Length: 14\r\n\r\n{}')

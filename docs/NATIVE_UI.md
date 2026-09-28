@@ -93,7 +93,8 @@ gesammelt. Ein länger als drei Sekunden wartender Befehl wird verworfen.
 
 Die vorhandene Weboberfläche bleibt für Wartung/Fernbedienung verfügbar:
 `http://10.42.0.1:8000` im direkten WLAN, lokal `http://localhost:8000`.
-Den API-Schlüssel aus `.env` pro Browser-Sitzung eingeben.
+Den API-Schlüssel aus `.env` pro Browser-Sitzung eingeben. Ein vom Server
+abgelehnter Schlüssel wird verworfen und erneut abgefragt.
 
 Wer ausdrücklich einen Browser-Kiosk verwenden möchte, kann `openbox`, `falkon`
 und `dbus-x11` installieren und `deploy/kiosk.xinitrc` statt `native.xinitrc` nach

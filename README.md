@@ -91,7 +91,9 @@ Voraussetzung: Pi-Hotspot und Timer-Server sind nach der
 4. Den **Zugriffsschlüssel** eingeben: den Wert hinter `PI_TIMER_TOKEN=` aus der
    `.env`-Datei im Projektverzeichnis auf dem Pi. Dieser Schlüssel ist unabhängig
    vom WLAN-Passwort. Er bleibt für die Browser-Sitzung gespeichert; bei einer
-   neuen Sitzung gegebenenfalls erneut eingeben.
+   neuen Sitzung gegebenenfalls erneut eingeben. Ein falsch eingegebener Schlüssel
+   ersetzt einen bereits gültigen nicht. Lehnt der Server den gespeicherten Schlüssel
+   ab (z. B. nach neu erzeugter `.env`), wird er verworfen und erneut abgefragt.
 5. Eine Zeit wählen oder **STOP** drücken. Countdown, ESP32-Synchronisation und
    Luxafor-BLE-Status werden auch auf dem mobilen Gerät angezeigt.
 
@@ -199,6 +201,9 @@ Python 3.11 oder neuer:
 .venv/bin/python -m compileall -q server.py ui_config.py native_client.py native_ui.py firmware tools
 ./run.sh
 ```
+
+Die Firmware läuft zusätzlich auf dem MicroPython-Unix-Port
+(`micropython tests/micropython/run.py`); Einrichtung in [BUILD.md](docs/BUILD.md#micropython-laufzeittest).
 
 Hardwarelosen Knoten in einem zweiten Terminal simulieren:
 

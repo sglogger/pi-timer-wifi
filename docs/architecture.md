@@ -39,13 +39,14 @@ muss dabei erhalten bleiben. Ein einzelner verlorener Start darf keinen Timer ve
 ## Protokoll v1
 
 Alle `/api/*`-Routen benötigen `Authorization: Bearer <PI_TIMER_TOKEN>`.
-POST verlangt `Content-Type: application/json`. Keine CORS-Freigabe.
+POST verlangt `Content-Type: application/json`. Keine CORS-Freigabe. Fehler
+(auch ungültiges JSON) werden als `{"error": "..."}` mit passendem Statuscode beantwortet.
 
 | Route | Bedeutung |
 |---|---|
 | `GET /api/state` | Timer + zuletzt gemeldeter Gerätestatus |
-| `POST /api/start` mit `{"minutes": 25}` | Neuen Countdown starten/ersetzen |
-| `POST /api/stop` mit `{}` | Sollzustand Stop |
+| `POST /api/start` mit `{"minutes": 25}` | Neuen Countdown starten/ersetzen; Antwort wie `GET /api/state` |
+| `POST /api/stop` mit `{}` | Sollzustand Stop; Antwort wie `GET /api/state` |
 | `POST /api/device/sync` | Vorher übernommene Revision melden, aktuellen Sollzustand holen |
 
 Gerätemeldung:
@@ -54,7 +55,7 @@ Gerätemeldung:
 {"session":null,"revision":-1,"ble_connected":false,"ble_status":"Suche Luxafor"}
 ```
 
-Antwort (Beispiel):
+Antwort an den ESP32 (Beispiel; ohne den Gerätestatus der Bedien-Antworten):
 
 ```json
 {"protocol":1,"session":"a-server-boot-uuid","revision":3,"remaining_ms":1423500,"phase":"green"}

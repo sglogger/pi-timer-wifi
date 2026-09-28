@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SwiNOG · Pi Timer WiFi</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>:root{ {%- for name, color in colors.items() %}--{{name}}:{{color}};{% endfor -%} }</style>
   <script id="ui-config" type="application/json">{{ ui|tojson }}</script>
   <script src="/static/app.js" defer></script>
 </head>
@@ -25,7 +26,7 @@
       <p>VERBINDUNGEN</p>
       <div class="status"><i id="node-dot"></i><div><strong>ESP32 · WLAN</strong><small id="node-state">Unbekannt</small></div></div>
       <div class="status"><i id="ble-dot"></i><div><strong>Luxafor · BLE</strong><small id="ble-state">Unbekannt</small></div></div>
-      <div class="legend">Grün · über 5 min<br>Gelb · bis 5 min<br>Orange · bis 1 min<br>Rot · Zeit abgelaufen<br>Blinkend · 30 s überzogen</div>
+      <div class="legend">{% for line in legend %}{{line}}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
       <button id="settings">Zugriffsschlüssel</button>
     </aside>
   </main>

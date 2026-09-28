@@ -1,5 +1,14 @@
 # Änderungen
 
+## MicroPython-Laufzeittest (28.09.2026)
+
+- Neuer CI-Job führt die Firmware auf dem MicroPython-Unix-Port v1.28.0 aus
+  (`tests/micropython/run.py`); findet Methoden, die nur CPython kennt.
+- ESP32 liest HTTP-Antworten in Blöcken statt byteweise; Größengrenzen bleiben.
+- Legende und Weboberflächen-Farben werden aus `ui_config.py` bzw. den Phasen-Schwellen erzeugt.
+- Weboberfläche startet auch, wenn der Browser `sessionStorage` blockiert.
+- `age_s` in der API auf Millisekunden gerundet.
+
 ## Review-Korrekturen (28.09.2026)
 
 - ESP32-Start repariert: MicroPython kennt `str.isalnum()` nicht; die Token-Prüfung

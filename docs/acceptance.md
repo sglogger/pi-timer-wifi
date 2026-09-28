@@ -7,13 +7,17 @@ Start/Stop-Ersetzung, Gerätemeldungen, API-Eingaben, Zugriffsschlüssel,
 Offline-Countdown, Reconnect, Server-Neustart, Tick-Wrap und HTTP-Transport.
 Diese Tests ersetzen keinen Funk-/Hardwaretest.
 
-Entwicklungsprüfung am 28.09.2026: **42 Tests erfolgreich** unter Python 3.14,
+Entwicklungsprüfung am 28.09.2026: **46 Tests erfolgreich** unter Python 3.14,
 einschließlich eines simulierten GATT-Geräts, echter lokaler TCP-Verbindungen und
 Hotspot-Vorbereitung mit simuliertem NetworkManager. Der Hotspot-Test prüft auch,
 dass bestehende Profile erhalten bleiben und das Setup keine Verbindung aktiviert.
 Zusätzlich geprüft: native Statusanzeige, abgelaufene Bedienanfragen, alte
 Antworten sowie ein verlorenes Start-Ergebnis ohne erneuten Startversuch.
 Alle acht Firmware-Quelldateien wurden mit mpy-cross 1.29.0.post2 kompiliert.
+Auf dem MicroPython-Unix-Port v1.28.0 laufen zusätzlich 13 Prüfungen
+(`tests/micropython/run.py`): Timerlogik, Tick-Wrap, HTTP-Austausch über echte
+Sockets einschließlich Größengrenzen, Konfigurationsprüfung beim Start von `main.py`
+und Display-Rendering in den Framebuffer. Funk und SPI-Display sind dabei nachgebildet.
 Browserprüfung mit simuliertem Knoten: Anmeldung, Start, Ein-Minuten-Preset,
 Neuladen mit laufendem Timer, bestätigter Stop und getrennte BLE-Statusanzeige.
 Eine Ausführung auf ESP32-C6 und Luxafor wurde dabei nicht durchgeführt.

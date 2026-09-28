@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import font
 
 from native_client import Client, Transport, ViewState
-from ui_config import COLORS, LABELS, PRESETS
+from ui_config import COLORS, LABELS, LEGEND, PRESETS
 
 BG, PANEL, TEXT, MUTED = '#111820', '#202d38', COLORS['off'], '#a7b5bf'
 
@@ -82,7 +82,7 @@ class TimerWindow:
         self.ble_detail = self.label(status, 'Unbekannt', size=11)
         self.ble_detail.configure(wraplength=180, justify='left')
         self.ble_detail.pack(anchor='w', pady=(6, 30))
-        self.label(status, 'Grün · über 5 min\nGelb · bis 5 min\nOrange · bis 1 min\nRot · Zeit abgelaufen\nBlinkend · 30 s überzogen', size=11).pack(anchor='w')
+        self.label(status, '\n'.join(LEGEND), size=11).pack(anchor='w')
         self.center = center
         center.bind('<Configure>', self.resize)
         self.tick()

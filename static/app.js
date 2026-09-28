@@ -2,7 +2,8 @@
 const $ = id => document.getElementById(id);
 const ui = JSON.parse($('ui-config').textContent);
 class Unauthorized extends Error {}
-let token = sessionStorage.getItem("pi-timer-token") || "";
+let token = "";
+try { token = sessionStorage.getItem("pi-timer-token") || ""; } catch (error) {}
 let snapshot = null;
 let sampledAt = 0;
 let lastSuccess = 0;

@@ -7,7 +7,7 @@ import uuid
 
 from flask import Flask, jsonify, render_template, request
 from firmware.timer_logic import THRESHOLDS, phase
-from ui_config import COLORS, LABELS, PRESETS
+from ui_config import COLORS, LABELS, LEGEND, PRESETS
 
 
 class Timer:
@@ -28,7 +28,8 @@ class Timer:
     def _with_node(self, state):
         age = None if self.seen is None else self.clock() - self.seen
         online = age is not None and age < 5
-        state["node"] = {"online": online, "age_s": age, "report": self.node,
+        state["node"] = {"online": online, "age_s": None if age is None else round(age, 3),
+                         "report": self.node,
                          "applied": bool(online and self.node["session"] == self.session
                                          and self.node["revision"] == self.revision)}
         return state
@@ -78,7 +79,7 @@ def create_app(token=None, timer=None):
     @app.get("/")
     def index():
         ui = dict(thresholds=THRESHOLDS, colors=COLORS, labels=LABELS)
-        return render_template("index.html", presets=PRESETS, ui=ui)
+        return render_template("index.html", presets=PRESETS, legend=LEGEND, colors=COLORS, ui=ui)
 
     @app.get("/api/state")
     def state():

@@ -18,6 +18,27 @@ jobs:
       - run: python -m compileall -q server.py ui_config.py native_client.py native_ui.py firmware tools deploy
       - run: python -m pip install mpy-cross==1.29.0.post2
       - run: python tools/check_firmware.py
+  micropython:
+    # Runs the firmware on the MicroPython unix port (same version as the ESP32 build);
+    # mpy-cross only checks syntax and misses methods MicroPython does not implement.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        id: micropython
+        with:
+          path: micropython-bin
+          key: micropython-unix-v1.28.0
+      - if: steps.micropython.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch v1.28.0 https://github.com/micropython/micropython.git /tmp/micropython
+          make -C /tmp/micropython/mpy-cross -j4
+          make -C /tmp/micropython/ports/unix submodules
+          make -C /tmp/micropython/ports/unix -j4 MICROPY_PY_FFI=0
+          mkdir -p micropython-bin
+          cp /tmp/micropython/ports/unix/build-standard/micropython micropython-bin/
+      - run: micropython-bin/micropython tests/micropython/run.py
   native-ui:
     runs-on: ubuntu-latest
     timeout-minutes: 5

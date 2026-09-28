@@ -30,7 +30,33 @@ TCP-Sockets müssen für die HTTP-Tests erlaubt sein. `compileall` prüft CPytho
 Syntax; `check_firmware.py` lässt die Dateien zusätzlich durch den MicroPython-
 Compiler laufen und löscht dessen temporäre `.mpy`-Ergebnisse wieder.
 
-**Diese Prüfung erzeugt kein flashbares `.bin` und führt keine Hardware aus.**
+### MicroPython-Laufzeittest
+
+`mpy-cross` prüft nur die Syntax. Methoden, die MicroPython nicht kennt (etwa
+`str.isalnum()`), fallen erst beim Ausführen auf. Deshalb laufen Timerlogik,
+HTTP-Austausch, Konfigurationsprüfung von `main.py` und Display-Rendering zusätzlich
+auf dem Unix-Port derselben MicroPython-Version wie auf dem ESP32. Hardwaremodule
+(`machine`, `network`, `bluetooth`, `aioble`) sind dabei durch kleine Ersatzmodule
+in `tests/micropython/stubs/` ersetzt. Einmalig bauen (Linux/macOS, C-Compiler und
+`make` nötig, dauert wenige Minuten):
+
+```sh
+git clone --depth 1 --branch v1.28.0 https://github.com/micropython/micropython.git ~/micropython-unix
+make -C ~/micropython-unix/mpy-cross -j4
+make -C ~/micropython-unix/ports/unix submodules
+make -C ~/micropython-unix/ports/unix -j4 MICROPY_PY_FFI=0
+```
+
+Im Projektverzeichnis ausführen:
+
+```sh
+~/micropython-unix/ports/unix/build-standard/micropython tests/micropython/run.py
+```
+
+Erwartet: jede Zeile `ok`, zuletzt `0 failure(s)`. Der Test verwendet lokal TCP-Port
+18765. Die CI führt ihn als eigenen Job aus und speichert das gebaute Binary im Cache.
+
+**Diese Prüfungen erzeugen kein flashbares `.bin` und führen keine Hardware aus.**
 Die `.pyc`-Dateien von CPython gehören nicht auf den ESP32. Der Syntax-Compiler
 1.29.0.post2 ist das Werkzeug der CI und keine Festlegung der ESP32-Laufzeitversion.
 
@@ -146,7 +172,8 @@ die sieben Timerdateien** installieren; sie sind nicht in diesem Image enthalten
 Die Befehle wurden anhand des genannten MicroPython-Tags und der Espressif-
 Dokumentation zusammengestellt. Ein vollständiger ESP-IDF-Eigenbau und dessen
 Flash-Test wurden im Rahmen dieser Dokumentation **nicht ausgeführt**. Die CI
-testet den Anwendungscode und dessen MicroPython-Syntax, nicht den C-Firmwarebuild.
+testet den Anwendungscode, dessen MicroPython-Syntax und die Ausführung auf dem
+MicroPython-Unix-Port, nicht den ESP32-Firmwarebuild.
 
 ## D. `.mpy`-Dateien und Bibliotheken
 
