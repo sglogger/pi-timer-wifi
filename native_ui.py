@@ -18,6 +18,7 @@ class TimerWindow:
         self.root, self.client = root, client
         self.view = ViewState()
         self.previous = {}
+        self.center_width = None
         self.buttons = []
         root.title('SwiNOG – Pi Timer')
         root.configure(bg=BG)
@@ -69,7 +70,8 @@ class TimerWindow:
         self.feedback = self.label(center, 'Warte auf Timer-Server', size=12)
         self.feedback.configure(wraplength=430)
         self.feedback.grid(row=4, column=0, sticky='n', padx=8, pady=18)
-        status = tk.Frame(body, bg=BG, width=190)
+        status = tk.Frame(body, bg=BG, width=220)
+        status.pack_propagate(False)
         status.grid(row=0, column=2, sticky='ns', padx=(18, 0))
         self.label(status, 'VERBINDUNGEN', size=11).pack(anchor='w', pady=(12, 24))
         self.node = self.label(status, 'ESP32 · WLAN', size=14)
@@ -92,8 +94,13 @@ class TimerWindow:
         return tk.Label(parent, text=text, bg=BG, fg=MUTED, font=('DejaVu Sans', size), justify='left')
 
     def resize(self, event):
+        if event.width == self.center_width:
+            return
+        self.center_width = event.width
         # Reserve room for a leading minus and a three-digit minute counter.
-        self.time_font.configure(size=-max(36, min(108, int(event.width / 4.9))))
+        size = -max(36, min(108, int(event.width / 4.9)))
+        if self.time_font.cget('size') != size:
+            self.time_font.configure(size=size)
         self.feedback.configure(wraplength=max(160, event.width - 24))
 
     def command(self, minutes=None):

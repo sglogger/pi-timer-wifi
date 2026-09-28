@@ -1,6 +1,7 @@
 """Linux/Tk layout and interaction checks; run under xvfb, outside unit discovery."""
 import queue
 import os
+import faulthandler
 import sys
 from pathlib import Path
 import tkinter as tk
@@ -62,4 +63,5 @@ class WindowTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    faulthandler.dump_traceback_later(10)
     unittest.main()

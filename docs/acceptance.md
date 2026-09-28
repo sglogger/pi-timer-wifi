@@ -18,6 +18,13 @@ Browserprüfung mit simuliertem Knoten: Anmeldung, Start, Ein-Minuten-Preset,
 Neuladen mit laufendem Timer, bestätigter Stop und getrennte BLE-Statusanzeige.
 Eine Ausführung auf ESP32-C6 und Luxafor wurde dabei nicht durchgeführt.
 
+Ein zusätzlicher nativer GUI-Test (`tests/ui_smoke.py`) prüft die 1024×600-
+Darstellung einschließlich negativer dreistelliger Minutenanzeige, alle acht
+Touch-Tasten, deren Mindesthöhe und das Schließen ohne STOP. Er läuft separat
+unter Linux/Xvfb in der CI und wurde auch lokal mit Tk ausgeführt. Die native
+App benötigt weiterhin eine Prüfung auf dem echten Pi auf Startzeit, CPU/RAM
+und Touch-Bedienung.
+
 ## Hardwareprotokoll – noch offen
 
 Datum, MicroPython-Version, aioble-Version/Commit, Luxafor-Firmware, AP/Kanal,
