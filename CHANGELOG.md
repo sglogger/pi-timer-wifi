@@ -25,15 +25,18 @@ Headend:
 - Versionsnummer in `version.py` mit Git-Commit, angezeigt im Overlay und in der
   Weboberfläche; Changelog nummeriert.
 - ESP32-Status zeigt die gemeldete Firmware-Version und markiert veraltete Firmware.
+- Farblegende mit kleinem Farbquadrat je Phase (Touch-App und Weboberfläche);
+  das Quadrat für „überzogen“ blinkt.
 - Neue Abhängigkeit `qrcode` (reines Python).
 
 ESP32-Firmware:
 - Eigene Version `FIRMWARE_VERSION` in `firmware/timer_logic.py`, wird bei jedem
   Abgleich gemeldet und beim Start auf der seriellen Konsole ausgegeben.
 - Optionaler `HOSTNAME` in `config.py`, damit mehrere Geräte im Overlay unterscheidbar sind.
+- Display zeigt die Firmware-Version unten rechts und den `HOSTNAME` (falls gesetzt) oben rechts.
 
 Noch nicht auf der Hardware geprüft: Overlay (insbesondere Lesen des WLAN-Passworts
-per `nmcli` als normaler Benutzer), `HOSTNAME` und Versionsmeldung des ESP32.
+per `nmcli` als normaler Benutzer), `HOSTNAME`, Versionsmeldung und Display-Anzeige des ESP32.
 
 ## 0.7.1 – Hotspot und Installation korrigiert (12.10.2026)
 

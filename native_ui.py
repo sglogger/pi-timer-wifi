@@ -91,7 +91,15 @@ class TimerWindow:
         self.orb_detail = self.label(status, 'Unbekannt', size=11)
         self.orb_detail.configure(wraplength=180, justify='left')
         self.orb_detail.pack(anchor='w', pady=(6, 30))
-        self.label(status, '\n'.join(LEGEND), size=11).pack(anchor='w')
+        self.swatches = {}
+        for phase_name, text in LEGEND:
+            row = tk.Frame(status, bg=BG)
+            row.pack(anchor='w', pady=1)
+            # Small colour square; the overdue one blinks like the countdown.
+            swatch = tk.Frame(row, bg=COLORS[phase_name], width=11, height=11)
+            swatch.pack(side='left', padx=(0, 8))
+            self.swatches[phase_name] = swatch
+            self.label(row, text, size=11).pack(side='left')
         self.center = center
         center.bind('<Configure>', self.resize)
         self.info_button = tk.Button(root, text='WLAN / IP', command=self.open_info, font=('DejaVu Sans', 11),
@@ -139,8 +147,10 @@ class TimerWindow:
                 break
         state = self.view.render()
         color = COLORS[state['phase']]
-        if state['phase'] == 'overdue' and int(self.view.clock() * 2) % 2:
+        blink_off = int(self.view.clock() * 2) % 2
+        if state['phase'] == 'overdue' and blink_off:
             color = '#71343c'
+        self.update(self.swatches['overdue'], bg='#71343c' if blink_off else COLORS['overdue'])
         self.update(self.countdown, text=state['text'], fg=color)
         self.update(self.phase, text=LABELS[state['phase']])
         self.update(self.server, text='Headend verbunden' if state['server'] else 'Server offline / suche …')

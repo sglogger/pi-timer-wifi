@@ -6,7 +6,10 @@ from timer_logic import phase, clock_text
 
 
 class Display:
-    def __init__(self):
+    def __init__(self, hostname="", version=""):
+        # Right of the scale-2 "SwiNOG" title there is room for 25 characters.
+        self.hostname = hostname[:25]
+        self.version = "v" + version if version else ""
         spi = machine.SPI(1, baudrate=40000000, sck=machine.Pin(7), mosi=machine.Pin(6))
         self.tft = st7789.ST7789(spi, 172, 320,
                                reset=machine.Pin(21, machine.Pin.OUT),
@@ -44,4 +47,9 @@ class Display:
         self.text("SwiNOG", 8, 10, 2, 0xFFFF)
         status = "WIFI %s   BLE %s" % ("OK" if online else "OFFLINE", "OK" if ble else "OFFLINE")
         self.text(status, 8, 145, 1, 0xFFFF)
+        # Same 8 px size as the status line, right-aligned to the 320 px width.
+        if self.hostname:
+            self.text(self.hostname, 312 - len(self.hostname) * 8, 14, 1, 0xFFFF)
+        if self.version:
+            self.text(self.version, 312 - len(self.version) * 8, 145, 1, 0xFFFF)
         self.tft.show()

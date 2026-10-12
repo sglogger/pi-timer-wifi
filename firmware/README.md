@@ -57,7 +57,8 @@ eintragen; sie hat Vorrang. Es wird niemals automatisch das erstbeste BLE-Gerät
 angesteuert. Bei wechselnder privater MAC den eindeutigen Namen benutzen.
 Optional mit `HOSTNAME = "timer-saal-1"` jedem ESP32 einen eigenen Namen geben
 (Buchstaben, Ziffern, `-`, max. 32 Zeichen). Das Headend zeigt ihn unter
-**WLAN / IP** in der Geräteliste.
+**WLAN / IP** in der Geräteliste, das ESP32-Display oben rechts (erste 25 Zeichen).
+Unten rechts zeigt das Display die Firmware-Version, z. B. `v1.0.0`.
 
 ```sh
 cp firmware/config.example.py firmware/config.py

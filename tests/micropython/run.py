@@ -129,6 +129,8 @@ def test_main():
         main.display.previous = None
         main.display.render(remaining, True, False)
     check("display renders", main.display.previous is not None)
+    check("display shows hostname and version",
+          main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)
 
 
 test_timer_logic()

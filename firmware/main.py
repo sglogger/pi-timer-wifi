@@ -8,15 +8,15 @@ from luxafor import Luxafor
 from display import Display
 
 print("Pi Timer Firmware", FIRMWARE_VERSION)
-# Allocate the ~110 KB framebuffer before Wi-Fi/BLE fragment the heap.
-display = Display()
-replica = Replica(time.ticks_ms, time.ticks_diff)
-light = Luxafor(config, replica)
 # Optional DHCP name; the headend lists hotspot clients by this name.
-# Must be set before the station interface is activated.
 HOSTNAME = getattr(config, "HOSTNAME", "")
 if len(HOSTNAME) > 32 or not all(c.isalpha() or c.isdigit() or c == "-" for c in HOSTNAME):
     raise ValueError("Invalid HOSTNAME")
+# Allocate the ~110 KB framebuffer before Wi-Fi/BLE fragment the heap.
+display = Display(HOSTNAME, FIRMWARE_VERSION)
+replica = Replica(time.ticks_ms, time.ticks_diff)
+light = Luxafor(config, replica)
+# Must be set before the station interface is activated.
 if HOSTNAME:
     network.hostname(HOSTNAME)
 wlan = network.WLAN(network.STA_IF)

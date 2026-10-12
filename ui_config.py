@@ -9,8 +9,9 @@ LABELS = dict(off='BEREIT', green='REDEZEIT', yellow='LETZTE 5 MINUTEN', orange=
 
 _limit = dict(THRESHOLDS)
 # Derived from the thresholds so the legend cannot drift from the actual phases.
-LEGEND = ('Grün · über %d min' % (_limit['yellow'] // 60000),
-          'Gelb · bis %d min' % (_limit['yellow'] // 60000),
-          'Orange · bis %d min' % (_limit['orange'] // 60000),
-          'Rot · Zeit abgelaufen',
-          'Blinkend · %d s überzogen' % (-_limit['overdue'] // 1000))
+# Each entry is (phase, text); the phase selects the colour swatch shown next to it.
+LEGEND = (('green', 'Grün · über %d min' % (_limit['yellow'] // 60000)),
+          ('yellow', 'Gelb · bis %d min' % (_limit['yellow'] // 60000)),
+          ('orange', 'Orange · bis %d min' % (_limit['orange'] // 60000)),
+          ('red', 'Rot · Zeit abgelaufen'),
+          ('overdue', 'Blinkend · %d s überzogen' % (-_limit['overdue'] // 1000)))
