@@ -63,6 +63,11 @@ def main():
         print("NetworkManager konnte das Profil nicht vorbereiten. "
               "Dienststatus, wlan0 und bestehende Profile prüfen.", file=sys.stderr)
         print("nmcli Exit-Code:", exc.returncode, file=sys.stderr)
+        detail = (exc.stderr or "").strip()
+        if detail:
+            psk = exc.cmd[exc.cmd.index("802-11-wireless-security.psk") + 1] \
+                if "802-11-wireless-security.psk" in exc.cmd else None
+            print("nmcli:", detail.replace(psk, "***") if psk else detail, file=sys.stderr)
         return 1
     print("Profil gespeichert; aktuelle WLAN-Verbindung bleibt aktiv.")
     print("Diese Werte in firmware/config.py übernehmen:")
