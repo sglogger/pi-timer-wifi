@@ -14,6 +14,8 @@ class HotspotTests(unittest.TestCase):
         self.assertEqual(settings['802-11-wireless.band'], 'bg')
         self.assertEqual(settings['802-11-wireless-security.key-mgmt'], 'wpa-psk')
         self.assertEqual(settings['802-11-wireless-security.proto'], 'rsn')
+        self.assertEqual(settings['802-11-wireless-security.pmf'], 'disable')
+        self.assertEqual(settings['connection.autoconnect-priority'], '999')
         self.assertEqual(settings['802-11-wireless-security.psk'], password)
         self.assertEqual(len(password), 24)
         self.assertEqual(settings['ipv4.method'], 'shared')

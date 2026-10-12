@@ -1,5 +1,16 @@
 # Änderungen
 
+## Hotspot und Installation korrigiert (12.10.2026)
+
+- Hotspot: PMF im Profil abgeschaltet; macOS/iOS und ESP32 konnten sich trotz
+  korrektem Passwort nicht verbinden. Bestehende Profile: siehe `deploy/direct-wifi.md`.
+- Hotspot: Autoconnect-Priorität 999 statt 1000 (NetworkManager erlaubt höchstens 999);
+  `setup_hotspot.py` brach bisher mit nmcli-Exit-Code 2 ab.
+- `setup_hotspot.py` zeigt die nmcli-Fehlermeldung an (Passwort maskiert).
+- `native.xinitrc` verwendet `$HOME/pi-timer-wifi` statt fest `/home/pitimer`.
+- Anleitung: systemd-Unit für andere Benutzernamen, Console Autologin je nach
+  raspi-config-Version, Hotspot-Umschaltung nur über SSH mit Rückfall-Timer.
+
 ## Luxafor Orb am Headend (28.09.2026)
 
 - Luxafor Orb per USB am Pi funktioniert wie im ursprünglichen Projekt: gleiche Farben

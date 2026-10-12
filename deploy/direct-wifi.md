@@ -44,6 +44,8 @@ sudo python3 deploy/setup_hotspot.py
 Das Hilfsprogramm legt ausschließlich das neue Profil `pi-timer-direct` an:
 
 - WLAN-Name `SwiNOG-Timer`, WPA2-Personal/AES, zufälliges Passwort mit 24 Zeichen.
+- PMF (Protected Management Frames) aus: Der WLAN-Chip des Pi beherrscht es im
+  AP-Modus nicht; aktuelle macOS-/iOS-Geräte scheitern sonst beim Verbinden.
 - 2.4 GHz, Kanal 6, WLAN-Energiesparen am Pi deaktiviert.
 - Pi-Adresse `10.42.0.1/24`; NetworkManager vergibt per DHCP eigene dynamische
   Adressen an ESP32, Handys und weitere WLAN-Clients, auch ohne Internet.
@@ -83,6 +85,12 @@ sudo nmcli connection modify pi-timer-direct connection.autoconnect yes
 sudo nmcli connection up pi-timer-direct
 ```
 
+Ohne Tastatur am Pi die verzögerte Umschaltung mit Rückfall-Timer aus der
+[Installationsanleitung, Schritt 7](../docs/INSTALLATION.md#7-direktbetrieb-einschalten--am-pi)
+verwenden. `autoconnect yes` erst setzen, wenn ein Client den Hotspot erreicht:
+Danach startet der Pi bei jedem Booten als Hotspot und ist über das Heim-WLAN
+nicht mehr erreichbar.
+
 Autoconnect-Priorität 999 bevorzugt dieses Profil beim nächsten Booten gegenüber
 normalen gespeicherten WLANs mit Standardpriorität 0. Andere Profile bleiben
 erhalten. Es wird kein gleichzeitiger AP-/Client-Betrieb auf `wlan0` eingerichtet.
@@ -119,6 +127,21 @@ sudo nmcli connection up pi-timer-direct
 ```
 
 Dies unterbricht kurz die Verbindung. Ein laufender ESP32-Timer zählt lokal weiter.
+
+### Hotspot sichtbar, aber Verbinden schlägt fehl
+
+Bei korrektem Passwort meldet macOS „Verbindungsaufbau fehlgeschlagen“, der ESP32
+`Sync: WLAN nicht verbunden`. Ursache ist meist PMF. Profile, die mit einer älteren
+Version von `setup_hotspot.py` angelegt wurden, so korrigieren:
+
+```sh
+nmcli --get-values 802-11-wireless-security.pmf connection show pi-timer-direct
+sudo nmcli connection modify pi-timer-direct 802-11-wireless-security.pmf disable
+```
+
+Erwartet nach der Änderung: `1 (disable)` statt `0 (default)`. Danach Hotspot neu
+starten und auf dem Rechner das gespeicherte Netz `SwiNOG-Timer` vorher entfernen
+(„Dieses Netzwerk ignorieren“). Das WLAN-Land prüft `iw reg get`.
 
 ## Alternative: vorhandenes WLAN
 

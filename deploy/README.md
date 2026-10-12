@@ -40,7 +40,9 @@ und gezielt stoppen/deaktivieren; beide Server können nicht Port 8000 belegen.
 Keine pauschalen Systemdienste, Bluetooth, Journald oder Zeitsynchronisation abschalten.
 
 `deploy/pi-timer-wifi.service` verwendet Benutzer `pitimer` und
-`/home/pitimer/pi-timer-wifi`. Vor Installation ggf. anpassen:
+`/home/pitimer/pi-timer-wifi`. Bei anderem Benutzer die angepasste Installation aus
+[INSTALLATION.md, Server-Autostart](../docs/INSTALLATION.md#server-autostart) verwenden.
+Mit `pitimer`:
 
 ```sh
 sudo cp deploy/pi-timer-wifi.service /etc/systemd/system/

@@ -206,17 +206,31 @@ beenden, bevor der Dienst gestartet wird.
 ### Server-Autostart
 
 Die mitgelieferte Unit verwendet `/home/pitimer/pi-timer-wifi` und Benutzer `pitimer`.
-Bei anderem Benutzernamen/Verzeichnis `User`, `WorkingDirectory`, `EnvironmentFile`
-und `ExecStart` vor dem Kopieren anpassen.
+Bei anderem Benutzernamen die Unit statt mit `cp` so installieren (als dieser Benutzer,
+Repository unter `~/pi-timer-wifi`); das passt `User` und alle Pfade an:
+
+```sh
+sudo sed -e "s/^User=pitimer/User=$USER/" -e "s#/home/pitimer/#$HOME/#g" \
+  deploy/pi-timer-wifi.service | sudo tee /etc/systemd/system/pi-timer-wifi.service >/dev/null
+```
+
+Mit Benutzer `pitimer`:
 
 ```sh
 sudo cp deploy/pi-timer-wifi.service /etc/systemd/system/
+```
+
+Anschließend:
+
+```sh
 sudo systemctl daemon-reload
 sudo systemctl enable --now pi-timer-wifi
 systemctl is-active pi-timer-wifi
 ```
 
 Erwartet: `active`. Fehler mit `journalctl -u pi-timer-wifi -n 50 --no-pager` lesen.
+Meldet `systemctl` „failed because of unavailable resources“, passen Benutzer oder
+Pfade in der Unit nicht (meist fehlt die `.env` unter dem eingetragenen Pfad).
 
 ## 3. Native Touch-App und Autologin — Pi
 
@@ -236,7 +250,8 @@ Bei vorhandenem Desktop dort `./run-native.sh` starten und dessen Autostart benu
 nicht zusätzlich eine zweite X11-Sitzung starten. Details und `.desktop`-Beispiel:
 [Native Oberfläche](NATIVE_UI.md). Bestehenden Browser-Kiosk zuerst deaktivieren.
 
-Als `pitimer`, aus `/home/pitimer/pi-timer-wifi`:
+Als Timer-Benutzer (z. B. `pitimer`), aus `~/pi-timer-wifi`. `native.xinitrc`
+startet die App aus `$HOME/pi-timer-wifi` und funktioniert so mit jedem Benutzernamen:
 
 ```sh
 test ! -f ~/.xinitrc || cp -n ~/.xinitrc ~/.xinitrc.before-pi-timer
@@ -252,9 +267,11 @@ if [ -z "$DISPLAY" ] && [ "$(tty)" = /dev/tty1 ]; then
 fi
 ```
 
-Mit `sudo raspi-config` unter Boot/Auto Login bzw. System Options **Console
-Autologin** für `pitimer` wählen. Nicht Desktop Autologin wählen. Menünamen hängen
-von der OS-Version ab. Lokal auf dem Pi testen: aus der Textkonsole `startx`
+Als Timer-Benutzer `sudo raspi-config` starten und **Console Autologin** wählen;
+raspi-config richtet ihn für den Benutzer ein, der `sudo` aufgerufen hat. Nicht
+Desktop Autologin wählen. Je nach OS-Version unter System Options → *S5 Boot / Auto
+Login* → *B2 Console Autologin* oder getrennt unter *S5 Boot* → *Console* und
+*S6 Auto Login* → *Yes*. Ohne Menü: `sudo raspi-config nonint do_boot_behaviour B2`. Lokal auf dem Pi testen: aus der Textkonsole `startx`
 aufrufen oder neu starten. X11 nicht über eine reine SSH-Sitzung mit `startx` starten.
 
 Erwartet: Timer-Oberfläche im Vollbild, alle sieben Zeitknöpfe und Stop bedienbar.
@@ -435,6 +452,32 @@ systemctl is-active pi-timer-wifi
 ```
 
 Erwartet: `pi-timer-direct` auf `wlan0`, IP `10.42.0.1/24`, Dienst `active`.
+
+**Ohne Tastatur am Pi (nur SSH):** Vorher das Hotspot-Passwort notieren und die
+Umschaltung verzögert im Hintergrund starten, damit sie den SSH-Abbruch übersteht.
+Der Rückfall-Timer kehrt nach 10 Minuten ins bisherige WLAN zurück, falls der Hotspot
+nicht erreichbar ist (Profilname mit `nmcli connection show` ermitteln):
+
+```sh
+sudo nmcli --show-secrets --get-values 802-11-wireless-security.psk connection show pi-timer-direct
+sudo systemd-run --unit=hotspot-rollback --on-active=10min \
+  nmcli connection up 'NAME-DES-HEIM-WLAN-PROFILS'
+sudo systemd-run --on-active=5 nmcli connection up pi-timer-direct
+```
+
+Die SSH-Sitzung bricht danach ab. Rechner mit `SwiNOG-Timer` verbinden und
+`ssh BENUTZER@10.42.0.1`. Funktioniert das, Rückfall stoppen und Autostart einschalten:
+
+```sh
+sudo systemctl stop hotspot-rollback.timer
+sudo nmcli connection modify pi-timer-direct connection.autoconnect yes
+```
+
+Der Rückfall-Timer überlebt keinen Neustart. Nach einem Neustart mit
+`autoconnect yes` startet der Pi wieder als Hotspot; ohne funktionierenden Hotspot
+bleibt dann nur ein LAN-Kabel (`ssh BENUTZER@pi-timer.local`). Deshalb `autoconnect`
+erst nach erfolgreichem Test einschalten.
+
 Der ESP32 sollte anschließend `WIFI OK` anzeigen. Auf dem Touchscreen erscheinen
 „Timer synchronisiert“ und nach BLE-Verbindung „BLE verbunden; Befehl gesendet“.
 Die Lichtfarbe zusätzlich mit den Augen prüfen: BLE-Verbindung ist keine LED-Rückmeldung.

@@ -40,6 +40,8 @@ def prepare():
           "802-11-wireless-security.proto", "rsn",
           "802-11-wireless-security.pairwise", "ccmp",
           "802-11-wireless-security.group", "ccmp",
+          # brcmfmac (Raspberry Pi) cannot negotiate PMF in AP mode; clients fail to join.
+          "802-11-wireless-security.pmf", "disable",
           "802-11-wireless-security.psk", password,
           "ipv4.method", "shared", "ipv4.addresses", ADDRESS,
           "ipv4.never-default", "yes", "ipv6.method", "disabled")

@@ -99,6 +99,9 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | `No module named aioble` | Vom Rechner `mpremote … mip install aioble` ausführen |
 | `incompatible .mpy file` | [Build-/Versionshinweise](BUILD.md#d-mpy-dateien-und-bibliotheken) beachten |
 | WLAN nicht verbunden | Hotspot aktiv? Richtige SSID/WLAN-Passwort? Pi/ESP32 nahe zusammen testen |
+| Hotspot sichtbar, Verbinden schlägt fehl | PMF im Profil abschalten: [Direktes WLAN](../deploy/direct-wifi.md#hotspot-sichtbar-aber-verbinden-schlägt-fehl) |
+| Touch-App: ESP32/BLE „Unbekannt“ | Noch kein Abgleich vom ESP32 angekommen; BLE-Status kommt nur über den ESP32. Zuerst dessen WLAN prüfen |
+| Dienst: „unavailable resources“ | `User`/Pfade in `/etc/systemd/system/pi-timer-wifi.service` passen nicht zum Benutzer |
 | HTTP 401 | `API_TOKEN` auf ESP32 und `PI_TIMER_TOKEN` in Pi-`.env` vergleichen |
 | HTTP-Verbindung verweigert / Timeout | Pi-IP/Port, Timer-Dienst und lokale Firewall prüfen |
 | Luxafor nicht gefunden | Name/MAC exakt? Dongle und andere BLE-Clients getrennt? Lampe geladen? |
