@@ -7,6 +7,9 @@ WIFI_PASSWORD = "PASSWORD-FROM-HOTSPOT-SETUP"
 SERVER_IP = "10.42.0.1"
 SERVER_PORT = 8000
 API_TOKEN = "REPLACE-WITH-TOKEN-FROM-PI"
+# Optional: name shown in the headend's "WLAN / IP" overlay, e.g. "timer-saal-1".
+# Letters, digits and "-" only; empty keeps MicroPython's default name.
+HOSTNAME = ""
 # Run scan.py, then enter the exact device name (or MAC below).
 LUXAFOR_NAME = "LUX DOT YOUR-DEVICE"
 LUXAFOR_MAC = ""

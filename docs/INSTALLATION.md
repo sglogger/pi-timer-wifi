@@ -235,7 +235,8 @@ Pfade in der Unit nicht (meist fehlt die `.env` unter dem eingetragenen Pfad).
 ## 3. Native Touch-App und Autologin — Pi
 
 Standard ist **Tkinter direkt auf X11**, ohne Browser, Desktop-Shell oder Windowmanager.
-Die App verwendet nur Python-Standardbibliothek und das Systempaket `python3-tk`.
+Die App verwendet die Python-Standardbibliothek, das Systempaket `python3-tk` und für
+den WLAN-QR-Code das Paket `qrcode` aus `requirements.txt` (installiert `install.sh`).
 Zuerst prüfen:
 
 ```sh

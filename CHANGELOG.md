@@ -1,5 +1,13 @@
 # Änderungen
 
+## WLAN / IP-Übersicht (13.10.2026)
+
+- Touch-App: Knopf „WLAN / IP“ unten rechts öffnet ein schließbares Overlay mit
+  WLAN-QR-Code (inkl. Passwort), Headend-Adressen und den Geräten im Hotspot
+  (DHCP-Leases und ARP-Tabelle, mit Hostname). Aktualisiert alle 5 Sekunden.
+- Neue Abhängigkeit `qrcode` (reines Python); nach `git pull` `./install.sh` ausführen.
+- ESP32: optionaler `HOSTNAME` in `config.py`, damit mehrere Geräte unterscheidbar sind.
+
 ## Hotspot und Installation korrigiert (12.10.2026)
 
 - Hotspot: PMF im Profil abgeschaltet; macOS/iOS und ESP32 konnten sich trotz

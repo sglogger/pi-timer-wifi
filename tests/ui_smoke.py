@@ -8,6 +8,7 @@ import tkinter as tk
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import native_ui
 from native_ui import TimerWindow, PRESETS
 
 
@@ -62,7 +63,53 @@ class WindowTests(unittest.TestCase):
         self.assertTrue(client.closed)
         self.assertEqual(client.calls, list(PRESETS) + [None], 'Closing the window must not send STOP')
 
+    def test_info_overlay_opens_fits_and_closes_without_timer_commands(self):
+        root = tk.Tk()
+        client = FakeClient()
+        window = TimerWindow(root, client, fullscreen=False)
+        matrix = [[(x + y) % 3 == 0 for x in range(37)] for y in range(37)]
+        info = {'ssid': 'SwiNOG-Timer', 'psk': '0123456789abcdef01234567', 'matrix': matrix, 'error': None,
+                'addresses': [('wlan0', '10.42.0.1/24'), ('eth0', '192.168.1.20/24')],
+                'clients': [('10.42.0.%d' % n, 'aa:bb:cc:dd:ee:%02x' % n, 'espressif', n < 60)
+                            for n in range(50, 66)]}
+        original = native_ui.netinfo.snapshot
+        native_ui.netinfo.snapshot = lambda: info
+        try:
+            root.update()
+            opener = window.info_button
+            self.assertGreaterEqual(opener.winfo_rootx() + opener.winfo_width(), root.winfo_rootx() + 1000)
+            self.assertGreaterEqual(opener.winfo_rooty() + opener.winfo_height(), root.winfo_rooty() + 580)
+            opener.invoke()
+            overlay = window.overlay
+            for _ in range(40):
+                root.update()
+                if overlay.details.cget('text'):
+                    break
+                root.after(50)
+            self.assertTrue(overlay.details.cget('text'), 'overlay did not render')
+            self.assertIn('10.42.0.50', overlay.details.cget('text'))
+            self.assertIn('2 weitere', overlay.details.cget('text'))
+            self.assertIn('0123456789abcdef01234567', overlay.wifi.cget('text'))
+            self.assertGreater(len(overlay.qr.find_all()), 100)
+            for widget in (overlay.qr, overlay.wifi, overlay.details):
+                self.assertLessEqual(widget.winfo_rootx() + widget.winfo_reqwidth(), root.winfo_rootx() + 1024)
+                self.assertLessEqual(widget.winfo_rooty() + widget.winfo_reqheight(), root.winfo_rooty() + 600)
+            if os.environ.get('UI_SCREENSHOT'):
+                from PIL import ImageGrab
+                path = os.environ['UI_SCREENSHOT']
+                ImageGrab.grab().save(path.replace('.png', '-info.png'))
+            overlay.close()
+            root.update()
+            self.assertFalse(overlay.frame.winfo_exists())
+            window.open_info()
+            self.assertIsNot(window.overlay, overlay, 'overlay must reopen after closing')
+            window.overlay.close()
+            self.assertEqual(client.calls, [])
+        finally:
+            native_ui.netinfo.snapshot = original
+            window.close()
+
 
 if __name__ == '__main__':
-    faulthandler.dump_traceback_later(10)
+    faulthandler.dump_traceback_later(int(os.environ.get("UI_TIMEOUT", "10")))
     unittest.main()

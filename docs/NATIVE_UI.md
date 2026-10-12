@@ -75,6 +75,30 @@ Benutzername/Verzeichnis anpassen und Desktop-Autologin aktivieren. Bei einer
 Desktop-Umgebung mit eigenem Autostartformat deren Programmeinstellungen benutzen.
 Für geringstmöglichen Grundbedarf bleibt Lite + X11 die Standardinstallation.
 
+## WLAN / IP-Übersicht
+
+Der Knopf **WLAN / IP** unten rechts öffnet ein Overlay über der ganzen App;
+**Schließen** blendet es wieder aus. Der Timer läuft unverändert weiter.
+
+- QR-Code mit WLAN-Name und Passwort des Hotspots `pi-timer-direct`. Handy-Kamera
+  darauf richten, um direkt ins `SwiNOG-Timer`-WLAN zu kommen. Name und Passwort
+  stehen zusätzlich als Text darunter. Das Overlay zeigt das Passwort offen an.
+- IPv4-Adressen des Headends je Schnittstelle.
+- Geräte im Hotspot: IP, MAC und Hostname aus den DHCP-Leases, ergänzt um die
+  ARP-Tabelle (`ip neigh`). Aktive Geräte stehen oben; Einträge nur aus alten Leases
+  sind als „(inaktiv)“ markiert. Die Liste aktualisiert sich alle 5 Sekunden.
+  Eigene ESP32-Namen über `HOSTNAME` in `firmware/config.py`.
+
+Das Passwort liest die App mit `nmcli` aus NetworkManager. Darf der Benutzer das
+nicht, zeigt das Overlay einen Hinweis; dann Name und Passwort in `.env` eintragen:
+
+```sh
+PI_TIMER_WIFI_SSID=SwiNOG-Timer
+PI_TIMER_WIFI_PSK=PASSWORT-AUS-SETUP-HOTSPOT
+```
+
+Fehlt das Paket `qrcode`, `./install.sh` erneut ausführen (braucht Internet).
+
 ## Neustarts und Ausfälle
 
 - App schließen/neu starten: laufender Timer bleibt im Server erhalten.

@@ -15,7 +15,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
-      - run: python -m compileall -q server.py orb.py ui_config.py native_client.py native_ui.py firmware tools deploy
+      - run: python -m compileall -q server.py orb.py ui_config.py native_client.py native_ui.py netinfo.py firmware tools deploy
       - run: python -m pip install mpy-cross==1.29.0.post2
       - run: python tools/check_firmware.py
   micropython:

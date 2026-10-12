@@ -2,9 +2,11 @@
 import argparse
 import os
 import queue
+import threading
 import tkinter as tk
 from tkinter import font
 
+import netinfo
 from native_client import Client, Transport, ViewState
 from ui_config import COLORS, LABELS, LEGEND, PRESETS
 
@@ -18,6 +20,7 @@ class TimerWindow:
         self.previous = {}
         self.center_width = None
         self.buttons = []
+        self.overlay = None
         root.title('SwiNOG – Pi Timer')
         root.configure(bg=BG)
         root.geometry('1024x600')
@@ -90,6 +93,10 @@ class TimerWindow:
         self.label(status, '\n'.join(LEGEND), size=11).pack(anchor='w')
         self.center = center
         center.bind('<Configure>', self.resize)
+        self.info_button = tk.Button(root, text='WLAN / IP', command=self.open_info, font=('DejaVu Sans', 11),
+                  bg=PANEL, fg=MUTED, activebackground='#304353', activeforeground=TEXT, relief='flat',
+                  bd=0, highlightthickness=0, padx=12, pady=6)
+        self.info_button.place(relx=1, rely=1, x=-8, y=-8, anchor='se')
         self.tick()
 
     @staticmethod
@@ -105,6 +112,10 @@ class TimerWindow:
         if self.time_font.cget('size') != size:
             self.time_font.configure(size=size)
         self.feedback.configure(wraplength=max(160, event.width - 24))
+
+    def open_info(self):
+        if self.overlay is None or self.overlay.closed:
+            self.overlay = InfoOverlay(self.root)
 
     def command(self, minutes=None):
         generation = self.client.command(minutes)
@@ -147,6 +158,88 @@ class TimerWindow:
         # Window lifecycle never changes the timer; only the STOP button does.
         self.client.close()
         self.root.destroy()
+
+
+class InfoOverlay:
+    """Full-window overlay with hotspot QR code and addresses; closing never touches the timer."""
+    REFRESH_MS = 5000
+
+    def __init__(self, root):
+        self.root = root
+        self.result = None
+        self.closed = False
+        self.frame = tk.Frame(root, bg=BG)
+        self.frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+        self.frame.grid_columnconfigure(1, weight=1)
+        self.frame.grid_rowconfigure(1, weight=1)
+        title = tk.Frame(self.frame, bg=BG)
+        title.grid(row=0, column=0, columnspan=2, sticky='ew', padx=22, pady=(18, 10))
+        TimerWindow.label(title, 'WLAN & ADRESSEN', size=20).pack(side='left')
+        tk.Button(title, text='Schließen', command=self.close, font=('DejaVu Sans', 18, 'bold'),
+                  bg=PANEL, fg=TEXT, activebackground='#304353', activeforeground=TEXT, relief='flat',
+                  bd=0, highlightthickness=0, padx=24, pady=10).pack(side='right')
+        left = tk.Frame(self.frame, bg=BG)
+        left.grid(row=1, column=0, sticky='n', padx=(22, 18))
+        self.qr = tk.Canvas(left, width=300, height=300, bg=BG, highlightthickness=0)
+        self.qr.pack(anchor='w')
+        self.wifi = TimerWindow.label(left, 'Lese WLAN-Daten …', size=13)
+        self.wifi.configure(fg=TEXT, wraplength=300)
+        self.wifi.pack(anchor='w', pady=(10, 0))
+        self.details = TimerWindow.label(self.frame, '', size=13)
+        self.details.configure(fg=TEXT, anchor='nw', font=('DejaVu Sans Mono', 13))
+        self.details.grid(row=1, column=1, sticky='nsew', padx=(0, 22), pady=(0, 18))
+        self.refresh()
+
+    def refresh(self):
+        if self.closed:
+            return
+        def collect():
+            self.result = netinfo.snapshot()
+        threading.Thread(target=collect, daemon=True).start()
+        self.poll()
+
+    def poll(self):
+        if self.closed:
+            return
+        if self.result is None:
+            self.root.after(100, self.poll)
+            return
+        info, self.result = self.result, None
+        self.render(info)
+        self.root.after(self.REFRESH_MS, self.refresh)
+
+    def render(self, info):
+        self.qr.delete('all')
+        if info['matrix']:
+            size = len(info['matrix'])
+            cell = 300 // size
+            offset = (300 - cell * size) // 2
+            # White background is required: phone scanners expect dark modules on light.
+            self.qr.create_rectangle(0, 0, 300, 300, fill='white', outline='')
+            for y, row in enumerate(info['matrix']):
+                for x, dark in enumerate(row):
+                    if dark:
+                        self.qr.create_rectangle(offset + x * cell, offset + y * cell, offset + (x + 1) * cell,
+                                                 offset + (y + 1) * cell, fill='black', outline='')
+            self.wifi.configure(text='WLAN: %s\nPasswort: %s' % (info['ssid'], info['psk']))
+        else:
+            self.wifi.configure(text=info['error'] or 'Kein WLAN-Profil')
+        lines = ['HEADEND']
+        lines += ['  %-8s %s' % row for row in info['addresses']] or ['  keine IPv4-Adresse']
+        lines += ['', 'GERÄTE IM HOTSPOT']
+        # Room for about 20 lines at 600 px; active clients are listed first.
+        shown = info['clients'][:max(1, 19 - len(lines))]
+        for ip, mac, name, active in shown:
+            lines.append('  %-15s %s  %s%s' % (ip, mac, name or '–', '' if active else '  (inaktiv)'))
+        if len(info['clients']) > len(shown):
+            lines.append('  … und %d weitere' % (len(info['clients']) - len(shown)))
+        if not info['clients']:
+            lines.append('  keine')
+        self.details.configure(text='\n'.join(lines))
+
+    def close(self):
+        self.closed = True
+        self.frame.destroy()
 
 
 def main():

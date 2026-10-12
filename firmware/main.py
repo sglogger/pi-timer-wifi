@@ -11,6 +11,13 @@ from display import Display
 display = Display()
 replica = Replica(time.ticks_ms, time.ticks_diff)
 light = Luxafor(config, replica)
+# Optional DHCP name; the headend lists hotspot clients by this name.
+# Must be set before the station interface is activated.
+HOSTNAME = getattr(config, "HOSTNAME", "")
+if len(HOSTNAME) > 32 or not all(c.isalpha() or c.isdigit() or c == "-" for c in HOSTNAME):
+    raise ValueError("Invalid HOSTNAME")
+if HOSTNAME:
+    network.hostname(HOSTNAME)
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 

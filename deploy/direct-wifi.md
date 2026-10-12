@@ -53,8 +53,9 @@ Das Hilfsprogramm legt ausschließlich das neue Profil `pi-timer-direct` an:
 - Zunächst kein Autostart und keine Aktivierung, damit die Vorbereitung über SSH
   die bestehende Verbindung nicht unerwartet trennt.
 
-Existiert das Profil bereits, wird es nicht überschrieben. Das Passwort lässt
-sich direkt am Pi wieder anzeigen:
+Existiert das Profil bereits, wird es nicht überschrieben. Das Passwort zeigt
+die Touch-App unter **WLAN / IP** samt QR-Code fürs Handy
+([Native Oberfläche](../docs/NATIVE_UI.md#wlan--ip-übersicht)), alternativ am Pi:
 
 ```sh
 sudo nmcli --show-secrets --get-values 802-11-wireless-security.psk connection show pi-timer-direct

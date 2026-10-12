@@ -122,6 +122,8 @@ def test_main():
     finally:
         asyncio.gather = gather
     check("main accepts valid config", started == [3])
+    import network
+    check("hostname applied", network.hostname() == "timer-test-1")
     for remaining in (None, 61000, -31000):
         main.display.previous = None
         main.display.render(remaining, True, False)
