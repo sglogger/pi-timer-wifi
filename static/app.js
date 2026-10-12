@@ -92,7 +92,10 @@ function render() {
   const node = snapshot.node;
   const online = fresh && node?.online && node.age_s + (now - sampledAt)/1000 < 5;
   $('node-dot').className = online ? 'ok' : 'bad';
-  $('node-state').textContent = online ? (node.applied ? 'Timer synchronisiert' : 'Übertragung ausstehend') : 'Offline / noch keine Meldung';
+  const fw = node?.firmware;
+  const fwText = !online || !fw ? '' : fw.current ? ` · Firmware ${fw.version}`
+    : ` · Firmware ${fw.version || '< 1.0.0'} veraltet – aktuell ${fw.expected}`;
+  $('node-state').textContent = (online ? (node.applied ? 'Timer synchronisiert' : 'Übertragung ausstehend') : 'Offline / noch keine Meldung') + fwText;
   const ble = online && node.report?.ble_connected;
   $('ble-dot').className = ble ? 'ok' : 'bad';
   $('ble-state').textContent = online ? node.report.ble_status : 'Status unbekannt';

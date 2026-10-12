@@ -49,6 +49,11 @@ class NetinfoTests(unittest.TestCase):
                                 ('10.42.0.9', 'aa:aa:aa:aa:aa:03', '', True),
                                 ('10.42.0.50', 'aa:aa:aa:aa:aa:01', 'espressif', False)])
 
+    def test_remote_urls_use_mdns_name_and_hotspot_address(self):
+        with patch.object(netinfo.socket, 'gethostname', return_value='pi-timer'):
+            urls = netinfo.remote_urls([('eth0', '192.168.1.20/24'), ('wlan0', '10.42.0.1/24')], '8000')
+        self.assertEqual(urls, ['http://pi-timer.local:8000/', 'http://10.42.0.1:8000/'])
+
     def test_snapshot_never_raises(self):
         with patch.object(netinfo, 'run', side_effect=OSError), patch('builtins.open', side_effect=OSError), \
                 patch.dict(os.environ, {}, clear=True):

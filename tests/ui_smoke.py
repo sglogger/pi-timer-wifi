@@ -70,6 +70,7 @@ class WindowTests(unittest.TestCase):
         matrix = [[(x + y) % 3 == 0 for x in range(37)] for y in range(37)]
         info = {'ssid': 'SwiNOG-Timer', 'psk': '0123456789abcdef01234567', 'matrix': matrix, 'error': None,
                 'addresses': [('wlan0', '10.42.0.1/24'), ('eth0', '192.168.1.20/24')],
+                'urls': ['http://pi-timer.local:8000/', 'http://10.42.0.1:8000/'],
                 'clients': [('10.42.0.%d' % n, 'aa:bb:cc:dd:ee:%02x' % n, 'espressif', n < 60)
                             for n in range(50, 66)]}
         original = native_ui.netinfo.snapshot
@@ -90,6 +91,7 @@ class WindowTests(unittest.TestCase):
             self.assertIn('10.42.0.50', overlay.details.cget('text'))
             self.assertIn('2 weitere', overlay.details.cget('text'))
             self.assertIn('0123456789abcdef01234567', overlay.wifi.cget('text'))
+            self.assertIn('http://10.42.0.1:8000/', overlay.wifi.cget('text'))
             self.assertGreater(len(overlay.qr.find_all()), 100)
             for widget in (overlay.qr, overlay.wifi, overlay.details):
                 self.assertLessEqual(widget.winfo_rootx() + widget.winfo_reqwidth(), root.winfo_rootx() + 1024)

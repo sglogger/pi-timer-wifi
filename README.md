@@ -22,9 +22,10 @@ flowchart LR
   A -->|"USB-Kabel"| E
 ```
 
-**Stand: erste implementierte Version, noch nicht auf der konkreten Hardware
-abgenommen.** Server, Synchronisation und Timerregeln werden automatisiert
-getestet. BLE-Befehle sind aus einer veröffentlichten Bluetooth-Pro-Implementierung
+**Stand: Version 1.0.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
+BLE-Verbindung laufen seit 0.7.1 auf der Hardware; die vollständige
+[Hardware-Abnahme](docs/acceptance.md) steht noch aus. Server, Synchronisation und
+Timerregeln werden automatisiert getestet. BLE-Befehle sind aus einer veröffentlichten Bluetooth-Pro-Implementierung
 abgeleitet; tatsächliche Gerätekompatibilität, Display und Reichweite müssen vor
 dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 

@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import font
 
 import netinfo
+import version
 from native_client import Client, Transport, ViewState
 from ui_config import COLORS, LABELS, LEGEND, PRESETS
 
@@ -175,6 +176,7 @@ class InfoOverlay:
         title = tk.Frame(self.frame, bg=BG)
         title.grid(row=0, column=0, columnspan=2, sticky='ew', padx=22, pady=(18, 10))
         TimerWindow.label(title, 'WLAN & ADRESSEN', size=20).pack(side='left')
+        TimerWindow.label(title, 'Version ' + version.describe(), size=11).pack(side='left', padx=18)
         tk.Button(title, text='Schließen', command=self.close, font=('DejaVu Sans', 18, 'bold'),
                   bg=PANEL, fg=TEXT, activebackground='#304353', activeforeground=TEXT, relief='flat',
                   bd=0, highlightthickness=0, padx=24, pady=10).pack(side='right')
@@ -221,9 +223,12 @@ class InfoOverlay:
                     if dark:
                         self.qr.create_rectangle(offset + x * cell, offset + y * cell, offset + (x + 1) * cell,
                                                  offset + (y + 1) * cell, fill='black', outline='')
-            self.wifi.configure(text='WLAN: %s\nPasswort: %s' % (info['ssid'], info['psk']))
+            text = 'WLAN: %s\nPasswort: %s' % (info['ssid'], info['psk'])
         else:
-            self.wifi.configure(text=info['error'] or 'Kein WLAN-Profil')
+            text = info['error'] or 'Kein WLAN-Profil'
+        # Web UI on phones/laptops in the hotspot; it asks for the API key from .env.
+        text += '\n\nGUI remote öffnen:\n' + '\n'.join(info.get('urls', []))
+        self.wifi.configure(text=text)
         lines = ['HEADEND']
         lines += ['  %-8s %s' % row for row in info['addresses']] or ['  keine IPv4-Adresse']
         lines += ['', 'GERÄTE IM HOTSPOT']

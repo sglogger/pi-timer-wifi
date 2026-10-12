@@ -1,5 +1,6 @@
 """Hotspot credentials, headend addresses and DHCP clients for the native info overlay."""
 import os
+import socket
 import subprocess
 
 PROFILE = 'pi-timer-direct'
@@ -95,6 +96,13 @@ def clients():
     return sorted(rows, key=lambda row: (not row[3], tuple(int(p) for p in row[0].split('.'))))
 
 
+def remote_urls(addresses, port):
+    """Web UI addresses for other devices: mDNS name first, then the hotspot IP."""
+    urls = ['http://%s.local:%s/' % (socket.gethostname(), port)]
+    urls += ['http://%s:%s/' % (cidr.split('/')[0], port) for name, cidr in addresses if name == INTERFACE]
+    return urls
+
+
 def snapshot():
     """Collect everything the overlay shows; never raises."""
     info = {'ssid': None, 'psk': None, 'matrix': None, 'error': None, 'addresses': [], 'clients': []}
@@ -110,4 +118,5 @@ def snapshot():
     except (OSError, subprocess.SubprocessError):
         pass
     info['clients'] = clients()
+    info['urls'] = remote_urls(info['addresses'], os.environ.get('PI_TIMER_PORT', '8000'))
     return info

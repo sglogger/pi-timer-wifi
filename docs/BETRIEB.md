@@ -158,14 +158,45 @@ kein `git reset --hard`. Bei Testfehlern die neue Version nicht in den Einsatz
 nehmen. Bei geänderter systemd-Unit diese erneut prüfen/kopieren und
 `sudo systemctl daemon-reload` ausführen. `.env` bleibt bei `install.sh` erhalten.
 
-### 3. ESP32 aktualisieren
+### 3. ESP32-Firmware aktualisieren
 
-Auf dem Rechner `git pull --ff-only` ausführen, Konfigurationsänderungen mit
-`firmware/config.example.py` vergleichen und die sieben Dateien aus
-[Installation, Schritt 6](INSTALLATION.md#6-luxafor-auswählen-timer-konfigurieren-und-übertragen--rechner)
-erneut übertragen. Eine bereits gepflegte `config.py` nicht mit Beispielwerten
-überschreiben. Basisfirmware nur ändern, wenn erforderlich; aioble bei normalen
-Anwendungsupdates beibehalten, sofern die Änderungen keine neue Version verlangen.
+**Wann:** Wenn die Touch-App bzw. Weboberfläche bei „ESP32 · WLAN“ „Firmware …
+veraltet – aktuell X.Y.Z“ zeigt, oder wenn der [CHANGELOG](../CHANGELOG.md) eine
+ESP32-Änderung nennt. Die Version im Repository steht als `FIRMWARE_VERSION` in
+`firmware/timer_logic.py`; der ESP32 meldet seine bei jedem Abgleich.
+Firmware vor 1.0.0 meldet keine Version und erscheint als „< 1.0.0 veraltet“.
+
+Jeden ESP32 einzeln per USB-Datenkabel am Rechner anschließen, im Repository:
+
+```sh
+git pull --ff-only
+diff firmware/config.example.py firmware/config.py
+```
+
+Neue Einträge aus `config.example.py` (z. B. `HOSTNAME`) bei Bedarf in die eigene
+`config.py` übernehmen; fehlende optionale Einträge sind erlaubt. Die gepflegte
+`config.py` nicht mit der Vorlage überschreiben. Bei mehreren ESP32 mit eigener
+`config.py` (z. B. anderem `HOSTNAME`) jeweils die passende Datei verwenden.
+
+Programmdateien übertragen und neu starten (`PORT` wie in
+[Installation, Schritt 6](INSTALLATION.md#6-luxafor-auswählen-timer-konfigurieren-und-übertragen--rechner),
+z. B. `/dev/cu.usbmodem2101` oder `auto`):
+
+```sh
+.venv-board/bin/mpremote connect PORT fs cp firmware/timer_logic.py firmware/http_sync.py \
+  firmware/luxafor.py firmware/st7789.py firmware/display.py firmware/main.py :
+.venv-board/bin/mpremote connect PORT fs cp firmware/config.py :config.py   # nur wenn geändert
+.venv-board/bin/mpremote connect PORT reset
+```
+
+Prüfen: `.venv-board/bin/mpremote connect PORT repl`, dann Ctrl-D. Die erste Zeile
+lautet `Pi Timer Firmware X.Y.Z`. Danach zeigt das Headend die neue Version ohne
+„veraltet“. Ctrl-] beendet die REPL.
+
+Basisfirmware (MicroPython) und aioble bleiben bei normalen Updates unverändert,
+außer der CHANGELOG verlangt eine neue Version. Bei einem Fehler nach dem Update
+den vorherigen Stand auschecken (`git checkout <commit> -- firmware/`) und die
+Dateien erneut übertragen.
 
 Nach Updates Direkt-WLAN wieder aktivieren, ESP32 neu starten und einen vollständigen
 Ein-Minuten-/Stop-/Kaltstarttest durchführen.

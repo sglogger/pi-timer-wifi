@@ -83,6 +83,9 @@ Der Knopf **WLAN / IP** unten rechts öffnet ein Overlay über der ganzen App;
 - QR-Code mit WLAN-Name und Passwort des Hotspots `pi-timer-direct`. Handy-Kamera
   darauf richten, um direkt ins `SwiNOG-Timer`-WLAN zu kommen. Name und Passwort
   stehen zusätzlich als Text darunter. Das Overlay zeigt das Passwort offen an.
+- „GUI remote öffnen“: Adressen der Weboberfläche für Geräte im Hotspot, z. B.
+  `http://pi-timer.local:8000/` oder `http://10.42.0.1:8000/`. Die Weboberfläche
+  fragt nach dem API-Schlüssel aus `.env`.
 - IPv4-Adressen des Headends je Schnittstelle.
 - Geräte im Hotspot: IP, MAC und Hostname aus den DHCP-Leases, ergänzt um die
   ARP-Tabelle (`ip neigh`). Aktive Geräte stehen oben; Einträge nur aus alten Leases

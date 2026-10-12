@@ -151,8 +151,21 @@ class APITests(unittest.TestCase):
         self.assertTrue(self.client.get('/api/state', headers=self.headers).json['node']['applied'])
         self.assertEqual(self.client.post('/api/stop', json={}, headers=self.headers).json['phase'], 'off')
 
+    def test_device_firmware_version_is_compared(self):
+        from firmware.timer_logic import FIRMWARE_VERSION
+        report = dict(session=None, revision=-1, ble_connected=False, ble_status='Suche')
+        self.client.post('/api/device/sync', json=report, headers=self.headers)
+        firmware = self.client.get('/api/state', headers=self.headers).json['node']['firmware']
+        self.assertEqual(firmware, {'version': None, 'expected': FIRMWARE_VERSION, 'current': False})
+        for version, current in (('0.9.0', False), (FIRMWARE_VERSION, True)):
+            self.client.post('/api/device/sync', json=dict(report, firmware=version), headers=self.headers)
+            firmware = self.client.get('/api/state', headers=self.headers).json['node']['firmware']
+            self.assertEqual((firmware['version'], firmware['current']), (version, current))
+
     def test_bad_device_report(self):
-        for body in ([], {}, {'revision':True}, {'ble_status':'x'*121}):
+        valid = dict(session=None, revision=-1, ble_connected=False, ble_status='Suche')
+        for body in ([], {}, {'revision':True}, {'ble_status':'x'*121},
+                     dict(valid, firmware=1), dict(valid, firmware='x'*21)):
             self.assertEqual(self.client.post('/api/device/sync', json=body, headers=self.headers).status_code, 400)
 
     def test_restart_has_new_session_and_stops(self):

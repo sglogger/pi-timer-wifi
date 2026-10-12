@@ -28,6 +28,7 @@
       <div class="status"><i id="ble-dot"></i><div><strong>Luxafor · BLE</strong><small id="ble-state">Unbekannt</small></div></div>
       <div class="status"><i id="orb-dot"></i><div><strong>Luxafor · USB</strong><small id="orb-state">Unbekannt</small></div></div>
       <div class="legend">{% for line in legend %}{{line}}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+      <div class="legend version">Version {{version}}</div>
       <button id="settings">Zugriffsschlüssel</button>
     </aside>
   </main>

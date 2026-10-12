@@ -173,4 +173,5 @@ ausführen. Es findet kein automatischer Wechsel zwischen den Betriebsarten stat
 - [NetworkManager: WLAN-AP, Band, Kanal und Energiesparen](https://www.networkmanager.dev/docs/api/latest/settings-802-11-wireless.html)
 
 Konfiguration und Fehlerfälle sind mit simuliertem NetworkManager getestet.
-**Pi-/ESP32-Hotspot, Kaltstart und Reichweite sind noch nicht an der Hardware verifiziert.**
+Hotspot und ESP32-Verbindung sind am 12.10.2026 an der Hardware geprüft (Pi Zero 2 W,
+macOS-Client, ESP32-C6). **Kaltstart und Reichweite sind noch nicht verifiziert.**

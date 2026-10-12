@@ -48,6 +48,18 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(self.view.render()['phase'], 'off')
         self.assertIn('ESP32 offline', self.view.render()['message'])
 
+    def test_firmware_version_shown_and_outdated_flagged(self):
+        from firmware.timer_logic import FIRMWARE_VERSION
+        state = self.timer.command(5)
+        report = dict(session=state['session'], revision=state['revision'], ble_connected=True, ble_status='OK')
+        self.timer.sync(dict(report, firmware=FIRMWARE_VERSION))
+        self.refresh()
+        self.assertIn('Firmware ' + FIRMWARE_VERSION, self.view.render()['node_text'])
+        self.assertNotIn('veraltet', self.view.render()['node_text'])
+        self.timer.sync(report)
+        self.refresh()
+        self.assertIn('< 1.0.0 veraltet', self.view.render()['node_text'])
+
     def test_no_node_does_not_crash_or_claim_connection(self):
         self.refresh()
         self.assertFalse(self.view.render()['node'])
@@ -68,7 +80,7 @@ class ViewTests(unittest.TestCase):
                              ble_connected=True, ble_status='Verbunden'))
         self.timer.command(10)
         self.refresh()
-        self.assertEqual(self.view.render()['node_text'], 'Übertragung ausstehend')
+        self.assertEqual(self.view.render()['node_text'].splitlines()[0], 'Übertragung ausstehend')
         self.assertIn('Bestätigung', self.view.render()['message'])
 
 

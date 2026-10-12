@@ -6,9 +6,10 @@ import time
 import uuid
 
 from flask import Flask, jsonify, render_template, request
-from firmware.timer_logic import THRESHOLDS, phase
+from firmware.timer_logic import FIRMWARE_VERSION, THRESHOLDS, phase
 from orb import Orb
 from ui_config import COLORS, LABELS, LEGEND, PRESETS
+from version import describe as describe_version
 
 
 class Timer:
@@ -33,6 +34,10 @@ class Timer:
                          "report": self.node,
                          "applied": bool(online and self.node["session"] == self.session
                                          and self.node["revision"] == self.revision)}
+        # Firmware before 1.0.0 sends no version; treat it as outdated.
+        reported = self.node.get("firmware") if self.node else None
+        state["node"]["firmware"] = {"version": reported, "expected": FIRMWARE_VERSION,
+                                     "current": reported == FIRMWARE_VERSION}
         return state
 
     def command(self, minutes=None):
@@ -60,6 +65,7 @@ def create_app(token=None, timer=None, orb=None):
     if len(token) < 20 or not token.isascii() or not token.isalnum():
         raise ValueError("Set PI_TIMER_TOKEN to at least 20 ASCII letters/digits")
     timer = timer or Timer()
+    version = describe_version()
 
     def respond(state):
         if orb is not None:
@@ -85,7 +91,8 @@ def create_app(token=None, timer=None, orb=None):
     @app.get("/")
     def index():
         ui = dict(thresholds=THRESHOLDS, colors=COLORS, labels=LABELS)
-        return render_template("index.html", presets=PRESETS, legend=LEGEND, colors=COLORS, ui=ui)
+        return render_template("index.html", presets=PRESETS, legend=LEGEND, colors=COLORS, ui=ui,
+                               version=version)
 
     @app.get("/api/state")
     def state():
@@ -112,10 +119,13 @@ def create_app(token=None, timer=None, orb=None):
                  and (body.get("session") is None or
                       isinstance(body.get("session"), str) and len(body["session"]) <= 64)
                  and type(body.get("ble_connected")) is bool
-                 and isinstance(body.get("ble_status"), str) and len(body["ble_status"]) <= 120)
+                 and isinstance(body.get("ble_status"), str) and len(body["ble_status"]) <= 120
+                 and (body.get("firmware") is None or
+                      isinstance(body.get("firmware"), str) and len(body["firmware"]) <= 20))
         if not valid:
             return jsonify(error="Ungültiger Gerätestatus"), 400
         report = {key: body[key] for key in ("session", "revision", "ble_connected", "ble_status")}
+        report["firmware"] = body.get("firmware")
         return jsonify(timer.sync(report))
 
     return app

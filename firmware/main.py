@@ -2,11 +2,12 @@ import asyncio
 import network
 import time
 import config
-from timer_logic import Replica
+from timer_logic import FIRMWARE_VERSION, Replica
 from http_sync import exchange
 from luxafor import Luxafor
 from display import Display
 
+print("Pi Timer Firmware", FIRMWARE_VERSION)
 # Allocate the ~110 KB framebuffer before Wi-Fi/BLE fragment the heap.
 display = Display()
 replica = Replica(time.ticks_ms, time.ticks_diff)
@@ -36,7 +37,8 @@ async def sync_loop():
                 if not wlan.isconnected():
                     raise OSError("WLAN nicht verbunden")
             report = {"session": replica.session, "revision": replica.revision,
-                      "ble_connected": light.connected, "ble_status": light.status}
+                      "ble_connected": light.connected, "ble_status": light.status,
+                      "firmware": FIRMWARE_VERSION}
             started = time.ticks_ms()
             state = await asyncio.wait_for_ms(exchange(config.SERVER_IP, config.SERVER_PORT,
                                                       config.API_TOKEN, report), 2000)

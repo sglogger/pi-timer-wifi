@@ -101,6 +101,15 @@ class Client:
         self.closed.set()
 
 
+def firmware_text(node):
+    firmware = node.get('firmware')
+    if not firmware:
+        return ''
+    if firmware['current']:
+        return '\nFirmware %s' % firmware['version']
+    return '\nFirmware %s veraltet – aktuell %s' % (firmware['version'] or '< 1.0.0', firmware['expected'])
+
+
 class ViewState:
     def __init__(self, clock=time.monotonic):
         self.clock = clock
@@ -142,7 +151,8 @@ class ViewState:
                            'Timer synchronisiert – BLE verbunden'))
         return dict(text=clock_text(remaining) if remaining is not None else '00:00',
                     phase=phase(remaining), server=bool(fresh), node=online, ble=bool(ble),
-                    node_text='Timer synchronisiert' if applied else 'Übertragung ausstehend' if online else 'Offline / unbekannt',
+                    node_text=('Timer synchronisiert' if applied else 'Übertragung ausstehend' if online
+                               else 'Offline / unbekannt') + (firmware_text(node) if online else ''),
                     ble_text=node['report']['ble_status'] if online else 'Status unbekannt',
                     orb=bool(fresh and orb and orb['connected']),
                     orb_text=('Status unbekannt' if not fresh else orb['status'] if orb else 'Deaktiviert'),

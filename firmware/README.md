@@ -81,6 +81,8 @@ Zum Lesen der Laufzeitmeldungen `mpremote connect PORT repl` verwenden. Mit
 Ctrl-C wird die laufende Firmware gestoppt; danach Ctrl-D für Neustart.
 Optional kann Thonny dieselben Dateien ins Wurzelverzeichnis übertragen.
 
+Spätere Updates und Versionsprüfung: [Betrieb, ESP32-Firmware aktualisieren](../docs/BETRIEB.md#3-esp32-firmware-aktualisieren).
+
 ## Pairing / Diagnose
 
 Bei Authentifizierungsfehlern `LUXAFOR_PAIR = True` setzen, Konfiguration erneut
