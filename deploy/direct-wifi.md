@@ -83,7 +83,7 @@ sudo nmcli connection modify pi-timer-direct connection.autoconnect yes
 sudo nmcli connection up pi-timer-direct
 ```
 
-Autoconnect-Priorität 1000 bevorzugt dieses Profil beim nächsten Booten gegenüber
+Autoconnect-Priorität 999 bevorzugt dieses Profil beim nächsten Booten gegenüber
 normalen gespeicherten WLANs mit Standardpriorität 0. Andere Profile bleiben
 erhalten. Es wird kein gleichzeitiger AP-/Client-Betrieb auf `wlan0` eingerichtet.
 

@@ -30,7 +30,7 @@ def prepare():
     nmcli("connection", "add", "type", "wifi", "ifname", INTERFACE,
           "con-name", PROFILE,
           "connection.autoconnect", "no",
-          "connection.autoconnect-priority", "1000",
+          "connection.autoconnect-priority", "999",
           "802-11-wireless.ssid", SSID,
           "802-11-wireless.mode", "ap",
           "802-11-wireless.band", "bg",
