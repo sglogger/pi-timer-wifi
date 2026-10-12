@@ -4,8 +4,8 @@ xset s off || true
 xset -dpms || true
 xset s noblank || true
 
-# Adapt this path when using a different repository location/user.
-cd /home/pitimer/pi-timer-wifi || exit 1
+# Repository is expected in the home directory of the autologin user.
+cd "$HOME/pi-timer-wifi" || exit 1
 # Restart only the frontend after a crash; the systemd timer service stays alive.
 while true; do
     ./run-native.sh
