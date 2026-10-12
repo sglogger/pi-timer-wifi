@@ -25,8 +25,9 @@ Headend:
 - Versionsnummer in `version.py` mit Git-Commit, angezeigt im Overlay und in der
   Weboberfläche; Changelog nummeriert.
 - ESP32-Status zeigt die gemeldete Firmware-Version und markiert veraltete Firmware.
+- Mauszeiger im Vollbild ausgeblendet statt X11-„X“; `PI_TIMER_CURSOR=dot` zeigt einen Punkt.
 - Farblegende mit kleinem Farbquadrat je Phase (Touch-App und Weboberfläche);
-  das Quadrat für „überzogen“ blinkt.
+  „Blinkend“ als statisches dunkleres Rot.
 - Neue Abhängigkeit `qrcode` (reines Python).
 
 ESP32-Firmware:

@@ -9,13 +9,13 @@ from tkinter import font
 import netinfo
 import version
 from native_client import Client, Transport, ViewState
-from ui_config import COLORS, LABELS, LEGEND, PRESETS
+from ui_config import COLORS, LABELS, LEGEND, LEGEND_COLORS, OVERDUE_DIM, PRESETS
 
 BG, PANEL, TEXT, MUTED = '#111820', '#202d38', COLORS['off'], '#a7b5bf'
 
 
 class TimerWindow:
-    def __init__(self, root, client, fullscreen=True):
+    def __init__(self, root, client, fullscreen=True, cursor=''):
         self.root, self.client = root, client
         self.view = ViewState()
         self.previous = {}
@@ -27,6 +27,11 @@ class TimerWindow:
         root.geometry('1024x600')
         root.minsize(800, 480)
         root.attributes('-fullscreen', fullscreen)
+        # Without a desktop X11 shows its default 'X' pointer; child widgets inherit this one.
+        try:
+            root.configure(cursor=cursor)
+        except tk.TclError:
+            pass
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.bind('<F11>', lambda event: root.attributes('-fullscreen', not root.attributes('-fullscreen')))
         root.bind('<Escape>', lambda event: root.attributes('-fullscreen', False))
@@ -48,7 +53,7 @@ class TimerWindow:
             button = tk.Button(presets, text='%d min' % minutes, command=lambda m=minutes: self.command(m),
                                font=('DejaVu Sans', 22, 'bold'), width=6, bg=PANEL, fg=TEXT,
                                activebackground='#304353', activeforeground=TEXT, relief='flat', bd=0,
-                               highlightthickness=0, cursor='hand2')
+                               highlightthickness=0)
             button.grid(row=index, column=0, sticky='nsew', pady=4, ipady=4)
             self.buttons.append(button)
         center = tk.Frame(body, bg=BG)
@@ -91,14 +96,10 @@ class TimerWindow:
         self.orb_detail = self.label(status, 'Unbekannt', size=11)
         self.orb_detail.configure(wraplength=180, justify='left')
         self.orb_detail.pack(anchor='w', pady=(6, 30))
-        self.swatches = {}
         for phase_name, text in LEGEND:
             row = tk.Frame(status, bg=BG)
             row.pack(anchor='w', pady=1)
-            # Small colour square; the overdue one blinks like the countdown.
-            swatch = tk.Frame(row, bg=COLORS[phase_name], width=11, height=11)
-            swatch.pack(side='left', padx=(0, 8))
-            self.swatches[phase_name] = swatch
+            tk.Frame(row, bg=LEGEND_COLORS[phase_name], width=11, height=11).pack(side='left', padx=(0, 8))
             self.label(row, text, size=11).pack(side='left')
         self.center = center
         center.bind('<Configure>', self.resize)
@@ -147,10 +148,8 @@ class TimerWindow:
                 break
         state = self.view.render()
         color = COLORS[state['phase']]
-        blink_off = int(self.view.clock() * 2) % 2
-        if state['phase'] == 'overdue' and blink_off:
-            color = '#71343c'
-        self.update(self.swatches['overdue'], bg='#71343c' if blink_off else COLORS['overdue'])
+        if state['phase'] == 'overdue' and int(self.view.clock() * 2) % 2:
+            color = OVERDUE_DIM
         self.update(self.countdown, text=state['text'], fg=color)
         self.update(self.phase, text=LABELS[state['phase']])
         self.update(self.server, text='Headend verbunden' if state['server'] else 'Server offline / suche …')
@@ -267,7 +266,9 @@ def main():
     port = int(os.environ.get('PI_TIMER_PORT', '8000'))
     root = tk.Tk()
     client = Client(Transport(token, port))
-    TimerWindow(root, client, fullscreen=not args.windowed)
+    # Touch kiosk: hide the pointer in fullscreen ('dot' = small dot, '' = X11 default).
+    cursor = os.environ.get('PI_TIMER_CURSOR', 'none') if not args.windowed else ''
+    TimerWindow(root, client, fullscreen=not args.windowed, cursor=cursor)
     client.thread.start()
     root.mainloop()
 

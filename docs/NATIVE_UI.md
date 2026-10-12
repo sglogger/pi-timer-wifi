@@ -75,6 +75,19 @@ Benutzername/Verzeichnis anpassen und Desktop-Autologin aktivieren. Bei einer
 Desktop-Umgebung mit eigenem Autostartformat deren Programmeinstellungen benutzen.
 Für geringstmöglichen Grundbedarf bleibt Lite + X11 die Standardinstallation.
 
+## Mauszeiger
+
+Im Vollbild blendet die App den Mauszeiger aus (sonst zeigt X11 ohne Desktop ein
+„X“). Für einen kleinen Punkt statt unsichtbar in `.env` eintragen:
+
+```sh
+PI_TIMER_CURSOR=dot
+```
+
+Weitere Werte sind X11-Zeigernamen wie `arrow`; `PI_TIMER_CURSOR=` (leer) behält den
+X11-Standard. Im Fenstermodus (`--windowed`) bleibt der normale Zeiger. Änderungen
+gelten nach dem Neustart der App.
+
 ## WLAN / IP-Übersicht
 
 Der Knopf **WLAN / IP** unten rechts öffnet ein Overlay über der ganzen App;

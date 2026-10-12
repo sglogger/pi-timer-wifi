@@ -4,6 +4,9 @@ from firmware.timer_logic import THRESHOLDS
 PRESETS = (30, 25, 20, 15, 10, 5, 1)
 COLORS = dict(off='#eaf0f3', green='#4ce7a0', yellow='#f9dd69', orange='#ffad60',
               red='#ff6e79', overdue='#ff6e79')
+# Dark phase of the blinking overdue countdown; also the static legend swatch for it.
+OVERDUE_DIM = '#71343c'
+LEGEND_COLORS = dict(COLORS, overdue=OVERDUE_DIM)
 LABELS = dict(off='BEREIT', green='REDEZEIT', yellow='LETZTE 5 MINUTEN', orange='LETZTE MINUTE',
               red='ZEIT ABGELAUFEN', overdue='ÜBERZOGEN')
 

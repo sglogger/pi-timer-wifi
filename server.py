@@ -8,7 +8,7 @@ import uuid
 from flask import Flask, jsonify, render_template, request
 from firmware.timer_logic import FIRMWARE_VERSION, THRESHOLDS, phase
 from orb import Orb
-from ui_config import COLORS, LABELS, LEGEND, PRESETS
+from ui_config import COLORS, LABELS, LEGEND, LEGEND_COLORS, PRESETS
 from version import describe as describe_version
 
 
@@ -92,7 +92,7 @@ def create_app(token=None, timer=None, orb=None):
     def index():
         ui = dict(thresholds=THRESHOLDS, colors=COLORS, labels=LABELS)
         return render_template("index.html", presets=PRESETS, legend=LEGEND, colors=COLORS, ui=ui,
-                               version=version)
+                               legend_colors=LEGEND_COLORS, version=version)
 
     @app.get("/api/state")
     def state():

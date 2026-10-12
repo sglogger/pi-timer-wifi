@@ -27,7 +27,7 @@
       <div class="status"><i id="node-dot"></i><div><strong>ESP32 · WLAN</strong><small id="node-state">Unbekannt</small></div></div>
       <div class="status"><i id="ble-dot"></i><div><strong>Luxafor · BLE</strong><small id="ble-state">Unbekannt</small></div></div>
       <div class="status"><i id="orb-dot"></i><div><strong>Luxafor · USB</strong><small id="orb-state">Unbekannt</small></div></div>
-      <div class="legend">{% for phase, line in legend %}<span class="swatch{% if phase == 'overdue' %} overdue{% endif %}" style="background:{{colors[phase]}}"></span>{{line}}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+      <div class="legend">{% for phase, line in legend %}<span class="swatch" style="background:{{legend_colors[phase]}}"></span>{{line}}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
       <div class="legend version">Version {{version}}</div>
       <button id="settings">Zugriffsschlüssel</button>
     </aside>
