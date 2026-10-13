@@ -56,6 +56,9 @@ konfigurierbare Pairing-Variante vor Ort zu prüfen.
 - [MicroPython aioble API und Beispiele](https://github.com/micropython/micropython-lib/tree/master/micropython/bluetooth/aioble)
 - [MicroPython asyncio](https://docs.micropython.org/en/latest/library/asyncio.html)
 
-Recherche: 28.09.2026. **Hardwareverifikation ausstehend.** Bei Abweichungen zuerst
+Recherche: 28.09.2026. **Auf der Hardware bestätigt (13.10.2026)** mit einer Luxafor
+Bluetooth Pro (`LUX DOT …`) und `firmware/ble_test.py`: Service `1234`, Schreiben auf
+`1235` ohne Pairing, Notifications auf `1236`; die Lampe zeigte die gesendeten Farben
+(rot, grün, aus). Bei Abweichungen mit anderen Lampen- oder Firmwareständen zuerst
 GATT und Firmwareversion dokumentieren und `luxafor.py` anpassen; nicht beliebige
 Characteristics mit geratenen Paketen beschreiben.

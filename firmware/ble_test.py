@@ -1,8 +1,8 @@
 """BLE diagnosis for the Luxafor; run manually with mpremote run firmware/ble_test.py.
 
 Uses LUXAFOR_NAME/LUXAFOR_MAC/LUXAFOR_PAIR from config.py on the board. Stop the
-timer first (mpremote stops main.py when it connects). Each round: scan, connect,
-list GATT, subscribe, cycle red/green/blue/off, disconnect. Watch the lamp.
+timer first (soft-reset). Each round: scan, connect, list GATT (first round),
+subscribe, cycle red/green/off, disconnect. Watch the lamp.
 """
 import asyncio
 import gc
@@ -16,6 +16,9 @@ ROUNDS = 3
 # True: Wi-Fi station and ESP-NOW active, one broadcast per second, like a
 # mesh-only device (WIFI = False). Compare a run with False and one with True.
 ESPNOW_LOAD = False
+# With ESPNOW_LOAD: switch Wi-Fi/ESP-NOW off only for scan and connect, back on
+# while connected. Shows whether an established connection survives the load.
+PAUSE_FOR_SCAN = False
 # Same reduced scan duty cycle as luxafor.py (30 ms of every 100 ms).
 SCAN_INTERVAL_US, SCAN_WINDOW_US = 100000, 30000
 
@@ -81,18 +84,24 @@ async def drain(notify, timeout_ms):
             return
 
 
-async def round_trip(number):
+async def round_trip(number, load):
     print("\n=== Runde %d von %d ===" % (number, ROUNDS))
-    device = await find()
-    if device is None:
-        return "nicht gefunden"
-    started = time.ticks_ms()
+    if load and PAUSE_FOR_SCAN:
+        load.pause()
     try:
-        connection = await device.connect(timeout_ms=10000)
-    except Exception as exc:
-        log("Verbinden fehlgeschlagen: %s %s" % (type(exc).__name__, exc))
-        return "Verbinden: " + type(exc).__name__
-    log("verbunden nach %d ms" % time.ticks_diff(time.ticks_ms(), started))
+        device = await find()
+        if device is None:
+            return "nicht gefunden"
+        started = time.ticks_ms()
+        try:
+            connection = await device.connect(timeout_ms=10000)
+        except Exception as exc:
+            log("Verbinden fehlgeschlagen: %s %s" % (type(exc).__name__, exc))
+            return "Verbinden: " + type(exc).__name__
+        log("verbunden nach %d ms" % time.ticks_diff(time.ticks_ms(), started))
+    finally:
+        if load and PAUSE_FOR_SCAN:
+            load.resume()
     try:
         if PAIR:
             await connection.pair(bond=True, mitm=False, timeout_ms=15000)
@@ -123,36 +132,59 @@ async def round_trip(number):
         log("getrennt")
 
 
-async def espnow_load():
-    import network
-    import espnow
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    radio = espnow.ESPNow()
-    radio.active(True)
-    radio.add_peer(b"\xff" * 6)
-    log("ESP-NOW-Last aktiv, Kanal", wlan.config("channel"))
-    while True:
+class Load:
+    """Wi-Fi station plus ESP-NOW broadcasts, like a mesh-only timer."""
+
+    def __init__(self):
+        import network
+        import espnow
+        self.wlan = network.WLAN(network.STA_IF)
+        self.radio = espnow.ESPNow()
+        self.active = False
+        self.resume()
+
+    def resume(self):
+        self.wlan.active(True)
+        self.radio.active(True)
         try:
-            radio.send(b"\xff" * 6, b"ble-test" * 25, False)  # 200 bytes, like mesh states
+            self.radio.add_peer(b"\xff" * 6)
         except OSError:
-            pass
-        while radio.any():
-            radio.recv(0)
-        await asyncio.sleep_ms(1000)
+            pass  # Peer still registered.
+        self.active = True
+        log("ESP-NOW-Last an, Kanal", self.wlan.config("channel"))
+
+    def pause(self):
+        self.active = False
+        self.radio.active(False)
+        self.wlan.active(False)
+        log("ESP-NOW-Last pausiert (WLAN aus)")
+
+    async def run(self):
+        while True:
+            if self.active:
+                try:
+                    self.radio.send(b"\xff" * 6, b"ble-test" * 25, False)  # 200 bytes, like mesh states
+                    while self.radio.any():
+                        self.radio.recv(0)
+                except OSError:
+                    pass
+            await asyncio.sleep_ms(1000)
 
 
 async def main():
     target = config.LUXAFOR_MAC or config.LUXAFOR_NAME
-    print("BLE-Test für", target, "| Pairing", PAIR, "| ESP-NOW-Last", ESPNOW_LOAD)
+    print("BLE-Test für", target, "| Pairing", PAIR, "| ESP-NOW-Last", ESPNOW_LOAD,
+          "| Pause für Scan", PAUSE_FOR_SCAN)
     print("Dongle abziehen, Luxafor-Apps trennen; Lampe beobachten: rot, grün, aus, rot, aus.")
     gc.collect()
+    load = None
     if ESPNOW_LOAD:
-        asyncio.create_task(espnow_load())
+        load = Load()
+        asyncio.create_task(load.run())
         await asyncio.sleep_ms(500)
     results = []
     for number in range(1, ROUNDS + 1):
-        results.append(await round_trip(number))
+        results.append(await round_trip(number, load))
         await asyncio.sleep_ms(1000)
     print("\nErgebnis:", results)
 
