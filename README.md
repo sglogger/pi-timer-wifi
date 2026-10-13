@@ -242,7 +242,8 @@ starten. Details: [Direktes WLAN](deploy/direct-wifi.md).
 - **ESP32-Neustart:** Countdown unbekannt, Licht zunächst aus. Nach WLAN-Sync
   übernimmt er den aktuellen Timer. Ohne Headend kann er ihn nicht rekonstruieren.
 - **Headend-Neustart:** neue Sitzung, Timer gestoppt. ESP32 übernimmt Stop beim
-  nächsten erfolgreichen Sync. Ein aktuell offline laufender ESP32 zählt bis dahin weiter.
+  nächsten erfolgreichen Sync; mit Booten des Pi und Hotspot-Start kann das bis
+  etwa 2 min dauern. Ein aktuell offline laufender ESP32 zählt bis dahin weiter.
 - **BLE-Status:** bedeutet GATT-Verbindung und gesendeter Befehl. Das verwendete
   Write-without-response-Protokoll bestätigt nicht die sichtbare LED-Farbe.
 

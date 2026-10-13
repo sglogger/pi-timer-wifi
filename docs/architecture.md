@@ -192,7 +192,8 @@ reinen Mesh-Empfänger (`WIFI = False`) ebenso wie den Fallback eines Geräts mi
 `WIFI = True` und `MESH = True`, dessen Hotspot nicht erreichbar ist. Ohne
 WLAN-Verbindung schaltet der ESP32 ESP-NOW und WLAN deshalb für Suche und
 Verbindungsaufbau zur Luxafor ab (1–3 s) und danach wieder ein, auf dem zuletzt
-bekannten Kanal; WLAN-Verbindungsversuche warten so lange bzw. brechen ab. Mit
+bekannten Kanal; WLAN-Verbindungsversuche warten so lange. Ein bereits laufender
+Verbindungsversuch zum Hotspot hat Vorrang, dann sucht der ESP32 ohne Pause. Mit
 WLAN-Verbindung bleibt alles an (der Energiesparmodus lässt BLE Funkzeit). Die
 bestehende BLE-Verbindung hielt im Test unter ESP-NOW-Last; Befehle wurden nach etwa
 190 statt 90 ms bestätigt. Ohne `MESH` (kein ESP-NOW) gibt es keine Pause; ob die

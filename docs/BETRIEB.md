@@ -105,6 +105,7 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | `No module named aioble` | Vom Rechner `mpremote … mip install aioble` ausführen |
 | `incompatible .mpy file` | [Build-/Versionshinweise](BUILD.md#d-mpy-dateien-und-bibliotheken) beachten |
 | WLAN nicht verbunden | Hotspot aktiv? Richtige SSID/WLAN-Passwort? Pi/ESP32 nahe zusammen testen |
+| Nach Headend-Neustart lange kein `WIFI OK` | Bis zu etwa 2 min sind normal: Der Pi bootet, startet Hotspot und Dienst, danach braucht der ESP32 bis etwa 20 s. Die Konsolenzeile `WLAN verbunden nach … s ohne WLAN, … Versuch(e)` (ab Firmware 1.3.2) zeigt die Dauer; Pi-Seite mit `systemd-analyze` und `journalctl -u pi-timer-wifi -b` prüfen. Bis dahin zählen die ESP32 den alten Timer weiter |
 | Display bleibt WIFI OFFLINE trotz ESP32 mit WLAN daneben | Mesh: auf beiden `MESH = True` (Standard ist aus)? Gleicher `API_TOKEN`? Firmware ab 1.1.0, Pi-Software ab 1.2.0? |
 | Konsole: `Sync: TimeoutError` bei gutem RSSI, BLE `ENOMEM` | Speichermangel der Firmware vor 1.2.4 (Socket-Leck, 110-KB-Bildpuffer): Firmware aktualisieren. Tritt es mit 1.2.4 und `MESH = True` auf, `MESH = False` setzen |
 | Konsole nach Ctrl-D: `MemoryError … 110080 bytes` | Firmware vor 1.2.4: mit Reset-Knopf statt Soft-Reset starten, Firmware aktualisieren |

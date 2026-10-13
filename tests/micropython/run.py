@@ -266,6 +266,11 @@ def test_main():
         mesh.resume()
     finally:
         meshonly.wlan.connected = False
+    # A hotspot connection attempt has priority over the BLE scan.
+    mesh.connecting = True
+    mesh.pause()
+    check("no pause during a Wi-Fi connection attempt", not mesh.paused and mesh.radio.active())
+    mesh.connecting = False
     main = import_main_quiet(fake_gather, gather)
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)

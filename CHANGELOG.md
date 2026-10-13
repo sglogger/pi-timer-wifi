@@ -23,8 +23,12 @@ ESP32-Firmware:
   jedes Mal nach 0,3–2,3 s. Eine bestehende Verbindung lief unter der Last weiter.
 - Ohne WLAN-Verbindung schaltet der ESP32 ESP-NOW und WLAN deshalb nur für Suche
   und Verbindungsaufbau zur Luxafor ab (im Test 1–3 s) und stellt danach den
-  Mesh-Kanal wieder her. Ein laufender WLAN-Verbindungsversuch bricht dafür ab und
-  wird danach wiederholt. Der Countdown läuft in der Zeit lokal weiter. Ist die Lampe aus,
+  Mesh-Kanal wieder her. Ein laufender WLAN-Verbindungsversuch zum Hotspot hat
+  Vorrang: Währenddessen sucht der ESP32 ohne Pause, die Suche wird bei Misserfolg
+  wiederholt. WLAN-Verbindungsversuche warten, solange die Pause läuft.
+- Neue Konsolenzeile bei jeder WLAN-Verbindung, z. B. `WLAN verbunden nach 95 s ohne
+  WLAN, 6 Versuch(e), Kanal 11`. Nach einem Headend-Neustart zeigt sie, ob die
+  Zeit beim Pi (Booten, Hotspot) oder beim ESP32 liegt. Der Countdown läuft in der Zeit lokal weiter. Ist die Lampe aus,
   wiederholt sich das alle paar Sekunden bis 15 s; das Display kann dann kurz
   `MESH OFFLINE` zeigen.
 - Mit WLAN-Verbindung bleibt alles an, wie bisher. Ohne `MESH` gibt es keine Pause.

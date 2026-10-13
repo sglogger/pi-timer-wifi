@@ -58,12 +58,14 @@ class Mesh:
         self.peers = {}  # id -> (status, ticks when received, age_ms at receipt)
         self.demand = None  # Last status packet: some peer lacks Wi-Fi.
         self.paused = False  # Radio off while the Luxafor is scanned for (luxafor.py).
+        self.connecting = False  # Hotspot connection attempt running (sync_loop).
 
     def pause(self):
         # Connected: Wi-Fi power save leaves BLE its airtime, and switching off
         # would drop the hotspot connection. Without it (mesh-only, or hotspot
-        # unreachable) ESP-NOW blocked the BLE scan completely.
-        if wlan.isconnected():
+        # unreachable) ESP-NOW blocked the BLE scan completely. A running
+        # connection attempt goes first; the BLE scan is retried later.
+        if wlan.isconnected() or self.connecting:
             return
         self.paused = True
         self.radio.active(False)
@@ -235,6 +237,7 @@ async def mesh_only_loop():
 async def sync_loop():
     retry = 1
     attempt = None
+    offline_since, attempts = time.ticks_ms(), 0
     while True:
         if mesh and mesh.paused:
             await asyncio.sleep_ms(100)  # Radio off for the Luxafor scan.
@@ -247,19 +250,33 @@ async def sync_loop():
                         and time.ticks_diff(time.ticks_ms(), attempt) < WIFI_RETRY_MS):
                     await asyncio.sleep_ms(500)
                     continue
+                if offline_since is None:
+                    offline_since, attempts = time.ticks_ms(), 0
                 attempt = time.ticks_ms()
-                wlan.disconnect()
-                wlan.connect(config.WIFI_SSID, config.WIFI_PASSWORD)
-                for _ in range(100):
-                    if wlan.isconnected() or (mesh and mesh.paused):
-                        break
-                    await asyncio.sleep_ms(100)
+                attempts += 1
+                if mesh:
+                    mesh.connecting = True
+                try:
+                    wlan.disconnect()
+                    wlan.connect(config.WIFI_SSID, config.WIFI_PASSWORD)
+                    for _ in range(100):
+                        if wlan.isconnected():
+                            break
+                        await asyncio.sleep_ms(100)
+                finally:
+                    if mesh:
+                        mesh.connecting = False
                 if not wlan.isconnected():
                     if mesh:
                         await mesh.listen()
                     raise OSError("WLAN nicht verbunden")
                 if mesh:
                     mesh.channel = wlan.config("channel")
+                # Shows where reconnecting takes its time, e.g. after a headend restart.
+                print("WLAN verbunden nach %d s ohne WLAN, %d Versuch(e), Kanal %d" % (
+                    time.ticks_diff(time.ticks_ms(), offline_since) // 1000, attempts,
+                    wlan.config("channel")))
+                offline_since = None
             report = {"id": DEVICE_ID, "name": HOSTNAME, "session": replica.session,
                       "revision": replica.revision, "ble_connected": light.connected,
                       "ble_status": light.status, "firmware": FIRMWARE_VERSION,
