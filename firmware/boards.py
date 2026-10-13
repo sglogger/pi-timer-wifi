@@ -33,9 +33,10 @@ BOARDS["s3-169-v1"] = dict(BOARDS["s3-169"], power_hold=35, buzzer=33)
 def select(name=""):
     """Profile for BOARD from config.py, else detected from the chip."""
     if not name:
-        # E.g. "Generic ESP32S3 module with ESP32S3"; the unix port has its own text.
+        # E.g. "Generic ESP32S3 module with ESP32-S3"; the unix port has its own text.
         machine_name = getattr(sys.implementation, "_machine", "")
-        name = "s3-169" if "ESP32S3" in machine_name else "c6-147"
+        s3 = "ESP32S3" in machine_name or "ESP32-S3" in machine_name
+        name = "s3-169" if s3 else "c6-147"
     if name not in BOARDS:
         raise ValueError("Invalid BOARD")
     return name, BOARDS[name]

@@ -371,9 +371,17 @@ aufbewahren. Das Lesen benötigt den Download-Modus, siehe nächster Absatz.
 
 Auf der [MicroPython-Downloadseite für ESP32_GENERIC_C6](https://micropython.org/download/ESP32_GENERIC_C6/)
 die **kombinierte `.bin`-Datei** wählen, vorzugsweise v1.28.0 für den dokumentierten
-Ausgangspunkt. Nicht `.app-bin`, `.elf` oder eine S3-Firmware verwenden. Unter
-`~/Downloads/micropython-c6.bin` speichern/umbenennen. Alternativ eine nach
+Ausgangspunkt. Nicht `.app-bin`, `.elf` oder auf dem C6 eine S3-Firmware verwenden.
+Unter `~/Downloads/micropython-c6.bin` speichern/umbenennen. Alternativ eine nach
 [BUILD.md](BUILD.md) selbst erzeugte kombinierte `firmware.bin` verwenden.
+
+Beim **ESP32-S3-LCD-1.69** stattdessen von der
+[Downloadseite für ESP32_GENERIC_S3](https://micropython.org/download/ESP32_GENERIC_S3/)
+die kombinierte `.bin` der Variante **SPIRAM_OCT** laden, z. B. als
+`~/Downloads/micropython-s3.bin`, und in den Befehlen unten `--chip esp32s3` und
+diesen Dateinamen angeben. Nach dem Flashen meldet die Versionsabfrage dann
+`Generic ESP32S3 module with Octal-SPIRAM`; ohne `Octal-SPIRAM` ist das Standard-Image
+ohne PSRAM installiert. Der Timer läuft auch damit, nur ohne den zusätzlichen Speicher.
 
 Falls der Port nicht stabil erscheint: BOOT gedrückt halten, RESET kurz drücken
 und loslassen, dann BOOT loslassen. Port danach erneut bestimmen. Das Board ist
@@ -389,10 +397,6 @@ nun im Download-Modus.
 
 `erase-flash` löscht Programm, Dateien und Zugangsdaten auf dem ESP32. Für normale
 Timer-Updates später nur die `.py`-Dateien kopieren, nicht erneut löschen.
-Beim **ESP32-S3-LCD-1.69** stattdessen von der
-[Downloadseite für ESP32_GENERIC_S3](https://micropython.org/download/ESP32_GENERIC_S3/)
-die kombinierte `.bin` der Variante **SPIRAM_OCT** laden, z. B. als
-`~/Downloads/micropython-s3.bin`, und in beiden Befehlen `--chip esp32s3` angeben.
 Bei Übertragungsfehlern Baudrate auf 115200 reduzieren. Nach erfolgreichem Flash
 RESET drücken, Port erneut prüfen und die obige MicroPython-Versionsabfrage ausführen.
 
@@ -453,6 +457,9 @@ des S3-Boards, siehe [Board-Profile](../firmware/README.md#esp32-s3-lcd-169)):
 .venv-board/bin/mpremote connect "$ESP_PORT" fs ls
 .venv-board/bin/mpremote connect "$ESP_PORT" reset
 ```
+
+Fehlt `boards.py`, bleibt das Display schwarz und die REPL meldet
+`ImportError: no module named 'boards'`.
 
 Die Dateiliste auf dem Gerät muss diese neun Dateien und die separat
 installierte aioble-Bibliothek in `lib/` enthalten.
