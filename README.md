@@ -155,9 +155,9 @@ unabhängige Timer pro Redner/Raum gibt es in dieser Version nicht. Die Anzeigen
 werden per Polling synchronisiert, nicht auf die Millisekunde gleichzeitig.
 
 **ESP-NOW-Mesh (experimentell, standardmäßig aus):** Mit `MESH = True` tauschen die
-ESP32 den Timer zusätzlich untereinander aus. Im ersten Hardwaretest störte aktives
-ESP-NOW auf dem ESP32-C6 den WLAN-Abgleich und BLE; bis das geklärt ist, bleibt es
-aus. Ein
+ESP32 den Timer zusätzlich untereinander aus. Im ersten Hardwaretest fiel mit aktivem
+ESP-NOW der WLAN-Abgleich aus; Ursache war ein inzwischen behobenes Socket-Leck.
+Bis ein erneuter Test das Mesh bestätigt, bleibt es aus. Ein
 Gerät außerhalb der Hotspot-Reichweite übernimmt Start und STOP von einem anderen
 ESP32, der WLAN hat, auch über mehrere Geräte hinweg; sein Display zeigt dann
 `MESH OK`. Es gibt keinen Master: Der Zustand mit dem neuesten Server-Kontakt

@@ -100,6 +100,39 @@ async def expect_error(name, response):
 async def test_http():
     body = b'{"protocol":1}'
     ok = b"HTTP/1.0 200 OK\r\nContent-Length: 14\r\n\r\n" + body
+    # Every socket must be closed, also on errors: MicroPython's Stream.close()
+    # alone leaves it open and leaked sockets exhausted lwIP on the ESP32.
+    sockets = []
+    original = asyncio.StreamWriter
+
+    class Recording(original):
+        def __init__(self, s, e={}):
+            super().__init__(s, e)
+            sockets.append(s)
+
+    async def silent(reader, writer):
+        await asyncio.sleep_ms(500)
+        writer.close()
+        await writer.wait_closed()
+
+    asyncio.StreamWriter = Recording
+    try:
+        await respond(ok)
+        await expect_error("HTTP error closes socket", b"HTTP/1.0 401 Unauthorized\r\nContent-Length: 0\r\n\r\n")
+        # The ESP32 failure mode: no answer, the sync timeout cancels the exchange.
+        server = await asyncio.start_server(silent, "127.0.0.1", PORT)
+        try:
+            await asyncio.wait_for_ms(exchange("127.0.0.1", PORT, config.API_TOKEN, {}), 100)
+            check("HTTP timeout", False)
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            server.close()
+            await server.wait_closed()
+    finally:
+        asyncio.StreamWriter = original
+    check("HTTP sockets closed, also after timeout",
+          len(sockets) == 3 and all(s.fileno() == -1 for s in sockets))
     check("HTTP exchange", await respond(ok) == {"protocol": 1})
     check("HTTP body in separate reads", await respond(ok, split=True) == {"protocol": 1})
     padded = b"HTTP/1.0 200 OK\r\nX-Pad: " + b"x" * 1500 + b"\r\nContent-Length: 14\r\n\r\n" + body

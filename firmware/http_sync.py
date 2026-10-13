@@ -1,11 +1,57 @@
 """Bounded, asynchronous HTTP/1.0 exchange; no blocking requests library."""
 import asyncio
 import json
+import socket
+import sys
+
+MICROPYTHON = sys.implementation.name == "micropython"
+
+
+def writable(sock):
+    # Same wait as MicroPython's open_connection(): resumes once connected.
+    yield asyncio.core._io_queue.queue_write(sock)
+
+
+async def open_stream(host, port):
+    """Connect without leaking the socket.
+
+    MicroPython's open_connection() loses its socket when a timeout cancels it
+    while connecting, and its Stream.close() does not close the socket at all
+    (only wait_closed() does). Leaked sockets exhaust lwIP within minutes: every
+    later connect times out and BLE fails with ENOMEM. Here the socket exists
+    before the first await, so the caller's finally always reaches it.
+    """
+    if not MICROPYTHON:
+        return await asyncio.open_connection(host, port)
+    from errno import EINPROGRESS
+    sock = socket.socket()
+    try:
+        sock.setblocking(False)
+        sock.connect(socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)[0][-1])
+    except OSError as exc:
+        if exc.errno != EINPROGRESS:
+            sock.close()
+            raise
+    stream = asyncio.StreamWriter(sock, {})
+    return stream, stream
+
+
+async def connected(writer):
+    if MICROPYTHON:
+        await writable(writer.s)
+
+
+def close_stream(writer):
+    writer.close()
+    # Synchronous on purpose: awaiting wait_closed() could let cleanup hang.
+    if MICROPYTHON:
+        writer.s.close()
 
 
 async def exchange(host, port, token, report):
-    reader, writer = await asyncio.open_connection(host, port)
+    reader, writer = await open_stream(host, port)
     try:
+        await connected(writer)
         payload = json.dumps(report).encode()
         writer.write(("POST /api/device/sync HTTP/1.0\r\nHost: %s\r\n"
                       "Authorization: Bearer %s\r\nContent-Type: application/json\r\n"
@@ -35,5 +81,4 @@ async def exchange(host, port, token, report):
             body += await reader.readexactly(length - len(body))
         return json.loads(body[:length])
     finally:
-        # Synchronous close only: awaiting wait_closed() could let cleanup hang.
-        writer.close()
+        close_stream(writer)

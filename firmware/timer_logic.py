@@ -2,7 +2,7 @@
 
 # ESP32 firmware version, reported on every sync; the server compares it with this
 # repository copy. Bump only when files copied to the ESP32 change (see CHANGELOG.md).
-FIRMWARE_VERSION = "1.2.2"
+FIRMWARE_VERSION = "1.2.3"
 
 # Upper bound (inclusive, ms) per phase; the web UI receives these via the server.
 THRESHOLDS = (("overdue", -30000), ("red", 0), ("orange", 60000), ("yellow", 300000))

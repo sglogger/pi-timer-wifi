@@ -9,6 +9,24 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.3 – Socket-Leck im ESP32-Abgleich behoben (13.10.2026)
+
+Pi-Software 1.3.3, ESP32-Firmware 1.2.3. Auf dem Pi Dienst und App neu starten,
+auf **alle ESP32** `firmware/http_sync.py`, `firmware/main.py` und
+`firmware/timer_logic.py` kopieren.
+
+ESP32-Firmware:
+- Behoben: Jeder Abgleich ließ einen Socket offen. In MicroPython schließt
+  `Stream.close()` den Socket nicht (nur `wait_closed()`), und ein Timeout während
+  `open_connection()` verlor ihn ganz. Nach einiger Zeit waren Sockets und
+  Netzwerkspeicher erschöpft: Jeder Abgleich endete mit `Sync: TimeoutError` trotz
+  gutem Signal, der Pi sah keine Pakete mehr, BLE meldete `ENOMEM`. Ein Reset half
+  nur vorübergehend. Der Socket wird jetzt in jedem Fall direkt geschlossen; ein
+  Test auf dem MicroPython-Unix-Port prüft das auch nach Timeouts.
+- Der in 1.2.2 ESP-NOW zugeschriebene Ausfall hatte dieselbe Ursache; ESP-NOW löste
+  ihn nur schneller aus. Das Mesh bleibt aus, bis ein Hardwaretest mit 1.2.3 es
+  bestätigt (`MESH = True` schaltet es ein).
+
 ## 1.3.2 – ESP-NOW-Mesh standardmäßig aus (13.10.2026)
 
 Pi-Software 1.3.2, ESP32-Firmware 1.2.2. Auf dem Pi Dienst und App neu starten,

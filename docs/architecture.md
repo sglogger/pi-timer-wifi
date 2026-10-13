@@ -160,9 +160,11 @@ ohne WLAN, die ständig empfangen.
 **Experimentell, standardmäßig aus:** Im Hardwaretest (ESP32-C6, MicroPython 1.28,
 WLAN + BLE + ESP-NOW auf einem Funkmodul) liefen mit aktivem ESP-NOW alle
 HTTP-Abgleiche in den Timeout, obwohl Kanal (6) und Signal (−70 dBm) passten; der
-Pi empfing keine Pakete des ESP32, BLE meldete `ENOMEM`. Ohne ESP-NOW lief beides.
-Die Ursache ist noch nicht geklärt. `MESH = True` in `config.py` schaltet das Mesh
-pro Gerät ein. Server ohne Stempel
+Pi empfing keine Pakete des ESP32, BLE meldete `ENOMEM`. Dasselbe trat später auch
+ohne ESP-NOW auf: Ursache war ein Socket-Leck im HTTP-Abgleich (in Firmware 1.2.3
+behoben, siehe CHANGELOG), das ESP-NOW nur schneller auslöste. Bis ein erneuter
+Hardwaretest das Mesh bestätigt, bleibt es aus. `MESH = True` in `config.py`
+schaltet es pro Gerät ein. Server ohne Stempel
 (vor Pi-Software 1.2.0) deaktivieren es automatisch.
 
 ## Grenzen

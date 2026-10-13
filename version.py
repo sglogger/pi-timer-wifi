@@ -2,7 +2,7 @@
 import os
 import subprocess
 
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 
 
 def describe():
