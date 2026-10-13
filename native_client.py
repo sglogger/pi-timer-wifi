@@ -101,13 +101,62 @@ class Client:
         self.closed.set()
 
 
-def firmware_text(node):
-    firmware = node.get('firmware')
-    if not firmware:
-        return ''
-    if firmware['current']:
-        return '\nFirmware %s' % firmware['version']
-    return '\nFirmware %s veraltet – aktuell %s' % (firmware['version'] or '< 1.0.0', firmware['expected'])
+def ago_text(seconds):
+    return 'vor %d s' % seconds if seconds < 120 else 'vor %d min' % (seconds // 60)
+
+
+def device_view(device, online):
+    """One device row: (title, detail text, level, short text) with level ok / warn / offline.
+
+    Firmware versions are shown on the "WLAN & Adressen" page, not here.
+    """
+    if not online:
+        return device['name'], 'Offline · letzte Meldung %s' % ago_text(device['age_s']), 'offline', 'offline'
+    link = 'WLAN' if device['via'] == 'wifi' else 'Mesh über %s' % device['relay']
+    sync = 'synchronisiert' if device['applied'] else 'Übertragung ausstehend'
+    ble = 'Luxafor verbunden' if device['ble_connected'] else device['ble_status']
+    ok = device['applied'] and device['ble_connected']
+    problem = 'OK' if ok else 'wartet' if not device['applied'] else 'kein BLE'
+    short = '%s · %s' % ('WLAN' if device['via'] == 'wifi' else 'Mesh', problem)
+    return device['name'], '%s · %s\n%s' % (link, sync, ble), 'ok' if ok else 'warn', short
+
+
+def firmware_text(device):
+    firmware = device['firmware']
+    version = firmware['version'] or '< 1.0.0'
+    return 'FW %s' % version if firmware['current'] else 'FW %s → %s' % (version, firmware['expected'])
+
+
+def hotspot_lines(clients, devices, limit):
+    """Rows of the "Geräte im Hotspot" list on the "WLAN & Adressen" page.
+
+    DHCP clients that are ESP32 timers (matched by MAC) show name and firmware;
+    ESP32 reachable only through the mesh follow with their route instead of an IP.
+    """
+    by_mac = {device['id']: device for device in devices}
+    active_rows, inactive_rows = [], []
+    for ip, mac, name, active in clients:
+        device = by_mac.pop(mac.replace(':', '').lower(), None)
+        suffix = '' if active else '  (inaktiv)'
+        if device is None:
+            row = '  %-15s %s  %s%s' % (ip, mac, name or '–', suffix)
+        else:
+            row = '  %-15s %-14s %s%s' % (ip, device['name'][:14], firmware_text(device), suffix)
+        (active_rows if active else inactive_rows).append(row)
+    mesh_rows = []
+    for device in by_mac.values():
+        route = ('offline' if not device['online'] else
+                 'WLAN' if device['via'] == 'wifi' else 'Mesh/' + (device['relay'] or '?'))
+        mesh_rows.append('  %-15s %-14s %s' % (route[:15], device['name'][:14], firmware_text(device)))
+    # ESP32 outside the DHCP list matter more than stale leases.
+    rows = active_rows + mesh_rows + inactive_rows
+    if len(rows) > limit:
+        rows = rows[:limit - 1] + ['  … und %d weitere' % (len(rows) - limit + 1)]
+    return rows or ['  keine']
+
+
+def names(devices):
+    return ', '.join(device['name'] for device in devices)
 
 
 class ViewState:
@@ -137,23 +186,27 @@ class ViewState:
         remaining = None if state is None else state['remaining_ms']
         if remaining is not None:
             remaining -= int((now - self.sampled_at) * 1000)
-        node = state.get('node') if state else None
-        online = bool(fresh and node and node['online'] and
-                      node['age_s'] + (now - self.sampled_at) < 5)
-        applied = online and node['applied']
-        ble = online and node['report']['ble_connected']
+        elapsed = now - self.sampled_at
+        devices = state.get('devices', []) if state else []
+        online = [device for device in devices
+                  if fresh and device['online'] and device['age_s'] + elapsed < device['timeout_s']]
+        rows = [device_view(dict(device, age_s=device['age_s'] + elapsed), device in online)
+                for device in devices]
+        pending = [device for device in online if not device['applied']]
+        offline = [device for device in devices if device not in online]
+        no_ble = [device for device in online if not device['ble_connected']]
         orb = state.get('orb') if state else None
         message = (self.error or 'Warte auf Timer-Server') if state is None else (
             self.error or ('Server offline – Zustand unbestätigt' if not fresh else
-                           'ESP32 offline – Start/Stop erst nach Wiederverbindung' if not online else
-                           'Warte auf ESP32-Bestätigung' if not applied else
-                           'Timer synchronisiert – Luxafor nicht verbunden' if not ble else
-                           'Timer synchronisiert – BLE verbunden'))
+                           'Kein ESP32 online – Start/Stop erst nach Wiederverbindung' if not online else
+                           'Warte auf Bestätigung: ' + names(pending) if pending else
+                           'Synchronisiert – offline: ' + names(offline) if offline else
+                           'Synchronisiert – Luxafor fehlt: ' + names(no_ble) if no_ble else
+                           ('Alle %d ESP32 synchronisiert – BLE verbunden' % len(online)
+                            if len(online) > 1 else 'ESP32 synchronisiert – BLE verbunden')))
         return dict(text=clock_text(remaining) if remaining is not None else '00:00',
-                    phase=phase(remaining), server=bool(fresh), node=online, ble=bool(ble),
-                    node_text=('Timer synchronisiert' if applied else 'Übertragung ausstehend' if online
-                               else 'Offline / unbekannt') + (firmware_text(node) if online else ''),
-                    ble_text=node['report']['ble_status'] if online else 'Status unbekannt',
+                    phase=phase(remaining), server=bool(fresh), devices=rows,
+                    online=len(online), synced=len(online) - len(pending),
                     orb=bool(fresh and orb and orb['connected']),
                     orb_text=('Status unbekannt' if not fresh else orb['status'] if orb else 'Deaktiviert'),
                     message=message)

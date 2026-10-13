@@ -29,4 +29,6 @@ class WLAN:
     def config(self, name=None, **settings):
         if "channel" in settings:
             self.channel = settings["channel"]
+        if name == "mac":
+            return b"\xa1\xb2\xc3\xd4\xe5\xf6"
         return getattr(self, "channel", 6)

@@ -89,26 +89,65 @@ function render() {
   $('countdown').classList.toggle('overdue', phase === 'overdue');
   $('phase').textContent = ui.labels[phase];
   $('connection').textContent = fresh ? 'Headend verbunden' : 'Server offline · lokale Anzeige';
-  const node = snapshot.node;
-  const online = fresh && node?.online && node.age_s + (now - sampledAt)/1000 < 5;
-  $('node-dot').className = online ? 'ok' : 'bad';
-  const fw = node?.firmware;
-  const fwText = !online || !fw ? '' : fw.current ? ` · Firmware ${fw.version}`
-    : ` · Firmware ${fw.version || '< 1.0.0'} veraltet – aktuell ${fw.expected}`;
-  $('node-state').textContent = (online ? (node.applied ? 'Timer synchronisiert' : 'Übertragung ausstehend') : 'Offline / noch keine Meldung') + fwText;
-  const ble = online && node.report?.ble_connected;
-  $('ble-dot').className = ble ? 'ok' : 'bad';
-  $('ble-state').textContent = online ? node.report.ble_status : 'Status unbekannt';
+  const elapsed = (now - sampledAt) / 1000;
+  const devices = snapshot.devices || [];
+  const online = devices.filter(d => fresh && d.online && d.age_s + elapsed < d.timeout_s);
+  renderDevices(devices, online, elapsed);
+  const pending = online.filter(d => !d.applied);
+  const offline = devices.filter(d => !online.includes(d));
+  const noBle = online.filter(d => !d.ble_connected);
+  const names = list => list.map(d => d.name).join(', ');
   const orb = snapshot.orb;
   $('orb-dot').className = fresh && orb?.connected ? 'ok' : 'bad';
   $('orb-state').textContent = !fresh ? 'Status unbekannt' : orb ? orb.status : 'Deaktiviert';
-  if (node && !commandBusy) {
+  if (!commandBusy) {
     $('feedback').textContent = !fresh ? 'Serververbindung unterbrochen. Bedienung und Zustand sind unbestätigt.' :
-      !online ? 'ESP32 offline. Start/Stop wird erst beim Wiederverbinden übernommen.' :
-      !node.applied ? 'Warte auf ESP32-Bestätigung …' :
-      !ble ? 'Timer synchronisiert. Luxafor-Verbindung fehlt.' :
-      'ESP32 synchronisiert · BLE verbunden';
+      !online.length ? 'Kein ESP32 online. Start/Stop wird erst beim Wiederverbinden übernommen.' :
+      pending.length ? `Warte auf Bestätigung: ${names(pending)} …` :
+      offline.length ? `Synchronisiert · offline: ${names(offline)}` :
+      noBle.length ? `Synchronisiert · Luxafor fehlt: ${names(noBle)}` :
+      online.length > 1 ? `Alle ${online.length} ESP32 synchronisiert · BLE verbunden` : 'ESP32 synchronisiert · BLE verbunden';
   }
+}
+
+function deviceText(d, isOnline, elapsed) {
+  const fw = d.firmware;
+  const outdated = fw.current ? '' : ` · Firmware ${fw.version || '< 1.0.0'} veraltet – aktuell ${fw.expected}`;
+  if (!isOnline) {
+    const age = d.age_s + elapsed;
+    return `Offline · letzte Meldung vor ${age < 120 ? Math.floor(age) + ' s' : Math.floor(age / 60) + ' min'}${outdated}`;
+  }
+  const link = d.via === 'wifi' ? 'WLAN' : `Mesh über ${d.relay}`;
+  const ble = d.ble_connected ? 'Luxafor verbunden' : d.ble_status;
+  return `${link} · ${d.applied ? 'synchronisiert' : 'Übertragung ausstehend'} · ${ble}${outdated}`;
+}
+
+// Rows are built with textContent only: device names come from the network.
+function renderDevices(devices, online, elapsed) {
+  const box = $('devices');
+  if (box.children.length !== Math.max(1, devices.length)) {
+    box.replaceChildren(...Array.from({length: Math.max(1, devices.length)}, () => {
+      const row = document.createElement('div');
+      row.className = 'status';
+      row.append(document.createElement('i'), document.createElement('div'));
+      row.lastChild.append(document.createElement('strong'), document.createElement('small'));
+      return row;
+    }));
+  }
+  if (!devices.length) {
+    const [dot, text] = box.children[0].children;
+    dot.className = 'bad';
+    text.children[0].textContent = 'ESP32';
+    text.children[1].textContent = 'Noch keine Meldung';
+    return;
+  }
+  devices.forEach((d, index) => {
+    const [dot, text] = box.children[index].children;
+    const isOnline = online.includes(d);
+    dot.className = !isOnline ? 'off' : d.applied && d.ble_connected && d.firmware.current ? 'ok' : 'bad';
+    text.children[0].textContent = d.name;
+    text.children[1].textContent = deviceText(d, isOnline, elapsed);
+  });
 }
 
 document.querySelectorAll('.preset').forEach(button => button.onclick = () => command('/api/start', {minutes:Number(button.dataset.minutes)}));

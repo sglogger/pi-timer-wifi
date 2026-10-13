@@ -1,7 +1,7 @@
 # Native Touch-Oberfläche für den Pi Zero 2 W
 
 Standard ist eine **Python-/Tkinter-App auf X11**, mit sieben Zeitknöpfen, großer
-Zeitanzeige, STOP und getrennten Anzeigen für Server, ESP32 und Luxafor. Im normalen
+Zeitanzeige, STOP und getrennten Anzeigen für Server, jeden ESP32 und die Luxafor Orb. Im normalen
 Betrieb laufen Xorg, die Tk-App und der Timer-Server. Ein kompletter Desktop,
 Windowmanager und Browser sind dafür nicht erforderlich.
 
@@ -100,10 +100,24 @@ Der Knopf **WLAN / IP** unten rechts öffnet ein Overlay über der ganzen App;
   `http://pi-timer.local:8000/` oder `http://10.42.0.1:8000/`. Die Weboberfläche
   fragt nach dem API-Schlüssel aus `.env`.
 - IPv4-Adressen des Headends je Schnittstelle.
-- Geräte im Hotspot: IP, MAC und Hostname aus den DHCP-Leases, ergänzt um die
-  ARP-Tabelle (`ip neigh`). Aktive Geräte stehen oben; Einträge nur aus alten Leases
-  sind als „(inaktiv)“ markiert. Die Liste aktualisiert sich alle 5 Sekunden.
-  Eigene ESP32-Namen über `HOSTNAME` in `firmware/config.py`.
+- Geräte im Hotspot / Mesh: IP, MAC und Hostname aus den DHCP-Leases, ergänzt um
+  die ARP-Tabelle (`ip neigh`). Ein ESP32-Timer (an der MAC erkannt) steht mit Name
+  und **Firmware-Version** statt MAC, z. B. `10.42.0.50  saal-1  FW 1.2.0`; veraltete
+  Firmware erscheint als `FW 1.0.0 → 1.2.0`. ESP32 ohne WLAN folgen mit ihrem Weg
+  statt IP (`Mesh/saal-1`, `offline`). Danach Einträge nur aus alten Leases mit
+  „(inaktiv)“. Die Liste aktualisiert sich alle 5 Sekunden. Eigene ESP32-Namen über
+  `HOSTNAME` in `firmware/config.py`.
+
+## ESP32-Status
+
+Die Spalte **VERBINDUNGEN** zeigt `ESP32 · 2/3 OK` (Geräte mit bestätigtem Start/STOP
+und verbundener Luxafor) und darunter die Geräte. Ein einzelnes Gerät erscheint
+ausführlich, z. B. `WLAN · synchronisiert` bzw. `Mesh über saal-1 · Übertragung
+ausstehend` und darunter den Luxafor-Status. Ab zwei Geräten steht jedes in einer
+Zeile, z. B. `saal-2 · Mesh · kein BLE`; höchstens fünf, weitere zeigt die
+Weboberfläche. Farben: grün = alles bestätigt, orange = Übertragung ausstehend oder
+Luxafor fehlt, rot = offline. Die Meldung unter STOP nennt betroffene Geräte, z. B.
+„Warte auf Bestätigung: saal-2“.
 
 Das Passwort liest die App mit `nmcli` aus NetworkManager. Darf der Benutzer das
 nicht, zeigt das Overlay einen Hinweis; dann Name und Passwort in `.env` eintragen:

@@ -26,10 +26,12 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 | Anzeige / Ereignis | Bedeutung und Vorgehen |
 |---|---|
 | Headend verbunden | Oberfläche erreicht Server; noch keine Gerätebestätigung |
-| Timer synchronisiert | ESP32 hat aktuelle Sitzung/Revision gemeldet |
-| Übertragung ausstehend | Start/Stop am Pi vorhanden, ESP32 hat ihn noch nicht bestätigt |
-| ESP32 offline | Mehr als 5 s keine Gerätemeldung; lokaler Countdown kann weiterlaufen |
-| ESP32-Display: MESH OK | Kein eigenes WLAN, Timer kommt per ESP-NOW von einem anderen ESP32; Start/Stop wirken, das Gerät erscheint aber nicht in der Statusanzeige des Pi |
+| ESP32 · 2/3 OK | Zwei von drei ESP32 haben Start/Stop übernommen und Luxafor verbunden; die Liste darunter nennt das dritte |
+| synchronisiert / OK | ESP32 hat aktuelle Sitzung/Revision gemeldet |
+| Übertragung ausstehend / wartet | Start/Stop am Pi vorhanden, dieser ESP32 hat ihn noch nicht bestätigt |
+| Mesh über saal-1 | ESP32 ohne eigenes WLAN; Timer und Status laufen über den ESP32 `saal-1` |
+| ESP32 rot: offline | Direkt 5 s, über Mesh 10 s keine Meldung; lokaler Countdown kann weiterlaufen |
+| ESP32-Display: MESH OK | Kein eigenes WLAN, Timer kommt per ESP-NOW von einem anderen ESP32 |
 | Luxafor/BLE offline | Licht kann alte Farbe behalten; Timer/WLAN separat prüfen |
 | BLE verbunden; Befehl gesendet | Befehl an GATT geschickt, tatsächliche LED-Farbe visuell prüfen |
 | Luxafor · USB: Verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
@@ -165,11 +167,11 @@ nehmen. Bei geänderter systemd-Unit (1.1.0: neuer Dienst `pi-timer-hotspot-chan
 
 ### 3. ESP32-Firmware aktualisieren
 
-**Wann:** Wenn die Touch-App bzw. Weboberfläche bei „ESP32 · WLAN“ „Firmware …
-veraltet – aktuell X.Y.Z“ zeigt, oder wenn der [CHANGELOG](../CHANGELOG.md) eine
+**Wann:** Wenn die Touch-App unter **WLAN / IP** bei einem ESP32 `FW alt → X.Y.Z`
+bzw. die Weboberfläche „Firmware … veraltet“ zeigt, oder wenn der [CHANGELOG](../CHANGELOG.md) eine
 ESP32-Änderung nennt. Die Version im Repository steht als `FIRMWARE_VERSION` in
 `firmware/timer_logic.py`; der ESP32 meldet seine bei jedem Abgleich.
-Firmware vor 1.0.0 meldet keine Version und erscheint als „< 1.0.0 veraltet“.
+Firmware vor 1.0.0 meldet keine Version und erscheint als `FW < 1.0.0 → X.Y.Z`.
 
 Jeden ESP32 einzeln per USB-Datenkabel am Rechner anschließen, im Repository:
 

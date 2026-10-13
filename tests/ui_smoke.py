@@ -35,17 +35,29 @@ class WindowTests(unittest.TestCase):
         window = TimerWindow(root, client, fullscreen=False)
         try:
             root.update()
-            for remaining in (None, 60000, -6000000):
-                window.view.accept((0, window.view.clock(), {'remaining_ms': remaining}, None))
+            def device(number, via='wifi'):
+                return dict(id='%012d' % number, name='saal-%d-langer-name' % number, via=via, relay='saal-1',
+                            online=True, age_s=0, timeout_s=10, applied=number % 2 == 0,
+                            ble_connected=number % 3 == 0, ble_status='Luxafor nicht gefunden',
+                            firmware=dict(version='1.0.0', expected='1.2.0', current=False))
+            scenarios = ((None, []), (60000, [device(1), device(2, 'mesh')]),
+                         (-6000000, [device(n, 'mesh') for n in range(7)]))
+            for remaining, devices in scenarios:
+                window.view.accept((0, window.view.clock(), {'remaining_ms': remaining, 'devices': devices}, None))
                 window.tick()
                 root.update()
-                for widget in window.buttons + [window.countdown, window.feedback, window.ble_detail,
-                                                window.orb_detail]:
+                legend = window.orb_detail.master.winfo_children()[-1]
+                for widget in window.buttons + [window.countdown, window.feedback, window.devices_title,
+                                                window.orb_detail, legend] + [w for row in window.device_rows for w in row]:
                     self.assertGreaterEqual(widget.winfo_rootx(), root.winfo_rootx())
                     self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
                                          root.winfo_rootx() + 1024)
                     self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
                                          root.winfo_rooty() + 600)
+                for widget in [window.devices_title] + [w for row in window.device_rows for w in row]:
+                    self.assertLessEqual(widget.winfo_reqwidth(), window.devices_title.master.winfo_width(),
+                                         widget.cget('text'))
+                self.assertLessEqual(legend.winfo_rooty() + legend.winfo_height(), window.info_button.winfo_rooty())
                 self.assertLessEqual(window.time_font.measure(window.countdown.cget('text')),
                                      window.countdown.winfo_width())
             for button in window.buttons:
@@ -75,6 +87,9 @@ class WindowTests(unittest.TestCase):
                             for n in range(50, 66)]}
         original = native_ui.netinfo.snapshot
         native_ui.netinfo.snapshot = lambda: info
+        window.view.snapshot = {'remaining_ms': None, 'devices': [
+            dict(id='aabbccddee32' if n == 0 else '%012d' % n, name='saal-%d' % n, via='mesh' if n else 'wifi', relay='saal-1', online=True,
+                 firmware=dict(version='1.0.0', expected='1.2.0', current=False)) for n in range(8)]}
         try:
             root.update()
             opener = window.info_button
@@ -89,7 +104,9 @@ class WindowTests(unittest.TestCase):
                 root.after(50)
             self.assertTrue(overlay.details.cget('text'), 'overlay did not render')
             self.assertIn('10.42.0.50', overlay.details.cget('text'))
-            self.assertIn('2 weitere', overlay.details.cget('text'))
+            self.assertIn('weitere', overlay.details.cget('text'))
+            self.assertIn('Mesh/saal-1', overlay.details.cget('text'))
+            self.assertIn('10.42.0.50      saal-0         FW 1.0.0 → 1.2.0', overlay.details.cget('text'))
             self.assertIn('0123456789abcdef01234567', overlay.wifi.cget('text'))
             self.assertIn('http://10.42.0.1:8000/', overlay.wifi.cget('text'))
             self.assertGreater(len(overlay.qr.find_all()), 100)

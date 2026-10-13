@@ -58,16 +58,37 @@ POST verlangt `Content-Type: application/json`. Keine CORS-Freigabe. Fehler
 
 | Route | Bedeutung |
 |---|---|
-| `GET /api/state` | Timer + zuletzt gemeldeter Gerätestatus |
+| `GET /api/state` | Timer + Status aller ESP32 (`devices`) |
 | `POST /api/start` mit `{"minutes": 25}` | Neuen Countdown starten/ersetzen; Antwort wie `GET /api/state` |
 | `POST /api/stop` mit `{}` | Sollzustand Stop; Antwort wie `GET /api/state` |
 | `POST /api/device/sync` | Vorher übernommene Revision melden, aktuellen Sollzustand holen |
 
-Gerätemeldung:
+Gerätemeldung (`id` = MAC, `name` = `HOSTNAME`, `peers` = per Mesh gehörte Geräte
+ohne WLAN mit Alter der Meldung):
 
 ```json
-{"session":null,"revision":-1,"ble_connected":false,"ble_status":"Suche Luxafor"}
+{"id":"a1b2c3d4e5f6","name":"saal-1","session":null,"revision":-1,"ble_connected":false,
+ "ble_status":"Suche Luxafor","firmware":"1.2.0",
+ "peers":[{"id":"0a1b2c3d4e5f","name":"saal-2","session":null,"revision":-1,"ble_connected":true,
+           "ble_status":"BLE verbunden; Befehl gesendet","firmware":"1.2.0","age_ms":2300}]}
 ```
+
+Firmware vor 1.2.0 sendet weder `id` noch `peers`; der Server führt sie pro
+IP-Adresse (`ip-10.42.0.23`). Ungültige `peers`-Einträge werden einzeln verworfen.
+
+`devices` in `GET /api/state` (eine Zeile pro Gerät, nach Name sortiert):
+
+```json
+{"id":"0a1b2c3d4e5f","name":"saal-2","via":"mesh","relay":"saal-1","online":true,
+ "age_s":2.3,"timeout_s":10,"applied":true,"ble_connected":true,
+ "ble_status":"BLE verbunden; Befehl gesendet",
+ "firmware":{"version":"1.2.0","expected":"1.2.0","current":true}}
+```
+
+`via` ist `wifi` (direkte Meldung, offline nach 5 s) oder `mesh` (weitergeleitet,
+offline nach 10 s). Pro Gerät gilt die neueste Meldung; eine direkte Meldung ersetzt
+immer eine weitergeleitete. Höchstens 16 Geräte; ohne Meldung für 30 Minuten
+verschwindet ein Gerät aus der Liste.
 
 Antwort an den ESP32 (Beispiel; ohne den Gerätestatus der Bedien-Antworten):
 
@@ -110,6 +131,10 @@ nach Stromausfall ohne Uhr monoton.
   (Multi-Hop, etwa eine Sendeperiode pro Hop).
 - Fällt der Pi aus, haben alle denselben letzten Stempel; niemand übernimmt etwas,
   alle zählen lokal weiter und zeigen `WIFI OFFLINE`.
+- **Status zurück zum Pi:** Ein Gerät ohne frische Server-Verbindung sendet alle 2 s
+  ein Statuspaket (ID, Name, Revision, Luxafor, Firmware, Alter). Geräte ohne WLAN
+  leiten fremde Statuspakete weiter (jüngstes pro Gerät, bis 10 s alt); ein Gerät
+  mit WLAN sendet sie als `peers` mit seinem nächsten Abgleich an den Pi.
 - Das Display zeigt `WIFI OK` (eigene Server-Verbindung), `MESH OK` (frischer
   Server-Zustand über einen anderen ESP32 innerhalb von 5 s) oder `WIFI OFFLINE`.
 
@@ -137,9 +162,9 @@ ohne WLAN, die ständig empfangen.
 
 ## Grenzen
 
-- Ein Headend; mehrere ESP32 zeigen denselben Timer, die Statusanzeige zeigt aber
-  nur das zuletzt per WLAN meldende Gerät. Geräte, die nur über das Mesh
-  synchronisieren, melden dem Server nichts.
+- Ein Headend; mehrere ESP32 zeigen denselben Timer. Statusmeldungen über das Mesh
+  sind nur signiert, nicht gegen Wiedereinspielen geschützt; sie zeigen Zustand an,
+  steuern aber nichts.
 - Timer überlebt WLAN-Ausfall, aber keinen Neustart des ESP32 ohne erreichbaren Pi.
 - Serverzustand liegt im RAM und wird bei Prozess-Neustart auf Stop gesetzt.
 - BLE Write-without-response bestätigt nur das lokale Absenden, keine LED-Farbe.

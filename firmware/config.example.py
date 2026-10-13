@@ -7,9 +7,9 @@ WIFI_PASSWORD = "PASSWORD-FROM-HOTSPOT-SETUP"
 SERVER_IP = "10.42.0.1"
 SERVER_PORT = 8000
 API_TOKEN = "REPLACE-WITH-TOKEN-FROM-PI"
-# Optional: name shown in the headend's "WLAN / IP" overlay and top right on the
-# ESP32 display (first 25 characters), e.g. "timer-saal-1".
-# Letters, digits and "-" only; empty keeps MicroPython's default name.
+# Recommended with several devices: name in the headend's device list and
+# "WLAN / IP" overlay and top right on the ESP32 display (first 25 characters),
+# e.g. "saal-1". Letters, digits and "-" only. Empty: the headend shows the MAC.
 HOSTNAME = ""
 # ESP-NOW mesh: devices without Wi-Fi take the timer from peers that have it.
 # All devices need the same API_TOKEN. False disables it.

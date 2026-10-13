@@ -18,7 +18,7 @@ flowchart LR
   B -->|"BLE · direkt daneben"| C
   F["Weiterer ESP32-C6\naußerhalb der WLAN-Reichweite"]
   G["Luxafor Bluetooth Pro"]
-  B <-.->|"ESP-NOW-Mesh · neuester Zustand gewinnt"| F
+  B <-.->|"ESP-NOW-Mesh\nTimer: neuester Zustand gewinnt\nStatus: zurück zum Pi"| F
   F -->|"BLE"| G
   D["Handy / Tablet / Laptop\nWeboberfläche im Browser"]
   D <-->|"WLAN · Timer bedienen"| A
@@ -43,13 +43,15 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
   Beim Booten wählt der Pi den am wenigsten belegten Kanal (1, 6 oder 11).
 - Mehrere ESP32 synchronisieren sich zusätzlich per ESP-NOW-Mesh untereinander:
   Ein Gerät ohne WLAN übernimmt den Timer von einem Nachbarn mit WLAN.
+- Das Headend zeigt jeden ESP32 einzeln (WLAN oder „Mesh über …“, Bestätigung,
+  Luxafor); Firmware-Versionen stehen unter **WLAN / IP**.
 - ESP32 holt alle 500 ms den vollständigen Timerzustand. Keine Befehlswarteschlange,
   die nach einem Ausfall veraltete Starts nachliefert.
 - Lokaler monotoner Countdown und Farbwechsel laufen bei WLAN-Ausfall weiter.
 - Automatische WLAN-/BLE-Wiederverbindung, frischer Zustand nach Reconnect.
 - **Native Tkinter-Touch-App als Standard am Pi Zero 2 W**: keine Browser-Engine,
   automatische Anmeldung aus `.env`, große Zeit-/Stop-Tasten. Weboberfläche optional.
-- Oberfläche zeigt getrennt Headend, ESP32-Synchronisation, Luxafor-BLE und Luxafor-USB.
+- Oberfläche zeigt getrennt Headend, jeden ESP32 mit Synchronisation und Luxafor-BLE sowie Luxafor-USB.
 - Handy, Tablet oder Laptop können denselben Timer über die Weboberfläche im
   Pi-WLAN steuern, auch gleichzeitig mit der nativen Touch-App.
 - Presets: 30, 25, 20, 15, 10, 5 und 1 Minute. API: 1–120 Minuten.
@@ -159,14 +161,15 @@ ESP32, der WLAN hat, auch über mehrere Geräte hinweg; sein Display zeigt dann
 gewinnt. Alle Geräte brauchen denselben `API_TOKEN`. Details:
 [Architektur](docs/architecture.md#esp-now-mesh-zwischen-den-esp32).
 
-**Grenze der aktuellen Statusanzeige:** Der Server speichert nur die zuletzt
-eingegangene ESP32-Meldung, ohne Geräte-ID. WLAN-/BLE-Status und „Timer synchronisiert“
-beziehen sich deshalb bei mehreren Geräten auf den jeweils zuletzt meldenden
-ESP32. Das bestätigt **nicht**, dass alle Geräte verbunden sind oder STOP übernommen
-haben. Die Anzeige kann zwischen Gerätestatus wechseln; ein ausgefallenes Gerät
-kann durch Meldungen eines anderen verdeckt werden. Für verlässliche zentrale
-Überwachung mehrerer Rednergeräte muss die Software zunächst um Geräte-IDs und
-eine getrennte Statusanzeige erweitert werden.
+**Statusanzeige pro Gerät:** Jeder ESP32 meldet sich mit seiner MAC-Adresse als ID
+und seinem `HOSTNAME` als Namen. Touch-App und Weboberfläche listen alle Geräte
+einzeln mit Weg (WLAN oder „Mesh über saal-1“), Übernahme von Start/STOP und
+Luxafor-Verbindung. Geräte ohne WLAN melden ihren Status per ESP-NOW an einen
+Nachbarn mit WLAN, der ihn an den Pi weitergibt. Die Meldung zählt 10 s statt 5 s
+als aktuell, weil sie über das Mesh später ankommt. Ein Gerät ohne Meldung bleibt
+30 Minuten als „offline“ sichtbar. Die Touch-App zeigt ein Gerät ausführlich, ab
+zwei Geräten je eine Zeile und höchstens fünf; die Weboberfläche zeigt alle.
+Firmware-Versionen stehen unter **WLAN / IP** bei den Geräten im Hotspot.
 
 ### Zusätzliches Gerät einrichten
 
@@ -186,15 +189,16 @@ eine getrennte Statusanzeige erweitert werden.
    Gerätename nötig. Die gemeinsame Beispielkonfiguration nicht unverändert
    einschließlich der Lampenzuordnung auf alle Boards kopieren.
 5. Die jeweilige `config.py` auf das passende Board übertragen, neu starten und
-   ESP32/Lampe als Paar beschriften. Der Pi-Hotspot muss nur einmal eingerichtet
+   ESP32/Lampe als Paar beschriften. Mit `HOSTNAME` (z. B. `saal-2`) erscheint das
+   Gerät am Headend unter diesem Namen statt der MAC-Adresse. Der Pi-Hotspot muss nur einmal eingerichtet
    werden; zusätzliche ESP32 benötigen keine manuelle IP-Vergabe oder Registrierung.
 6. Alle Geräte gleichzeitig einschalten. Start, Farbwechsel und STOP **an jedem
    Display und jeder Lampe einzeln** prüfen. Ein Gerät absichtlich ausschalten und
    wieder verbinden; anschließend Kaltstart ohne Internet und Reichweite mit allen
    vorgesehenen Geräten plus Handy testen.
 
-Zwei simulierte Knoten erhalten denselben Timerzustand und STOP; auch die oben
-beschriebene Beschränkung der Statusanzeige wurde geprüft. Ein Mehrgerätebetrieb
+Simulierte Knoten (`PI_TIMER_NODE=saal-2 tools/simulate_node.py`) erhalten denselben
+Timerzustand und STOP und erscheinen getrennt in der Statusanzeige. Ein Mehrgerätebetrieb
 auf der echten Hardware und eine maximale Teilnehmerzahl sind noch nicht getestet.
 Mit jedem ESP32 kommen ungefähr zwei Sync-Abfragen pro Sekunde hinzu; auch Handys
 und Laptops belegen WLAN-Verbindungen. Die passende Gerätezahl muss mit dem
@@ -256,6 +260,7 @@ set -a
 . ./.env
 set +a
 .venv/bin/python tools/simulate_node.py
+# weiteres Gerät: PI_TIMER_NODE=sim-2 .venv/bin/python tools/simulate_node.py
 ```
 
 Die Simulation meldet absichtlich keine bestehende Luxafor-Verbindung.

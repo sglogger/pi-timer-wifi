@@ -52,6 +52,11 @@ diese Version als Prototyp behandeln.
 - [ ] Mesh über zwei Hops: drei ESP32 in Kette, nur der erste mit WLAN.
 - [ ] Mesh: ESP32 mit anderem `API_TOKEN` übernimmt keine Zustände.
 - [ ] Mesh: Pi ausschalten: alle zählen weiter, keiner springt, Displays zeigen `WIFI OFFLINE`.
+- [ ] Statusanzeige: drei ESP32 mit `HOSTNAME`, einer nur über Mesh: alle drei getrennt
+      sichtbar, der Mesh-Teilnehmer als „Mesh über …“, STOP für jedes Gerät bestätigt.
+- [ ] Einen ESP32 ausschalten: nach 5 s (WLAN) bzw. 10 s (Mesh) rot/offline, die
+      Meldung unter STOP nennt ihn.
+- [ ] **WLAN / IP**: ESP32 im Hotspot mit Name und Firmware, Mesh-Geräte mit `Mesh/…`.
 - [ ] Luxafor ohne Dongle gefunden, GATT verbunden, Aus funktioniert.
 - [ ] Luxafor Orb per USB am Headend: Farben wie Bluetooth Pro, Blinken bei Überzeit, Aus bei Stop.
 - [ ] Orb bei laufendem Timer abziehen und wieder einstecken: aktuelle Farbe kehrt zurück.

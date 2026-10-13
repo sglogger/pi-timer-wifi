@@ -42,11 +42,11 @@ class TimerTests(unittest.TestCase):
         report = dict(session=state['session'], revision=state['revision'],
                       ble_connected=False, ble_status='Suche')
         self.timer.sync(report)
-        self.assertTrue(self.timer.snapshot()['node']['applied'])
+        self.assertTrue(self.timer.snapshot()['devices'][0]['applied'])
         self.timer.command()
-        self.assertFalse(self.timer.snapshot()['node']['applied'])
+        self.assertFalse(self.timer.snapshot()['devices'][0]['applied'])
         self.clock.now += 5
-        self.assertFalse(self.timer.snapshot()['node']['online'])
+        self.assertFalse(self.timer.snapshot()['devices'][0]['online'])
 
 
 class ReplicaTests(unittest.TestCase):
@@ -148,24 +148,26 @@ class APITests(unittest.TestCase):
         self.assertEqual(state['remaining_ms'], 600000)
         report.update(session=state['session'], revision=state['revision'])
         self.client.post('/api/device/sync', json=report, headers=self.headers)
-        self.assertTrue(self.client.get('/api/state', headers=self.headers).json['node']['applied'])
+        self.assertTrue(self.client.get('/api/state', headers=self.headers).json['devices'][0]['applied'])
         self.assertEqual(self.client.post('/api/stop', json={}, headers=self.headers).json['phase'], 'off')
 
     def test_device_firmware_version_is_compared(self):
         from firmware.timer_logic import FIRMWARE_VERSION
         report = dict(session=None, revision=-1, ble_connected=False, ble_status='Suche')
         self.client.post('/api/device/sync', json=report, headers=self.headers)
-        firmware = self.client.get('/api/state', headers=self.headers).json['node']['firmware']
+        firmware = self.client.get('/api/state', headers=self.headers).json['devices'][0]['firmware']
         self.assertEqual(firmware, {'version': None, 'expected': FIRMWARE_VERSION, 'current': False})
         for version, current in (('0.9.0', False), (FIRMWARE_VERSION, True)):
             self.client.post('/api/device/sync', json=dict(report, firmware=version), headers=self.headers)
-            firmware = self.client.get('/api/state', headers=self.headers).json['node']['firmware']
+            firmware = self.client.get('/api/state', headers=self.headers).json['devices'][0]['firmware']
             self.assertEqual((firmware['version'], firmware['current']), (version, current))
 
     def test_bad_device_report(self):
         valid = dict(session=None, revision=-1, ble_connected=False, ble_status='Suche')
         for body in ([], {}, {'revision':True}, {'ble_status':'x'*121},
-                     dict(valid, firmware=1), dict(valid, firmware='x'*21)):
+                     dict(valid, firmware=1), dict(valid, firmware='x'*21), dict(valid, id=''),
+                     dict(valid, id='a b'), dict(valid, name='x'*33), dict(valid, peers={}),
+                     dict(valid, peers=[{}] * 17)):
             self.assertEqual(self.client.post('/api/device/sync', json=body, headers=self.headers).status_code, 400)
 
     def test_restart_has_new_session_and_stops(self):
@@ -174,12 +176,45 @@ class APITests(unittest.TestCase):
         self.assertNotEqual(old['session'], new['session'])
         self.assertIsNone(new['remaining_ms'])
 
-    def test_command_response_keeps_node_status(self):
+    def test_command_response_keeps_device_status(self):
         self.client.post('/api/device/sync', headers=self.headers,
                          json=dict(session=None, revision=-1, ble_connected=True, ble_status='OK'))
-        node = self.client.post('/api/start', json={'minutes':5}, headers=self.headers).json['node']
-        self.assertTrue(node['online'])
-        self.assertFalse(node['applied'])
+        device = self.client.post('/api/start', json={'minutes':5}, headers=self.headers).json['devices'][0]
+        self.assertTrue(device['online'])
+        self.assertFalse(device['applied'])
+
+    def test_devices_are_listed_separately_and_relayed_via_mesh(self):
+        state = self.client.post('/api/start', json={'minutes': 5}, headers=self.headers).json
+        own = dict(session=state['session'], revision=state['revision'], ble_connected=True, ble_status='OK')
+        peer = dict(own, id='bbbbbbbbbbbb', name='saal-2', ble_connected=False, ble_status='Suche', age_ms=2000)
+        bad_peer = dict(peer, id='cc', age_ms=-5)
+        body = dict(own, id='aaaaaaaaaaaa', name='saal-1', peers=[peer, bad_peer])
+        self.assertEqual(self.client.post('/api/device/sync', json=body, headers=self.headers).status_code, 200)
+        self.client.post('/api/device/sync', json=dict(own, firmware='1.0.0'), headers=self.headers)
+        devices = {d['name']: d for d in self.client.get('/api/state', headers=self.headers).json['devices']}
+        self.assertEqual(sorted(devices), ['ip-127.0.0.1', 'saal-1', 'saal-2'])
+        self.assertEqual((devices['saal-2']['via'], devices['saal-2']['relay']), ('mesh', 'saal-1'))
+        self.assertEqual(devices['saal-2']['age_s'], 2)
+        self.assertTrue(all(d['applied'] for d in devices.values()))
+        # An older relayed copy (via another device) does not replace a newer one.
+        self.client.post('/api/device/sync', headers=self.headers,
+                         json=dict(own, id='dddddddddddd', peers=[dict(peer, age_ms=8000)]))
+        self.assertEqual({d['name']: d for d in self.timer.snapshot()['devices']}['saal-2']['relay'], 'saal-1')
+        # Mesh devices get a longer timeout; everything is forgotten after 30 minutes.
+        self.clock.now += 6
+        online = {d['name']: d['online'] for d in self.timer.snapshot()['devices']}
+        self.assertEqual((online['saal-1'], online['saal-2']), (False, True))
+        self.clock.now += 1800
+        self.assertEqual(self.timer.snapshot()['devices'], [])
+
+    def test_device_list_is_bounded(self):
+        report = dict(session=None, revision=-1, ble_connected=False, ble_status='')
+        for number in range(20):
+            self.clock.now += 1
+            self.timer.sync(dict(report, id='dev%02d' % number))
+        names = [d['id'] for d in self.timer.snapshot()['devices']]
+        self.assertEqual(len(names), 16)
+        self.assertNotIn('dev00', names)
 
     def test_invalid_json_returns_json_error(self):
         for path in ('/api/start', '/api/device/sync'):

@@ -44,10 +44,14 @@ def test_mesh_codec():
     # Produced by CPython (tests/test_mesh.py uses the same token): interop check.
     cpython = (b'SWT1["s-1", 3, 61000, 7, 1500]'
                b'\xaf\xe7U\xda-\x0b\xa9)"\xc1\xe2vd\x0b\x91=')
-    state = codec.decode(cpython)
-    check("mesh decodes CPython packet", state is not None and state["session"] == "s-1"
+    kind, state = codec.decode(cpython)
+    check("mesh decodes CPython packet", kind == "state" and state["session"] == "s-1"
           and state["remaining_ms"] == 61000 and state["stamp"] == (7, 1500))
-    check("mesh roundtrip", codec.decode(codec.encode("s", 1, None, (2, 3)))["stamp"] == (2, 3))
+    check("mesh roundtrip", codec.decode(codec.encode("s", 1, None, (2, 3)))[1]["stamp"] == (2, 3))
+    status = {"id": "a1", "name": "saal-2", "session": None, "revision": -1, "ble_connected": False,
+              "ble_status": "\u00e4" * 48, "firmware": "1.2.0", "age_ms": 5}
+    packet = codec.encode_status(status)
+    check("mesh status fits", len(packet) <= 250 and codec.decode(packet)[0] == "status")
     check("mesh rejects tampering", codec.decode(cpython.replace(b"61000", b"91000")) is None)
     replica = Replica(time.ticks_ms, time.ticks_diff)
     check("mesh merge", replica.merge(state) and not replica.merge(state))
@@ -154,8 +158,22 @@ def test_main():
     check("mesh peer state applied", main.replica.session == "s" and main.mesh.alive()
           and main.mesh.channel == 6 and main.link_text() == "MESH OK")
     main.mesh.send()
-    relayed = main.mesh.codec.decode(radio.sent[-1][1])
+    relayed = main.mesh.codec.decode(radio.sent[-1][1])[1]
     check("mesh relays state", relayed["stamp"] == (5, 10) and relayed["revision"] == 2)
+    check("device id from MAC", main.DEVICE_ID == "a1b2c3d4e5f6")
+    peer = {"id": "0000000000c3", "name": "saal-3", "session": "s", "revision": 2, "ble_connected": True,
+            "ble_status": "OK", "firmware": main.FIRMWARE_VERSION, "age_ms": 1200}
+    radio.inbox.append((b"\x00" * 6, main.mesh.codec.encode_status(peer)))
+    radio.inbox.append((b"\x00" * 6, main.mesh.codec.encode_status(dict(peer, age_ms=9000))))
+    radio.inbox.append((b"\x00" * 6, main.mesh.codec.encode_status(dict(peer, id=main.DEVICE_ID))))
+    main.mesh.receive()
+    reports = main.mesh.peer_reports()
+    check("mesh keeps freshest peer status", len(reports) == 1 and 1200 <= reports[0]["age_ms"] < 2000)
+    sent = len(radio.sent)
+    main.mesh.send_status()
+    statuses = [main.mesh.codec.decode(packet)[1] for _, packet in radio.sent[sent:]]
+    check("mesh sends own status and relays peers",
+          [s["id"] for s in statuses] == [main.DEVICE_ID, "0000000000c3"] and statuses[0]["name"] == "timer-test-1")
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)
 

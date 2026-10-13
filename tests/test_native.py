@@ -4,7 +4,7 @@ import unittest
 from urllib.error import HTTPError
 from werkzeug.serving import make_server
 
-from native_client import Client, Transport, ViewState
+from native_client import Client, Transport, ViewState, hotspot_lines
 from server import Timer, create_app
 
 TOKEN = 'nativeTestToken123456789012345'
@@ -27,15 +27,17 @@ class ViewTests(unittest.TestCase):
         self.view.accept((0, self.clock(), self.timer.snapshot(), None))
 
     def test_countdown_continues_but_offline_is_never_confirmed(self):
+        from firmware.timer_logic import FIRMWARE_VERSION
         state = self.timer.command(1)
         self.timer.sync(dict(session=state['session'], revision=state['revision'],
-                             ble_connected=True, ble_status='Verbunden'))
+                             ble_connected=True, ble_status='Verbunden', firmware=FIRMWARE_VERSION))
         self.refresh()
-        self.assertTrue(self.view.render()['ble'])
+        self.assertEqual(self.view.render()['devices'][0][2], 'ok')
         self.clock.now += 90
         state = self.view.render()
         self.assertEqual((state['text'], state['phase']), ('-00:30', 'overdue'))
-        self.assertFalse(state['node'])
+        self.assertEqual(state['online'], 0)
+        self.assertEqual(state['devices'][0][2], 'offline')
         self.assertFalse(state['server'])
         self.assertIn('unbestätigt', state['message'])
 
@@ -46,24 +48,23 @@ class ViewTests(unittest.TestCase):
         self.view.accept((1, self.clock(), old, None))
         self.assertEqual(self.view.render()['text'], '00:00')
         self.assertEqual(self.view.render()['phase'], 'off')
-        self.assertIn('ESP32 offline', self.view.render()['message'])
+        self.assertIn('Kein ESP32 online', self.view.render()['message'])
 
-    def test_firmware_version_shown_and_outdated_flagged(self):
+    def test_firmware_is_not_on_the_main_screen(self):
         from firmware.timer_logic import FIRMWARE_VERSION
         state = self.timer.command(5)
         report = dict(session=state['session'], revision=state['revision'], ble_connected=True, ble_status='OK')
         self.timer.sync(dict(report, firmware=FIRMWARE_VERSION))
         self.refresh()
-        self.assertIn('Firmware ' + FIRMWARE_VERSION, self.view.render()['node_text'])
-        self.assertNotIn('veraltet', self.view.render()['node_text'])
+        self.assertEqual(self.view.render()['devices'][0][2], 'ok')
         self.timer.sync(report)
         self.refresh()
-        self.assertIn('< 1.0.0 veraltet', self.view.render()['node_text'])
+        self.assertNotIn('Firmware', self.view.render()['devices'][0][1])
 
     def test_no_node_does_not_crash_or_claim_connection(self):
         self.refresh()
-        self.assertFalse(self.view.render()['node'])
-        self.assertIn('ESP32 offline', self.view.render()['message'])
+        self.assertEqual(self.view.render()['devices'], [])
+        self.assertIn('Kein ESP32 online', self.view.render()['message'])
 
     def test_aged_node_expires_even_with_recent_server_response(self):
         state = self.timer.command(5)
@@ -73,15 +74,60 @@ class ViewTests(unittest.TestCase):
         self.refresh()
         self.clock.now += 1
         self.assertTrue(self.view.render()['server'])
-        self.assertFalse(self.view.render()['node'])
+        self.assertEqual(self.view.render()['online'], 0)
 
     def test_start_ack_is_separate_from_ble_connection(self):
         self.timer.sync(dict(session=self.timer.session, revision=0,
                              ble_connected=True, ble_status='Verbunden'))
         self.timer.command(10)
         self.refresh()
-        self.assertEqual(self.view.render()['node_text'].splitlines()[0], 'Übertragung ausstehend')
+        self.assertEqual(self.view.render()['devices'][0][1].splitlines()[0], 'WLAN · Übertragung ausstehend')
         self.assertIn('Bestätigung', self.view.render()['message'])
+
+    def test_multiple_devices_and_mesh_relay(self):
+        state = self.timer.command(10)
+        peer = dict(id='c6c6c6c6c6c6', name='saal-2', session=state['session'], revision=state['revision'],
+                    ble_connected=False, ble_status='Luxafor nicht gefunden', firmware=None, age_ms=3000)
+        self.timer.sync(dict(id='a1a1a1a1a1a1', name='saal-1', session=state['session'],
+                             revision=state['revision'], ble_connected=True, ble_status='OK',
+                             firmware=None), [peer])
+        self.refresh()
+        view = self.view.render()
+        self.assertEqual([row[0] for row in view['devices']], ['saal-1', 'saal-2'])
+        self.assertTrue(view['devices'][1][1].startswith('Mesh über saal-1 · synchronisiert'))
+        self.assertIn('Luxafor nicht gefunden', view['devices'][1][1])
+        self.assertEqual((view['online'], view['synced']), (2, 2))
+        # Mesh reports may be older than direct ones before counting as offline.
+        self.clock.now += 6
+        self.refresh()
+        self.assertEqual([row[2] for row in self.view.render()['devices']], ['offline', 'warn'])
+        self.assertIn('offline: saal-1', self.view.render()['message'])
+
+
+class HotspotLinesTests(unittest.TestCase):
+    def test_esp32_clients_show_firmware_and_mesh_devices_follow(self):
+        from firmware.timer_logic import FIRMWARE_VERSION
+
+        def device(device_id, name, via, version, online=True):
+            return dict(id=device_id, name=name, via=via, relay='saal-1', online=online,
+                        firmware=dict(version=version, expected=FIRMWARE_VERSION,
+                                      current=version == FIRMWARE_VERSION))
+        clients = [('10.42.0.50', 'a1:b2:c3:d4:e5:f6', 'saal-1', True),
+                   ('10.42.0.51', '11:22:33:44:55:66', 'iphone', True)]
+        devices = [device('a1b2c3d4e5f6', 'saal-1', 'wifi', FIRMWARE_VERSION),
+                   device('000000000002', 'saal-2', 'mesh', '1.0.0'),
+                   device('000000000003', 'saal-3', 'wifi', None, online=False)]
+        lines = hotspot_lines(clients, devices, 10)
+        self.assertEqual(lines[0].split(), ['10.42.0.50', 'saal-1', 'FW', FIRMWARE_VERSION])
+        self.assertIn('11:22:33:44:55:66  iphone', lines[1])
+        self.assertIn('Mesh/saal-1', lines[2])
+        self.assertIn('FW 1.0.0 → ' + FIRMWARE_VERSION, lines[2])
+        self.assertIn('offline', lines[3])
+        self.assertIn('< 1.0.0', lines[3])
+        self.assertTrue(all(len(line) <= 56 for line in lines))
+        short = hotspot_lines(clients, devices, 3)
+        self.assertEqual(short[-1], '  … und 2 weitere')
+        self.assertEqual(hotspot_lines([], [], 5), ['  keine'])
 
 
 class WorkerTests(unittest.TestCase):

@@ -9,6 +9,36 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.0 – Status pro ESP32 (13.10.2026)
+
+Pi-Software 1.3.0, ESP32-Firmware 1.2.0. Nach dem Update auf dem Pi den Dienst neu
+starten und die native App neu starten; die systemd-Units sind unverändert. Alle
+ESP32 aktualisieren (`docs/BETRIEB.md`, „ESP32-Firmware aktualisieren“) und bei
+mehreren Geräten je einen eigenen `HOSTNAME` setzen. Firmware vor 1.2.0 erscheint
+weiterhin, aber pro IP-Adresse und ohne Mesh-Status.
+
+Headend:
+- Statusanzeige pro ESP32 statt nur des zuletzt meldenden Geräts: Name, Weg
+  (WLAN oder „Mesh über …“), Übernahme von Start/STOP und Luxafor-Verbindung.
+  `GET /api/state` liefert `devices` statt `node`.
+- Touch-App: `ESP32 · 2/3 OK`, ein Gerät ausführlich, ab zwei Geräten je eine
+  Zeile (höchstens fünf); grün/orange/rot. Weboberfläche listet alle Geräte.
+- Meldung unter STOP nennt betroffene Geräte („Warte auf Bestätigung: saal-2“).
+- **WLAN / IP**: ESP32 im Hotspot (an der MAC erkannt) mit Name und Firmware-Version,
+  Mesh-Geräte mit ihrem Weg. Die Firmware-Angaben stehen nicht mehr in der Statusspalte.
+- Geräte gelten direkt nach 5 s, über das Mesh nach 10 s ohne Meldung als offline
+  und verschwinden nach 30 Minuten aus der Liste; höchstens 16 Geräte.
+- `tools/simulate_node.py` meldet sich mit Namen (`PI_TIMER_NODE`), mehrere
+  Simulationen erscheinen getrennt.
+
+ESP32-Firmware:
+- Meldet MAC-Adresse als `id` und `HOSTNAME` als `name`.
+- Geräte ohne WLAN senden alle 2 s ein signiertes Statuspaket per ESP-NOW; Geräte
+  ohne WLAN leiten es weiter, ein Gerät mit WLAN meldet es als `peers` an den Pi.
+
+Noch nicht auf der Hardware geprüft: Statusweiterleitung über das Mesh und die
+Zuordnung von DHCP-Einträgen zu ESP32 über die MAC.
+
 ## 1.2.0 – ESP-NOW-Mesh zwischen den ESP32 (13.10.2026)
 
 Pi-Software 1.2.0, ESP32-Firmware 1.1.0. Nach dem Update auf dem Pi die Unit

@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'firmware'))
-from mesh import MAGIC, MAX_PACKET, TAG, Codec  # noqa: E402
+from mesh import MAX_PACKET, STATE as MAGIC, TAG, Codec  # noqa: E402
 from firmware.timer_logic import Replica  # noqa: E402
 from server import EPOCH, Timer, next_generation  # noqa: E402
 
@@ -37,9 +37,26 @@ class CodecTests(unittest.TestCase):
     def test_roundtrip(self):
         packet = self.codec.encode('a' * 36, 5, -1200, (7, 123456))
         self.assertLessEqual(len(packet), MAX_PACKET)
-        self.assertEqual(self.codec.decode(packet), {'protocol': 1, 'session': 'a' * 36, 'revision': 5,
-                                                     'remaining_ms': -1200, 'stamp': (7, 123456)})
-        self.assertIsNone(self.codec.decode(self.codec.encode('s', 1, None, (1, 1)))['remaining_ms'])
+        self.assertEqual(self.codec.decode(packet), ('state', {'protocol': 1, 'session': 'a' * 36, 'revision': 5,
+                                                               'remaining_ms': -1200, 'stamp': (7, 123456)}))
+        self.assertIsNone(self.codec.decode(self.codec.encode('s', 1, None, (1, 1)))[1]['remaining_ms'])
+
+    def test_status_roundtrip_fits_and_shrinks_long_ble_errors(self):
+        status = dict(id='a' * 12, name='n' * 32, session='s' * 36, revision=12345, ble_connected=False,
+                      ble_status='x' * 48, firmware='1.2.0', age_ms=9999)
+        packet = self.codec.encode_status(status)
+        self.assertLessEqual(len(packet), MAX_PACKET)
+        self.assertEqual(self.codec.decode(packet), ('status', status))
+        packet = self.codec.encode_status(dict(status, ble_status='ä' * 48))
+        self.assertLessEqual(len(packet), MAX_PACKET)
+        self.assertEqual(self.codec.decode(packet)[1]['ble_status'], 'ä' * 12)
+
+    def test_status_without_usable_id_or_age_is_ignored(self):
+        for bad in (dict(id=''), dict(id=5), dict(age_ms=-1), dict(age_ms='1')):
+            status = dict(id='a1', name='', session=None, revision=-1, ble_connected=False,
+                          ble_status='', firmware='1.2.0', age_ms=0)
+            status.update(bad)
+            self.assertIsNone(self.codec.decode(self.codec.encode_status(status)))
 
     def test_forged_foreign_and_garbage_packets_are_ignored(self):
         packet = self.codec.encode('s', 5, 60000, (7, 100))

@@ -74,8 +74,8 @@ haben unterschiedliche Aufgaben; beide müssen auf den Geräten übereinstimmen.
 Das Subnetz `10.42.0.0/24` darf nicht mit einer anderen Pi-Verbindung/VPN kollidieren.
 Für den Direktbetrieb ist keine weitere Netzkonfiguration nötig. Die ESP32
 verwenden bereits DHCP; auf Handys/Laptops IP-Konfiguration „automatisch“ lassen.
-Mehrere ESP32 können denselben Timer abrufen, allerdings zeigt der Server derzeit
-nur den zuletzt gemeldeten Gerätestatus. Einrichtung und Grenzen:
+Mehrere ESP32 können denselben Timer abrufen; das Headend zeigt jeden einzeln an.
+Einrichtung und Grenzen:
 [Mehrere Rednergeräte](../README.md#mehrere-rednergeräte-an-einem-pi).
 `ipv4.method=shared` stellt hier DHCP bereit, auch ohne Internet-Uplink. Bei später
 hinzugefügtem Internet-Uplink kann NetworkManager ihn zusätzlich an Clients teilen;

@@ -8,10 +8,13 @@ from tkinter import font
 
 import netinfo
 import version
-from native_client import Client, Transport, ViewState
+from native_client import Client, Transport, ViewState, hotspot_lines
 from ui_config import COLORS, LABELS, LEGEND, LEGEND_COLORS, OVERDUE_DIM, PRESETS
 
 BG, PANEL, TEXT, MUTED = '#111820', '#202d38', COLORS['off'], '#a7b5bf'
+LEVEL_COLORS = {'ok': COLORS['green'], 'warn': COLORS['orange'], 'offline': COLORS['red']}
+# Up to DETAILED devices get full rows; beyond that one line each, at most VISIBLE.
+DETAILED, VISIBLE = 1, 5
 
 
 class TimerWindow:
@@ -81,16 +84,14 @@ class TimerWindow:
         status.pack_propagate(False)
         status.grid(row=0, column=2, sticky='ns', padx=(18, 0))
         self.label(status, 'VERBINDUNGEN', size=11).pack(anchor='w', pady=(12, 20))
-        self.node = self.label(status, 'ESP32 · WLAN', size=14)
-        self.node.pack(anchor='w')
-        self.node_detail = self.label(status, 'Unbekannt', size=11)
-        self.node_detail.configure(wraplength=180, justify='left')
-        self.node_detail.pack(anchor='w', pady=(6, 26))
-        self.ble = self.label(status, 'Luxafor · BLE', size=14)
-        self.ble.pack(anchor='w')
-        self.ble_detail = self.label(status, 'Unbekannt', size=11)
-        self.ble_detail.configure(wraplength=180, justify='left')
-        self.ble_detail.pack(anchor='w', pady=(6, 26))
+        self.devices_title = self.label(status, 'ESP32', size=14)
+        self.devices_title.pack(anchor='w')
+        # Rows are rebuilt only when the number of devices or the layout changes.
+        self.devices_frame = tk.Frame(status, bg=BG)
+        self.devices_frame.pack(anchor='w', fill='x', pady=(2, 14))
+        self.device_rows = []
+        self.device_more = None
+        self.device_layout = None
         self.orb = self.label(status, 'Luxafor · USB', size=14)
         self.orb.pack(anchor='w')
         self.orb_detail = self.label(status, 'Unbekannt', size=11)
@@ -125,13 +126,17 @@ class TimerWindow:
 
     def open_info(self):
         if self.overlay is None or self.overlay.closed:
-            self.overlay = InfoOverlay(self.root)
+            self.overlay = InfoOverlay(self.root, self.devices)
 
     def command(self, minutes=None):
         generation = self.client.command(minutes)
         if generation is not None:
             self.view.generation = generation
             self.update(self.feedback, text='Befehl wird übertragen …')
+
+    def devices(self):
+        """Latest device list from the server, for the overlay."""
+        return (self.view.snapshot or {}).get('devices', [])
 
     def update(self, widget, **values):
         # Tk redraws only changed properties, not a whole page/frame each tick.
@@ -153,16 +158,54 @@ class TimerWindow:
         self.update(self.countdown, text=state['text'], fg=color)
         self.update(self.phase, text=LABELS[state['phase']])
         self.update(self.server, text='Headend verbunden' if state['server'] else 'Server offline / suche …')
-        self.update(self.node, text='ESP32 · WLAN', fg=COLORS['green'] if state['node'] else COLORS['orange'])
-        self.update(self.ble, text='Luxafor · BLE', fg=COLORS['green'] if state['ble'] else COLORS['orange'])
-        self.update(self.node_detail, text=state['node_text'])
-        self.update(self.ble_detail, text=state['ble_text'])
+        self.show_devices(state)
         self.update(self.orb, text='Luxafor · USB', fg=COLORS['green'] if state['orb'] else COLORS['orange'])
         self.update(self.orb_detail, text=state['orb_text'])
         self.update(self.feedback, text='Befehl wird übertragen …' if self.client.busy else state['message'])
         for button in self.buttons:
             self.update(button, state='disabled' if self.client.busy else 'normal')
         self.root.after(250, self.tick)
+
+    def show_devices(self, state):
+        rows = state['devices']
+        total = len(rows)
+        title = 'ESP32 · unbekannt' if not total else 'ESP32 · %d/%d OK' % (state['synced'], total)
+        self.update(self.devices_title, text=title,
+                    fg=COLORS['green'] if total and state['synced'] == total else COLORS['orange'])
+        compact = total > DETAILED
+        shown = rows[:VISIBLE if compact else DETAILED]
+        layout = (len(shown), compact, total > len(shown))
+        if layout != self.device_layout:
+            for child in self.devices_frame.winfo_children():
+                child.destroy()
+            self.previous = {key: value for key, value in self.previous.items()
+                             if not key.startswith(str(self.devices_frame))}
+            self.device_rows = []
+            for _ in shown:
+                name = self.label(self.devices_frame, '', size=10 if compact else 13)
+                name.pack(anchor='w', pady=(4 if compact else 6, 0))
+                row = (name,)
+                if not compact:
+                    detail = self.label(self.devices_frame, '', size=10)
+                    detail.configure(wraplength=200, justify='left')
+                    detail.pack(anchor='w')
+                    row = (name, detail)
+                self.device_rows.append(row)
+            self.device_more = None
+            if layout[2]:
+                self.device_more = self.label(self.devices_frame, '', size=10)
+                self.device_more.pack(anchor='w', pady=(6, 0))
+            self.device_layout = layout
+        for row, (title, text, level, short) in zip(self.device_rows, shown):
+            if compact:
+                # One line per device; details are in the web UI and the overlay.
+                name = title if len(title) <= 10 else title[:9] + '…'
+                self.update(row[0], text='%s · %s' % (name, short), fg=LEVEL_COLORS[level])
+            else:
+                self.update(row[0], text=title if len(title) <= 18 else title[:17] + '…', fg=LEVEL_COLORS[level])
+                self.update(row[1], text=text)
+        if self.device_more is not None:
+            self.update(self.device_more, text='+%d weitere (Weboberfläche)' % (total - len(shown)))
 
     def close(self):
         # Window lifecycle never changes the timer; only the STOP button does.
@@ -174,8 +217,9 @@ class InfoOverlay:
     """Full-window overlay with hotspot QR code and addresses; closing never touches the timer."""
     REFRESH_MS = 5000
 
-    def __init__(self, root):
+    def __init__(self, root, devices=lambda: []):
         self.root = root
+        self.devices = devices
         self.result = None
         self.closed = False
         self.frame = tk.Frame(root, bg=BG)
@@ -240,15 +284,10 @@ class InfoOverlay:
         self.wifi.configure(text=text)
         lines = ['HEADEND']
         lines += ['  %-8s %s' % row for row in info['addresses']] or ['  keine IPv4-Adresse']
-        lines += ['', 'GERÄTE IM HOTSPOT']
-        # Room for about 20 lines at 600 px; active clients are listed first.
-        shown = info['clients'][:max(1, 19 - len(lines))]
-        for ip, mac, name, active in shown:
-            lines.append('  %-15s %s  %s%s' % (ip, mac, name or '–', '' if active else '  (inaktiv)'))
-        if len(info['clients']) > len(shown):
-            lines.append('  … und %d weitere' % (len(info['clients']) - len(shown)))
-        if not info['clients']:
-            lines.append('  keine')
+        lines += ['', 'GERÄTE IM HOTSPOT / MESH']
+        # Room for about 20 lines at 600 px; active clients are listed first,
+        # ESP32 timers with name and firmware.
+        lines += hotspot_lines(info['clients'], self.devices(), max(2, 20 - len(lines)))
         self.details.configure(text='\n'.join(lines))
 
     def close(self):
