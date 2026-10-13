@@ -59,6 +59,11 @@ Bei mehreren Geräten mit `HOSTNAME = "saal-1"` jedem ESP32 einen eigenen Namen 
 (Buchstaben, Ziffern, `-`, max. 32 Zeichen). Das Headend zeigt ihn in der
 Statusspalte und unter **WLAN / IP**, das ESP32-Display oben rechts (erste 25 Zeichen).
 Ohne `HOSTNAME` erscheint das Gerät am Headend mit seiner MAC-Adresse.
+
+Mesh (experimentell): `MESH = True` lässt das Gerät per ESP-NOW mit anderen ESP32
+den Timer austauschen. `WIFI = False` macht es zum reinen Mesh-Empfänger ohne
+Hotspot-Verbindung; es braucht einen ESP32 mit WLAN und `MESH = True` in der Nähe.
+Details: [Architektur](../docs/architecture.md#esp-now-mesh-zwischen-den-esp32).
 Unten rechts zeigt das Display die Firmware-Version, z. B. `v1.0.0`.
 
 ```sh

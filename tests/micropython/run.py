@@ -149,6 +149,14 @@ def import_main():
     return main
 
 
+def import_main_quiet(fake_gather, gather):
+    asyncio.gather = fake_gather
+    try:
+        return import_main()
+    finally:
+        asyncio.gather = gather
+
+
 def test_main():
     # Invalid token: main() must reject it (not crash on a missing str method).
     config.API_TOKEN = "short"
@@ -230,6 +238,17 @@ def test_main():
     statuses = [main.mesh.codec.decode(packet)[1] for _, packet in radio.sent[sent:]]
     check("mesh sends own status and relays peers",
           [s["id"] for s in statuses] == [main.DEVICE_ID, "0000000000c3"] and statuses[0]["name"] == "timer-test-1")
+    # WIFI = False: mesh-only receiver, mesh forced on, no Wi-Fi attempts.
+    config.WIFI, config.MESH = False, False
+    asyncio.gather = fake_gather
+    try:
+        meshonly = import_main()
+    finally:
+        asyncio.gather = gather
+        config.WIFI, config.MESH = True, True
+    check("mesh-only device", not meshonly.WIFI and meshonly.mesh is not None
+          and meshonly.link_text() == "MESH OFFLINE")
+    main = import_main_quiet(fake_gather, gather)
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)
 

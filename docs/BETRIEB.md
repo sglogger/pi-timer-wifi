@@ -32,6 +32,7 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 | Mesh über saal-1 | ESP32 ohne eigenes WLAN; Timer und Status laufen über den ESP32 `saal-1` |
 | ESP32 rot: offline | Direkt 5 s, über Mesh 10 s keine Meldung; lokaler Countdown kann weiterlaufen |
 | ESP32-Display: MESH OK | Kein eigenes WLAN, Timer kommt per ESP-NOW von einem anderen ESP32 |
+| ESP32-Display: MESH OFFLINE | Gerät mit `WIFI = False` hört keinen Nachbarn: Ist ein ESP32 mit WLAN und `MESH = True` in Reichweite? Gleicher `API_TOKEN`? |
 | Luxafor/BLE offline | Licht kann alte Farbe behalten; Timer/WLAN separat prüfen |
 | BLE verbunden; Befehl gesendet | Befehl an GATT geschickt, tatsächliche LED-Farbe visuell prüfen |
 | Luxafor · USB: Verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |

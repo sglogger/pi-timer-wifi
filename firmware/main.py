@@ -172,14 +172,24 @@ def own_status():
             "ble_status": light.status[:48], "firmware": FIRMWARE_VERSION, "age_ms": 0}
 
 
+# WIFI = False: receiver that only uses the ESP-NOW mesh, never the hotspot.
+WIFI = getattr(config, "WIFI", True)
 mesh = None
-# Off unless configured: see config.example.py.
-if getattr(config, "MESH", False):
+# Off unless configured (or required by WIFI = False): see config.example.py.
+if getattr(config, "MESH", False) or not WIFI:
     import espnow
     radio = espnow.ESPNow()
     radio.active(True)
     radio.add_peer(BROADCAST)
     mesh = Mesh(radio, Codec(config.API_TOKEN))
+
+
+async def mesh_only_loop():
+    """WIFI = False: stay where peers are heard, search channels 1/6/11 otherwise."""
+    while True:
+        if not mesh.alive():
+            await mesh.listen()
+        await asyncio.sleep_ms(1000)
 
 
 async def sync_loop():
@@ -244,7 +254,7 @@ def link_text():
         return "WIFI OK"
     if recent(replica.last_mesh):
         return "MESH OK"  # Fresh server state relayed by a peer.
-    return "WIFI OFFLINE"
+    return "WIFI OFFLINE" if WIFI else "MESH OFFLINE"
 
 
 async def render_loop():
@@ -256,13 +266,14 @@ async def render_loop():
 
 async def main():
     # Numeric host required: DNS resolution can block the entire MCU event loop.
-    parts = config.SERVER_IP.split(".")
+    parts = config.SERVER_IP.split(".") if WIFI else ["0"] * 4
     if len(parts) != 4 or any(not p.isdigit() or not 0 <= int(p) <= 255 for p in parts):
         raise ValueError("SERVER_IP must be numeric IPv4")
     # MicroPython's str has no isalnum().
     if len(config.API_TOKEN) < 20 or not all(c.isalpha() or c.isdigit() for c in config.API_TOKEN):
         raise ValueError("Invalid API_TOKEN")
-    tasks = [sync_loop(), light.run(), render_loop()]
+    # The API_TOKEN also signs mesh packets, so it is needed without Wi-Fi too.
+    tasks = [sync_loop() if WIFI else mesh_only_loop(), light.run(), render_loop()]
     if mesh:
         tasks.append(mesh.run())
     await asyncio.gather(*tasks)

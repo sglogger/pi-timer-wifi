@@ -9,6 +9,18 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.7 – Reiner Mesh-Empfänger (13.10.2026)
+
+Pi-Software 1.3.7, ESP32-Firmware 1.2.7. Auf die ESP32 `firmware/main.py` und
+`firmware/timer_logic.py` kopieren; neue Option aus `config.example.py` bei Bedarf
+übernehmen.
+
+ESP32-Firmware:
+- Neue Option `WIFI = False` in `config.py`: Das Gerät nutzt nur das ESP-NOW-Mesh,
+  verbindet sich nie mit dem Hotspot und sucht die Kanäle 1, 6 und 11 nach Nachbarn
+  ab. `MESH` ist dann automatisch an. Display `MESH OK` bzw. `MESH OFFLINE`.
+  Praktisch auch zum Testen des Mesh mit zwei Geräten nebeneinander.
+
 ## 1.3.6 – Mesh sendet nur bei Bedarf (13.10.2026)
 
 Pi-Software 1.3.6, ESP32-Firmware 1.2.6. Auf die ESP32 `firmware/main.py` und

@@ -15,6 +15,10 @@ HOSTNAME = ""
 # that have it. All devices need the same API_TOKEN. Off by default: on the
 # ESP32-C6 an active ESP-NOW stopped HTTP sync and BLE (ENOMEM) in a hardware test.
 MESH = False
+# False: this device never joins the hotspot and gets the timer only through the
+# mesh from a nearby ESP32 that has Wi-Fi (MESH is then on automatically).
+# WIFI_SSID/WIFI_PASSWORD/SERVER_IP are ignored; API_TOKEN must still match.
+WIFI = True
 # Run scan.py, then enter the exact device name (or MAC below).
 LUXAFOR_NAME = "LUX DOT YOUR-DEVICE"
 LUXAFOR_MAC = ""

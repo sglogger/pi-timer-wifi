@@ -49,8 +49,9 @@ diese Version als Prototyp behandeln.
       Kanal; nach Neustart mit anderem Kanal verbinden sich alle ESP32 wieder.
 - [ ] Mesh (`MESH = True` auf allen Geräten): WLAN-Abgleich und BLE bleiben bei aktivem
       ESP-NOW stabil (im ersten Test nicht der Fall, siehe Architektur).
-- [ ] Mesh: zweiten ESP32 außerhalb der Hotspot-Reichweite (oder mit falschem WLAN-Passwort)
+- [ ] Mesh: zweiten ESP32 mit `WIFI = False` (oder außerhalb der Hotspot-Reichweite)
       betreiben: Display `MESH OK`, Start/Stop kommen innerhalb von 2 s an.
+- [ ] Mesh: Gerät mit WLAN behält währenddessen seine BLE-Verbindung zur Luxafor.
 - [ ] Mesh über zwei Hops: drei ESP32 in Kette, nur der erste mit WLAN.
 - [ ] Mesh: ESP32 mit anderem `API_TOKEN` übernimmt keine Zustände.
 - [ ] Mesh: Pi ausschalten: alle zählen weiter, keiner springt, Displays zeigen `WIFI OFFLINE`.

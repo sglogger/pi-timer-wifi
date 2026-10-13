@@ -161,7 +161,8 @@ Bis ein erneuter Test das Mesh bestätigt, bleibt es aus. Ein
 Gerät außerhalb der Hotspot-Reichweite übernimmt Start und STOP von einem anderen
 ESP32, der WLAN hat, auch über mehrere Geräte hinweg; sein Display zeigt dann
 `MESH OK`. Es gibt keinen Master: Der Zustand mit dem neuesten Server-Kontakt
-gewinnt. Alle Geräte brauchen denselben `API_TOKEN`. Details:
+gewinnt. Alle Geräte brauchen denselben `API_TOKEN`. Mit `WIFI = False` arbeitet
+ein Gerät nur über das Mesh, ohne je den Hotspot zu nutzen. Details:
 [Architektur](docs/architecture.md#esp-now-mesh-zwischen-den-esp32).
 
 **Statusanzeige pro Gerät:** Jeder ESP32 meldet sich mit seiner MAC-Adresse als ID

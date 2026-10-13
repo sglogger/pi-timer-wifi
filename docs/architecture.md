@@ -174,7 +174,15 @@ behoben, siehe CHANGELOG), das ESP-NOW nur schneller auslöste, zusammen mit dem
 über 110 KB), aber BLE brauchte mehrere Anläufe zur Lampe; deshalb sendet das Mesh
 seit 1.2.6 nur bei Bedarf. Bis ein Test mit zwei Geräten das Mesh bestätigt, bleibt
 es aus. `MESH = True` in `config.py`
-schaltet es pro Gerät ein. Server ohne Stempel
+schaltet es pro Gerät ein.
+
+**Nur Mesh, ohne WLAN:** `WIFI = False` in `config.py` macht ein Gerät zum reinen
+Mesh-Empfänger. Es verbindet sich nie mit dem Hotspot, sucht die Kanäle 1, 6 und 11
+nach Nachbarn ab, bleibt auf dem Kanal, auf dem es Pakete hört, und fragt per
+Statuspaket nach dem Timer. `MESH` ist dann automatisch an; `WIFI_SSID`,
+`WIFI_PASSWORD` und `SERVER_IP` werden ignoriert, `API_TOKEN` muss übereinstimmen.
+Das Display zeigt `MESH OK` bzw. `MESH OFFLINE`. Mindestens ein Gerät mit WLAN und
+`MESH = True` muss in Funkreichweite sein. Server ohne Stempel
 (vor Pi-Software 1.2.0) deaktivieren es automatisch.
 
 ## Grenzen
