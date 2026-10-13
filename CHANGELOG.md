@@ -9,6 +9,18 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.5 – Verständliche BLE-Fehlermeldung (13.10.2026)
+
+Pi-Software 1.3.5, ESP32-Firmware 1.2.5. Auf die ESP32 `firmware/luxafor.py` und
+`firmware/timer_logic.py` kopieren.
+
+ESP32-Firmware:
+- BLE-Fehler nennen den Typ, z. B. `BLE: DeviceDisconnectedError` nach dem
+  Ausschalten der Lampe statt eines leeren `BLE:`; so auch im Luxafor-Status am Headend.
+
+Auf der Hardware geprüft (1.2.4, ohne Mesh): 20 Minuten ohne `Sync`-Fehler oder
+`ENOMEM`, Luxafor aus- und wieder eingeschaltet ohne Störung des WLAN-Abgleichs.
+
 ## 1.3.4 – Speicher für WLAN und BLE freigegeben (13.10.2026)
 
 Pi-Software 1.3.4, ESP32-Firmware 1.2.4. Auf **alle ESP32** `firmware/st7789.py`,

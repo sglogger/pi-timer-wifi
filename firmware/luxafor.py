@@ -73,7 +73,8 @@ class Luxafor:
                         delay = 1
                         await self.control(connection)
             except Exception as exc:
-                self.status = ("BLE: " + str(exc))[:120]
+                # A dropped connection raises without a message: name the type.
+                self.status = ("BLE: %s %s" % (type(exc).__name__, exc)).strip()[:120]
                 print(self.status)
             finally:
                 self.connected = False
