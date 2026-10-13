@@ -38,7 +38,10 @@ Blinken: A3 FF FF 00 00 0F 00 00
 Der ESP32 entdeckt Service und Characteristics neu, abonniert Notifications,
 wartet bis zu 2 s auf eine Meldung, sendet Aus, wartet 400 ms und setzt den
 aktuellen Zustand. Er aktualisiert bei Phasenwechsel und spätestens alle 5 s.
-Ready-/Sleep-Meldungen lösen ebenfalls eine Aktualisierung aus.
+Ready-/Sleep-Meldungen lösen ebenfalls eine Aktualisierung aus. `1\r` ist keine
+davon: Die Lampe (LUX DOT, Bluetooth Pro) bestätigt damit jeden Schreibbefehl, etwa
+90 ms danach (gemessen mit `firmware/ble_test.py`); nach dem Abonnieren kam keine
+Ready-Meldung.
 aioble wählt Write-without-response, wenn die Characteristic dies unterstützt,
 ansonsten Write-with-response. Auch eine GATT-Schreibbestätigung bestätigt nur
 die Protokolloperation, nicht die sichtbare Lichtfarbe.

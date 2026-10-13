@@ -55,6 +55,30 @@ class BLETests(unittest.IsolatedAsyncioTestCase):
                          [timer_logic.packet_for_phase(p) for p in ('off','green','red')])
         self.assertTrue(self.light.connected)
 
+    async def test_write_acknowledgement_does_not_trigger_resend(self):
+        writes = []
+        notifications = 0
+
+        async def write(packet):
+            writes.append(packet)
+
+        async def notified(**kwargs):
+            nonlocal notifications
+            notifications += 1
+            return b'1\r'  # The lamp answers every write like this.
+
+        rx = SimpleNamespace(write=write)
+        tx = SimpleNamespace(subscribe=AsyncMock(), notified=notified)
+        service = SimpleNamespace(characteristic=AsyncMock(side_effect=[rx, tx]))
+        connection = SimpleNamespace(service=AsyncMock(return_value=service),
+                                     is_connected=lambda: notifications < 10)
+        with patch.object(asyncio, 'sleep_ms', AsyncMock(), create=True), \
+             patch.object(self.module.time, 'ticks_ms', lambda:self.now, create=True), \
+             patch.object(self.module.time, 'ticks_diff', lambda a,b:a-b, create=True):
+            await self.light.control(connection)
+        # Initial off, then green once; the acknowledgements cause no further writes.
+        self.assertEqual(writes, [timer_logic.packet_for_phase(p) for p in ('off', 'green')])
+
     async def test_missing_service_does_not_claim_connected(self):
         connection = SimpleNamespace(service=AsyncMock(return_value=None))
         with self.assertRaisesRegex(ValueError, 'Service'):

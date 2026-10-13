@@ -20,6 +20,13 @@ ESP32-Firmware:
 - Neue Option `FLIP = True` in `config.py`: Die Anzeige steht um 180° gedreht,
   auf beiden Boards (auf C6 und S3 geprüft).
 - Die S3-Erkennung akzeptiert auch die Schreibweise `ESP32-S3` im Chipnamen.
+- ESP32-S3-LCD-1.69 auf der Hardware geprüft: läuft mit Firmware 1.3.1.
+- Die Luxafor bestätigt jeden Schreibbefehl mit der Meldung `1\r`. Die Firmware hielt
+  sie für eine Ready-Meldung und sendete die Farbe sofort erneut: etwa zehn Befehle
+  pro Sekunde statt einem bei Phasenwechsel bzw. alle 5 s. Das belastete die
+  Funkzeit, die sich BLE mit WLAN und ESP-NOW teilt.
+- `ble_test.py`: Die GATT-Liste in Runde 1 brach mit `ValueError: Discovery in
+  progress` ab.
 - Fehlt `LUXAFOR_PAIR` in `config.py`, gilt jetzt `False`. Bisher brach jede
   BLE-Verbindung direkt nach dem Aufbau mit `BLE: AttributeError` ab.
 - Neues Diagnoseskript `firmware/ble_test.py` (nur ausführen, nicht kopieren): prüft

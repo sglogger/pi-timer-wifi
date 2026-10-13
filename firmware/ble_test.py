@@ -61,7 +61,11 @@ async def find():
 
 
 async def gatt(connection):
+    # aioble allows one discovery at a time: collect the services first.
+    services = []
     async for service in connection.services():
+        services.append(service)
+    for service in services:
         print("    Service", service.uuid)
         async for characteristic in service.characteristics():
             flags = [name for bit, name in FLAGS if characteristic.properties & bit]

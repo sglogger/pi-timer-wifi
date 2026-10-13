@@ -123,7 +123,9 @@ Im Querformat (280 × 240) sitzen Titel, Countdown und Statuszeile mit 20 px
 Rand wegen der runden Ecken. Statuszeile und Version stehen zentriert auf zwei
 Zeilen, der Hostname ist auf 17 Zeichen gekürzt.
 
-**Noch nicht auf der Hardware abgenommen.** Beim ersten Start prüfen:
+Auf der Hardware geprüft mit Firmware 1.3.1, dem automatisch gewählten Profil
+`s3-169` und MicroPython 1.29 (Standard-Image ohne PSRAM). Sollte ein Board davon
+abweichen:
 
 | Beobachtung | Anpassung in `boards.py`, Profil `s3-169` |
 |---|---|
@@ -134,8 +136,8 @@ Zeilen, der Hostname ist auf 17 Zeichen gekürzt.
 | Rot und Blau vertauscht | `madctl` ohne BGR-Bit: `0x60` statt `0x68` |
 
 Das C6 hatte mit aktivem Mesh zu wenig Speicher für WLAN und BLE gleichzeitig
-(siehe `MESH` in `config.example.py`). Mit dem PSRAM des S3 ist das vermutlich
-kein Problem mehr; das ist aber ebenfalls noch ungetestet.
+(siehe `MESH` in `config.example.py`). Das S3 hat schon ohne PSRAM mehr RAM; ob das
+SPIRAM_OCT-Image zusätzlich hilft, ist nicht gemessen.
 
 ## Pairing / Diagnose
 

@@ -45,8 +45,8 @@ MicroPython-Binärdatei; die Timer-Quelldateien werden direkt ausgeführt.
 - Waveshare **ESP32-C6-LCD-1.47**, USB-Datenkabel und Stromversorgung.
   Die Variante **ESP32-C6-Touch-LCD-1.47** verwendet einen anderen Display-Controller
   und andere Pins; dafür ist diese Firmware nicht vorgesehen.
-  Alternativ das Waveshare **ESP32-S3-LCD-1.69**; die Firmware erkennt es automatisch,
-  ist darauf aber noch nicht abgenommen ([Hinweise](../firmware/README.md#esp32-s3-lcd-169)).
+  Alternativ das Waveshare **ESP32-S3-LCD-1.69**; die Firmware erkennt es automatisch
+  ([Hinweise](../firmware/README.md#esp32-s3-lcd-169)).
   Die Befehle unten gelten für das C6; Abweichungen für das S3 stehen jeweils dabei.
 - Luxafor **Bluetooth Pro**, geladen und direkt neben dem ESP32.
 - Optional **Luxafor Orb** mit USB-Kabel am Zero-DISP-7A (USB-A-Buchse) als
@@ -466,6 +466,18 @@ installierte aioble-Bibliothek in `lib/` enthalten.
 
 `main.py` startet nach Reset automatisch. Zu diesem Zeitpunkt darf das Display
 noch `WIFI OFFLINE` zeigen, weil der Pi-Hotspot noch nicht aktiviert ist.
+
+Optional die Verbindung zur Luxafor allein prüfen, ohne WLAN und Mesh. Das Skript
+läuft vom Rechner aus und wird **nicht** auf den ESP32 kopiert:
+
+```sh
+.venv-board/bin/mpremote connect "$ESP_PORT" soft-reset run firmware/ble_test.py
+.venv-board/bin/mpremote connect "$ESP_PORT" reset
+```
+
+Die Lampe muss dabei dreimal rot, grün, aus, rot, aus zeigen; die letzte Zeile
+lautet `Ergebnis: ['OK', 'OK', 'OK']`. Abweichungen erklärt der
+[BLE-Test](../firmware/README.md#ble-test-ohne-timer).
 
 ## 7. Direktbetrieb einschalten — am Pi
 

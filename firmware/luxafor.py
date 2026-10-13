@@ -56,7 +56,9 @@ class Luxafor:
                 self.connected, self.status = True, "BLE verbunden; Befehl gesendet"
             try:
                 data = await notify.notified(timeout_ms=100)
-                if data in (b"0\r", b"1\r", b"2\r", b"3\r", b"\r0", b"\r2", b"\r3"):
+                # b"1\r" acknowledges every write (ble_test.py on a Luxafor Bluetooth
+                # Pro); re-sending on it made the timer write about ten times a second.
+                if data in (b"0\r", b"2\r", b"3\r", b"\r0", b"\r2", b"\r3"):
                     last_packet = None  # Ready / pre-sleep: re-send current state.
             except asyncio.TimeoutError:
                 pass
