@@ -25,6 +25,8 @@ ESP32-Firmware:
   nötig (`"s3-169-v1"`, anderer Haltepin für den Akkubetrieb).
 - Auf dem S3 hält die Firmware die Stromversorgung im Akkubetrieb (SYS_EN) und
   schaltet den Buzzer stumm. Layout mit breiterem Rand für die runden Ecken.
+- Display-Initialisierung mit den Wartezeiten aus dem ST7789-Datenblatt nach Reset
+  und Sleep Out; vermutliche Ursache des schwarzen Displays auf dem S3-Board.
 - Auf dem C6 bleibt die Anzeige unverändert. Das S3 ist noch nicht auf der
   Hardware abgenommen.
 

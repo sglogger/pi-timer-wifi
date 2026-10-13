@@ -110,7 +110,10 @@ z. B. `Pi Timer Firmware 1.3.0 s3-169`.
 | `s3-169-v1` | ESP32-S3-LCD-1.69, erste Revision | `BOARD = "s3-169-v1"` in `config.py` |
 
 Die Revisionen unterscheiden sich im Haltepin SYS_EN (V2: GPIO41, erste Revision:
-GPIO35) und im Buzzer (GPIO42 bzw. GPIO33). Die Firmware setzt SYS_EN sofort beim
+GPIO35) und im Buzzer (GPIO42 bzw. GPIO33). GPIO33–37 führen beim ESP32-S3R8 die
+Leitungen des Octal-PSRAM ([Datenblatt](https://documentation.espressif.com/esp32-s3_datasheet_en.pdf),
+Abschnitt 2.3.4); `s3-169-v1` daher nur auf einem Board verwenden, dessen PSRAM
+diese Pins frei lässt. Die Firmware setzt SYS_EN sofort beim
 Start auf High; sonst schaltet sich das Board im Akkubetrieb nach dem Loslassen
 der PWR-Taste wieder ab. Den passiven Buzzer zieht sie auf Low.
 
@@ -122,7 +125,8 @@ Zeilen, der Hostname ist auf 17 Zeichen gekürzt.
 
 | Beobachtung | Anpassung in `boards.py`, Profil `s3-169` |
 |---|---|
-| Display bleibt dunkel | SPI-Pins mit dem Pinout im Waveshare-Wiki vergleichen (eingetragen: SCK 6, MOSI 7, CS 5, DC 4, RST 8, Backlight 15) |
+| Display bleibt dunkel | REPL öffnen (`mpremote connect PORT repl`, Ctrl-D): Erste Zeile muss `… s3-169` lauten; eine Fehlermeldung davor zeigt den Grund. Die Pins (SCK 6, MOSI 7, CS 5, DC 4, RST 8, Backlight 15) entsprechen dem Waveshare-Schaltplan |
+| Display ganz schwarz, auch ohne Leuchten | Hintergrundbeleuchtung allein testen: `mpremote connect PORT exec "from machine import Pin; Pin(15, Pin.OUT).value(1)"` |
 | Bild um 20 px verschoben oder Streifen am Rand | `offset` (eingetragen: `(20, 0)`) |
 | Bild steht auf dem Kopf | `madctl` von `0x68` auf `0xA8` |
 | Rot und Blau vertauscht | `madctl` ohne BGR-Bit: `0x60` statt `0x68` |

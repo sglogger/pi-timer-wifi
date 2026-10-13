@@ -25,6 +25,8 @@ BOARDS = {
     },
 }
 # First revision of the S3 board: same display, other power and buzzer pins.
+# GPIO33-37 carry octal PSRAM on an ESP32-S3R8 (datasheet, section 2.3.4); only
+# use this profile on a board whose PSRAM leaves them free.
 BOARDS["s3-169-v1"] = dict(BOARDS["s3-169"], power_hold=35, buzzer=33)
 
 

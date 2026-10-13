@@ -30,24 +30,30 @@ class ST7789:
             self.width = width
             self.height = height
 
+        self.cs.value(1)
         self.reset.value(0)
         time.sleep_ms(50)
         self.reset.value(1)
-        time.sleep_ms(50)
+        # ST7789 datasheet: up to 120 ms after a reset before Sleep Out is accepted.
+        time.sleep_ms(120)
 
         # MADCTL (0x36): 0x60 = Landscape, 0x08 = BGR-Farbreihenfolge
         madctl = madctl if rotation == 1 else 0x08
 
-        for cmd, data in [
-            (0x01, None),
-            (0x11, None),
-            (0x3A, b'\x05'),
-            (0x36, bytes([madctl])),
-            (0x21, None),
-            (0x13, None),
-            (0x29, None),
+        # (command, data, wait in ms). Without the waits the panel may ignore
+        # Sleep Out and stay dark (black screen on the ESP32-S3-LCD-1.69).
+        for cmd, data, wait in [
+            (0x01, None, 150),  # Software reset
+            (0x11, None, 120),  # Sleep out
+            (0x3A, b'\x05', 0),
+            (0x36, bytes([madctl]), 0),
+            (0x21, None, 0),
+            (0x13, None, 10),
+            (0x29, None, 20),   # Display on
         ]:
             self._write(cmd, data)
+            if wait:
+                time.sleep_ms(wait)
 
         if self.backlight: self.backlight.value(1)
 
