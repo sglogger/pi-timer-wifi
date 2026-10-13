@@ -105,7 +105,8 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | `incompatible .mpy file` | [Build-/Versionshinweise](BUILD.md#d-mpy-dateien-und-bibliotheken) beachten |
 | WLAN nicht verbunden | Hotspot aktiv? Richtige SSID/WLAN-Passwort? Pi/ESP32 nahe zusammen testen |
 | Display bleibt WIFI OFFLINE trotz ESP32 mit WLAN daneben | Mesh: auf beiden `MESH = True` (Standard ist aus)? Gleicher `API_TOKEN`? Firmware ab 1.1.0, Pi-Software ab 1.2.0? |
-| Konsole: `Sync: TimeoutError` bei gutem RSSI, BLE `ENOMEM` | Socket-Leck der Firmware vor 1.2.3: Firmware aktualisieren. Tritt es mit 1.2.3 und `MESH = True` auf, `MESH = False` setzen |
+| Konsole: `Sync: TimeoutError` bei gutem RSSI, BLE `ENOMEM` | Speichermangel der Firmware vor 1.2.4 (Socket-Leck, 110-KB-Bildpuffer): Firmware aktualisieren. Tritt es mit 1.2.4 und `MESH = True` auf, `MESH = False` setzen |
+| Konsole nach Ctrl-D: `MemoryError … 110080 bytes` | Firmware vor 1.2.4: mit Reset-Knopf statt Soft-Reset starten, Firmware aktualisieren |
 | Hotspot sichtbar, Verbinden schlägt fehl | PMF im Profil abschalten: [Direktes WLAN](../deploy/direct-wifi.md#hotspot-sichtbar-aber-verbinden-schlägt-fehl) |
 | Touch-App: ESP32/BLE „Unbekannt“ | Noch kein Abgleich vom ESP32 angekommen; BLE-Status kommt nur über den ESP32. Zuerst dessen WLAN prüfen |
 | Dienst: „unavailable resources“ | `User`/Pfade in `/etc/systemd/system/pi-timer-wifi.service` passen nicht zum Benutzer |

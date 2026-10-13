@@ -9,6 +9,22 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.4 – Speicher für WLAN und BLE freigegeben (13.10.2026)
+
+Pi-Software 1.3.4, ESP32-Firmware 1.2.4. Auf **alle ESP32** `firmware/st7789.py`,
+`firmware/display.py`, `firmware/main.py` und `firmware/timer_logic.py` kopieren und
+mit Reset-Knopf oder `mpremote … reset` neu starten.
+
+ESP32-Firmware:
+- Behoben: Das Display hielt ein komplettes Bild im RAM (320×172 RGB565 =
+  110 KB am Stück). Auf dem ESP32-C6 blieb damit für WLAN und BLE zeitweise kein
+  Speicher (gemessen: Tiefststand 4 bzw. 792 Bytes freier IDF-Speicher). Folgen:
+  `Sync: TimeoutError`, BLE `ENOMEM`, mit Mesh ein Absturz (Guru Meditation), nach
+  einem Soft-Reset `MemoryError … 110080 bytes`. Jetzt zeichnet die Firmware
+  Kopfzeile, Countdown und Statuszeile einzeln über einen Streifenpuffer von 30 KB
+  und überträgt nur geänderte Bereiche.
+- Das Mesh bleibt bis zu einem Hardwaretest mit 1.2.4 aus.
+
 ## 1.3.3 – Socket-Leck im ESP32-Abgleich behoben (13.10.2026)
 
 Pi-Software 1.3.3, ESP32-Firmware 1.2.3. Auf dem Pi Dienst und App neu starten,

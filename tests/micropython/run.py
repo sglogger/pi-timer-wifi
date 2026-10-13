@@ -181,6 +181,24 @@ def test_main():
         main.display.previous = None
         main.display.render(remaining, main.link_text(), False)
     check("display renders", main.display.previous is not None)
+    # The 110 KB full-screen framebuffer starved Wi-Fi/BLE on the ESP32-C6.
+    check("display without full framebuffer",
+          len(main.display.buffer) <= 32000 and not hasattr(main.display.tft, "buffer"))
+    sent = []
+    blit = main.display.tft.blit
+    main.display.tft.blit = lambda buffer, x, y, w, h: sent.append(y)
+    main.display.previous = None
+    main.display.render(61000, "WIFI OK", False)
+    full = list(sent)
+    del sent[:]
+    main.display.render(61000, "MESH OK", False)
+    main.display.render(61000, "MESH OK", False)
+    status_only = list(sent)
+    del sent[:]
+    main.display.render(60000, "MESH OK", False)
+    main.display.tft.blit = blit
+    check("display redraws only changed regions",
+          full == [10, 60, 145] and status_only == [145] and sent == [60])
     check("offline link text", main.link_text() == "WIFI OFFLINE")
     check("timeout is named", main.describe_error(asyncio.TimeoutError()) == "TimeoutError")
     radio = main.mesh.radio
