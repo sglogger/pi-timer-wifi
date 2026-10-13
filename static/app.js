@@ -112,7 +112,8 @@ function render() {
 
 function deviceText(d, isOnline, elapsed) {
   const fw = d.firmware;
-  const outdated = fw.current ? '' : ` · Firmware ${fw.version || '< 1.0.0'} veraltet – aktuell ${fw.expected}`;
+  const outdated = fw.current ? '' : fw.newer ? ` · Firmware ${fw.version} neuer als Pi-Software (kennt ${fw.expected})`
+    : ` · Firmware ${fw.version || '< 1.0.0'} veraltet – aktuell ${fw.expected}`;
   if (!isOnline) {
     const age = d.age_s + elapsed;
     return `Offline · letzte Meldung vor ${age < 120 ? Math.floor(age) + ' s' : Math.floor(age / 60) + ' min'}${outdated}`;

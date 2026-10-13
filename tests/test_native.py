@@ -124,6 +124,8 @@ class HotspotLinesTests(unittest.TestCase):
         self.assertIn('FW 1.0.0 → ' + FIRMWARE_VERSION, lines[2])
         self.assertIn('offline', lines[3])
         self.assertIn('< 1.0.0', lines[3])
+        newer = dict(devices[0], firmware=dict(version='9.0.0', expected='1.2.2', current=False, newer=True))
+        self.assertIn('FW 9.0.0 (Pi kennt 1.2.2)', hotspot_lines(clients[:1], [newer], 5)[0])
         self.assertTrue(all(len(line) <= 56 for line in lines))
         short = hotspot_lines(clients, devices, 3)
         self.assertEqual(short[-1], '  … und 2 weitere')

@@ -124,7 +124,11 @@ def device_view(device, online):
 def firmware_text(device):
     firmware = device['firmware']
     version = firmware['version'] or '< 1.0.0'
-    return 'FW %s' % version if firmware['current'] else 'FW %s → %s' % (version, firmware['expected'])
+    if firmware['current']:
+        return 'FW %s' % version
+    if firmware.get('newer'):
+        return 'FW %s (Pi kennt %s)' % (version, firmware['expected'])
+    return 'FW %s → %s' % (version, firmware['expected'])
 
 
 def hotspot_lines(clients, devices, limit):

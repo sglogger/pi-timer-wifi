@@ -47,6 +47,8 @@ diese Version als Prototyp behandeln.
 - [ ] Pi-Neustart: Hotspot und Timer-Dienst starten erneut, ESP32 übernimmt neue Sitzung/Stop.
 - [ ] Kanalwahl: `journalctl -u pi-timer-hotspot-channel -b` zeigt Belegung und gewählten
       Kanal; nach Neustart mit anderem Kanal verbinden sich alle ESP32 wieder.
+- [ ] Mesh (`MESH = True` auf allen Geräten): WLAN-Abgleich und BLE bleiben bei aktivem
+      ESP-NOW stabil (im ersten Test nicht der Fall, siehe Architektur).
 - [ ] Mesh: zweiten ESP32 außerhalb der Hotspot-Reichweite (oder mit falschem WLAN-Passwort)
       betreiben: Display `MESH OK`, Start/Stop kommen innerhalb von 2 s an.
 - [ ] Mesh über zwei Hops: drei ESP32 in Kette, nur der erste mit WLAN.

@@ -157,7 +157,12 @@ WLAN-Energiesparmodus vorgeschrieben; Mesh-Pakete kommen dann unzuverlässig an.
 Diese Geräte brauchen sie nicht, sie senden nur. Die Weiterleitung hängt an Geräten
 ohne WLAN, die ständig empfangen.
 
-`MESH = False` in `config.py` schaltet das Mesh pro Gerät ab. Server ohne Stempel
+**Experimentell, standardmäßig aus:** Im Hardwaretest (ESP32-C6, MicroPython 1.28,
+WLAN + BLE + ESP-NOW auf einem Funkmodul) liefen mit aktivem ESP-NOW alle
+HTTP-Abgleiche in den Timeout, obwohl Kanal (6) und Signal (−70 dBm) passten; der
+Pi empfing keine Pakete des ESP32, BLE meldete `ENOMEM`. Ohne ESP-NOW lief beides.
+Die Ursache ist noch nicht geklärt. `MESH = True` in `config.py` schaltet das Mesh
+pro Gerät ein. Server ohne Stempel
 (vor Pi-Software 1.2.0) deaktivieren es automatisch.
 
 ## Grenzen

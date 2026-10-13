@@ -104,7 +104,8 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | `No module named aioble` | Vom Rechner `mpremote … mip install aioble` ausführen |
 | `incompatible .mpy file` | [Build-/Versionshinweise](BUILD.md#d-mpy-dateien-und-bibliotheken) beachten |
 | WLAN nicht verbunden | Hotspot aktiv? Richtige SSID/WLAN-Passwort? Pi/ESP32 nahe zusammen testen |
-| Display bleibt WIFI OFFLINE trotz ESP32 mit WLAN daneben | Mesh: gleicher `API_TOKEN` auf beiden? `MESH = False` gesetzt? Firmware ab 1.1.0, Pi-Software ab 1.2.0? |
+| Display bleibt WIFI OFFLINE trotz ESP32 mit WLAN daneben | Mesh: auf beiden `MESH = True` (Standard ist aus)? Gleicher `API_TOKEN`? Firmware ab 1.1.0, Pi-Software ab 1.2.0? |
+| Konsole: `Sync: TimeoutError` bei gutem RSSI, BLE `ENOMEM` | Bekannte Störung durch ESP-NOW: `MESH = False` in `config.py` setzen |
 | Hotspot sichtbar, Verbinden schlägt fehl | PMF im Profil abschalten: [Direktes WLAN](../deploy/direct-wifi.md#hotspot-sichtbar-aber-verbinden-schlägt-fehl) |
 | Touch-App: ESP32/BLE „Unbekannt“ | Noch kein Abgleich vom ESP32 angekommen; BLE-Status kommt nur über den ESP32. Zuerst dessen WLAN prüfen |
 | Dienst: „unavailable resources“ | `User`/Pfade in `/etc/systemd/system/pi-timer-wifi.service` passen nicht zum Benutzer |

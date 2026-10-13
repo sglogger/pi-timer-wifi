@@ -156,11 +156,15 @@ class APITests(unittest.TestCase):
         report = dict(session=None, revision=-1, ble_connected=False, ble_status='Suche')
         self.client.post('/api/device/sync', json=report, headers=self.headers)
         firmware = self.client.get('/api/state', headers=self.headers).json['devices'][0]['firmware']
-        self.assertEqual(firmware, {'version': None, 'expected': FIRMWARE_VERSION, 'current': False})
-        for version, current in (('0.9.0', False), (FIRMWARE_VERSION, True)):
+        self.assertEqual(firmware, {'version': None, 'expected': FIRMWARE_VERSION, 'current': False,
+                                    'newer': False})
+        self.assertFalse(firmware['newer'])
+        for version, current, newer in (('0.9.0', False, False), (FIRMWARE_VERSION, True, False),
+                                        ('99.0.0', False, True), ('simulation', False, False)):
             self.client.post('/api/device/sync', json=dict(report, firmware=version), headers=self.headers)
             firmware = self.client.get('/api/state', headers=self.headers).json['devices'][0]['firmware']
-            self.assertEqual((firmware['version'], firmware['current']), (version, current))
+            self.assertEqual((firmware['version'], firmware['current'], firmware['newer']),
+                             (version, current, newer))
 
     def test_bad_device_report(self):
         valid = dict(session=None, revision=-1, ble_connected=False, ble_status='Suche')

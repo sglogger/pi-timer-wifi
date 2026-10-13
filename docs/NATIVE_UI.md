@@ -103,7 +103,8 @@ Der Knopf **WLAN / IP** unten rechts öffnet ein Overlay über der ganzen App;
 - Geräte im Hotspot / Mesh: IP, MAC und Hostname aus den DHCP-Leases, ergänzt um
   die ARP-Tabelle (`ip neigh`). Ein ESP32-Timer (an der MAC erkannt) steht mit Name
   und **Firmware-Version** statt MAC, z. B. `10.42.0.50  saal-1  FW 1.2.0`; veraltete
-  Firmware erscheint als `FW 1.0.0 → 1.2.0`. ESP32 ohne WLAN folgen mit ihrem Weg
+  Firmware erscheint als `FW 1.0.0 → 1.2.0`. `FW 1.2.1 (Pi kennt 1.2.0)` heißt
+  umgekehrt: Der ESP32 ist neuer als die Pi-Software, der Pi braucht das Update. ESP32 ohne WLAN folgen mit ihrem Weg
   statt IP (`Mesh/saal-1`, `offline`). Danach Einträge nur aus alten Leases mit
   „(inaktiv)“. Die Liste aktualisiert sich alle 5 Sekunden. Eigene ESP32-Namen über
   `HOSTNAME` in `firmware/config.py`.

@@ -163,7 +163,8 @@ def own_status():
 
 
 mesh = None
-if getattr(config, "MESH", True):
+# Off unless configured: see config.example.py.
+if getattr(config, "MESH", False):
     import espnow
     radio = espnow.ESPNow()
     radio.active(True)

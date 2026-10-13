@@ -11,9 +11,10 @@ API_TOKEN = "REPLACE-WITH-TOKEN-FROM-PI"
 # "WLAN / IP" overlay and top right on the ESP32 display (first 25 characters),
 # e.g. "saal-1". Letters, digits and "-" only. Empty: the headend shows the MAC.
 HOSTNAME = ""
-# ESP-NOW mesh: devices without Wi-Fi take the timer from peers that have it.
-# All devices need the same API_TOKEN. False disables it.
-MESH = True
+# ESP-NOW mesh (experimental): devices without Wi-Fi take the timer from peers
+# that have it. All devices need the same API_TOKEN. Off by default: on the
+# ESP32-C6 an active ESP-NOW stopped HTTP sync and BLE (ENOMEM) in a hardware test.
+MESH = False
 # Run scan.py, then enter the exact device name (or MAC below).
 LUXAFOR_NAME = "LUX DOT YOUR-DEVICE"
 LUXAFOR_MAC = ""

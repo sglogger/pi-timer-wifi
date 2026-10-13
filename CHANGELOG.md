@@ -9,6 +9,23 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.2 – ESP-NOW-Mesh standardmäßig aus (13.10.2026)
+
+Pi-Software 1.3.2, ESP32-Firmware 1.2.2. Auf dem Pi Dienst und App neu starten,
+auf den ESP32 `firmware/main.py` und `firmware/timer_logic.py` kopieren.
+
+ESP32-Firmware:
+- Das Mesh ist ohne `MESH`-Eintrag in `config.py` jetzt aus. Im Hardwaretest legte
+  aktives ESP-NOW auf dem ESP32-C6 den WLAN-Abgleich lahm (`Sync: TimeoutError`
+  bei Kanal 6 und −70 dBm) und BLE meldete `ENOMEM`; ohne ESP-NOW lief beides.
+  `MESH = True` schaltet es für Tests wieder ein. Wer `MESH = True` aus der alten
+  Vorlage in seiner `config.py` hat, sollte es auf `False` setzen.
+
+Headend:
+- Meldet ein ESP32 eine neuere Firmware, als der Pi kennt, zeigt **WLAN / IP**
+  `FW 1.2.1 (Pi kennt 1.2.0)` statt eines irreführenden `FW 1.2.1 → 1.2.0`: Dann ist
+  die Pi-Software zu aktualisieren (`git pull`, Dienst und App neu starten).
+
 ## 1.3.1 – Diagnose für WLAN-Abgleich (13.10.2026)
 
 Pi-Software 1.3.1, ESP32-Firmware 1.2.1. Nur die ESP32-Firmware hat sich geändert

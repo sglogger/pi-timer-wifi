@@ -52,6 +52,14 @@ TIMEOUT_S = {"wifi": 5, "mesh": 10}
 FORGET_S = 1800
 
 
+def version_key(value):
+    """'1.2.10' -> (1, 2, 10) for ordering; None if not a dotted number."""
+    try:
+        return tuple(int(part) for part in value.split("."))
+    except (AttributeError, ValueError):
+        return None
+
+
 def valid_name(value, limit):
     return (isinstance(value, str) and len(value) <= limit
             and all(c.isascii() and (c.isalnum() or c == "-") for c in value))
@@ -127,8 +135,11 @@ class Timer:
                 "applied": bool(online and report["session"] == self.session
                                 and report["revision"] == self.revision),
                 "ble_connected": report["ble_connected"], "ble_status": report["ble_status"],
+                # newer: the device runs a later firmware than this Pi checkout knows,
+                # i.e. the Pi software needs the update, not the ESP32.
                 "firmware": {"version": reported, "expected": FIRMWARE_VERSION,
-                             "current": reported == FIRMWARE_VERSION}})
+                             "current": reported == FIRMWARE_VERSION,
+                             "newer": (version_key(reported) or ()) > version_key(FIRMWARE_VERSION)}})
         state["devices"] = sorted(devices, key=lambda device: (device["name"], device["id"]))
         return state
 
