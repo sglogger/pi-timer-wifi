@@ -9,6 +9,19 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.6 – Mesh sendet nur bei Bedarf (13.10.2026)
+
+Pi-Software 1.3.6, ESP32-Firmware 1.2.6. Auf die ESP32 `firmware/main.py` und
+`firmware/timer_logic.py` kopieren.
+
+ESP32-Firmware:
+- Mit `MESH = True` sendet ein ESP32 den Timer-Zustand nur noch, wenn in den letzten
+  15 s ein Gerät ohne WLAN nach ihm gefragt hat (dessen Statuspaket), und dann
+  jede Sekunde statt alle 500 ms. Haben alle Geräte WLAN, ist das Mesh still. Im
+  Test mit 1.2.5 und Mesh lief der BLE-Verbindungsaufbau zur Luxafor mehrfach in
+  den Timeout (`BLE: TimeoutError`), ohne Mesh nicht.
+- Der Speicher blieb mit 1.2.5 und Mesh stabil (Tiefststand über 110 KB).
+
 ## 1.3.5 – Verständliche BLE-Fehlermeldung (13.10.2026)
 
 Pi-Software 1.3.5, ESP32-Firmware 1.2.5. Auf die ESP32 `firmware/luxafor.py` und

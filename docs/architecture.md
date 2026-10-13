@@ -122,13 +122,18 @@ Generation steigt bei jedem Serverstart und liegt in
 `/var/lib/pi-timer-wifi/generation` (systemd `StateDirectory`). So bleibt sie auch
 nach Stromausfall ohne Uhr monoton.
 
-- Jeder ESP32 mit Zustand sendet alle 0,5–0,63 s einen Broadcast mit Session,
-  Revision, aktueller Restzeit und dem Stempel seines Zustands.
+- **Senden nur bei Bedarf:** Ein ESP32 ohne frische Server-Verbindung sendet alle 2 s
+  ein Statuspaket (siehe unten); das ist zugleich seine Anfrage nach dem Timer. Hat
+  ein ESP32 in den letzten 15 s ein solches Paket gehört, sendet er jede Sekunde
+  einen Broadcast mit Session, Revision, aktueller Restzeit und dem Stempel seines
+  Zustands. Haben alle Geräte WLAN, bleibt das Mesh still: Dauerndes Senden hatte im
+  Test den BLE-Verbindungsaufbau zur Luxafor wiederholt in den Timeout laufen lassen.
 - Ein Empfänger übernimmt nur einen **strikt neueren Stempel**. Geräte mit WLAN
   erhalten alle 500 ms einen frischen Stempel vom Server und sind dadurch automatisch
   die Quelle. Geräte ohne WLAN geben den übernommenen Stempel unverändert weiter;
   so erreicht der Zustand auch Geräte, die nur einen anderen ESP32 ohne WLAN hören
-  (Multi-Hop, etwa eine Sendeperiode pro Hop).
+  (Multi-Hop, etwa eine Sekunde pro Hop; ein Gerät ohne WLAN leitet weiter, sobald
+  ein weiteres Gerät ohne WLAN nach dem Timer fragt).
 - Fällt der Pi aus, haben alle denselben letzten Stempel; niemand übernimmt etwas,
   alle zählen lokal weiter und zeigen `WIFI OFFLINE`.
 - **Status zurück zum Pi:** Ein Gerät ohne frische Server-Verbindung sendet alle 2 s
@@ -154,16 +159,21 @@ Wählt der Pi nach einem Neustart einen anderen Kanal, finden die Geräte ihn so
 
 **Empfang mit WLAN:** Mit WLAN-Verbindung ist auf dem ESP32 wegen BLE der
 WLAN-Energiesparmodus vorgeschrieben; Mesh-Pakete kommen dann unzuverlässig an.
-Diese Geräte brauchen sie nicht, sie senden nur. Die Weiterleitung hängt an Geräten
-ohne WLAN, die ständig empfangen.
+Diese Geräte brauchen nur die Statuspakete der Geräte ohne WLAN, um zu erkennen,
+dass gesendet werden muss; bei einem Paket alle 2 s und 15 s Fenster genügt es, ab
+und zu eines zu empfangen. Die Weiterleitung hängt an Geräten ohne WLAN, die
+ständig empfangen.
 
 **Experimentell, standardmäßig aus:** Im Hardwaretest (ESP32-C6, MicroPython 1.28,
 WLAN + BLE + ESP-NOW auf einem Funkmodul) liefen mit aktivem ESP-NOW alle
 HTTP-Abgleiche in den Timeout, obwohl Kanal (6) und Signal (−70 dBm) passten; der
 Pi empfing keine Pakete des ESP32, BLE meldete `ENOMEM`. Dasselbe trat später auch
 ohne ESP-NOW auf: Ursache war ein Socket-Leck im HTTP-Abgleich (in Firmware 1.2.3
-behoben, siehe CHANGELOG), das ESP-NOW nur schneller auslöste. Bis ein erneuter
-Hardwaretest das Mesh bestätigt, bleibt es aus. `MESH = True` in `config.py`
+behoben, siehe CHANGELOG), das ESP-NOW nur schneller auslöste, zusammen mit dem
+110-KB-Bildpuffer (1.2.4). Mit 1.2.5 und Mesh blieb der Speicher stabil (Tiefststand
+über 110 KB), aber BLE brauchte mehrere Anläufe zur Lampe; deshalb sendet das Mesh
+seit 1.2.6 nur bei Bedarf. Bis ein Test mit zwei Geräten das Mesh bestätigt, bleibt
+es aus. `MESH = True` in `config.py`
 schaltet es pro Gerät ein. Server ohne Stempel
 (vor Pi-Software 1.2.0) deaktivieren es automatisch.
 

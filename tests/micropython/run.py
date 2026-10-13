@@ -204,6 +204,7 @@ def test_main():
     radio = main.mesh.radio
     main.mesh.send()
     check("mesh silent without server state", radio.sent == [])
+    check("mesh quiet before any peer asked", not main.mesh.needed())
     radio.inbox.append((b"\x00" * 6, main.mesh.codec.encode("s", 2, 30000, (5, 10))))
     radio.inbox.append((b"\x00" * 6, b"foreign"))
     main.mesh.receive()
@@ -221,6 +222,9 @@ def test_main():
     main.mesh.receive()
     reports = main.mesh.peer_reports()
     check("mesh keeps freshest peer status", len(reports) == 1 and 1200 <= reports[0]["age_ms"] < 2000)
+    check("mesh sends states only on demand", main.mesh.needed())
+    main.mesh.demand = time.ticks_add(time.ticks_ms(), -main.MESH_DEMAND_MS)
+    check("mesh quiet without demand", not main.mesh.needed())
     sent = len(radio.sent)
     main.mesh.send_status()
     statuses = [main.mesh.codec.decode(packet)[1] for _, packet in radio.sent[sent:]]

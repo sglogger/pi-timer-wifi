@@ -30,7 +30,11 @@ DEVICE_ID = "".join("%02x" % b for b in wlan.config("mac"))
 # hops channels and misses mesh packets meanwhile.
 WIFI_RETRY_MS = 30000
 MESH_TIMEOUT_MS = 5000
-MESH_SEND_MS = 500
+MESH_SEND_MS = 1000
+# States are only broadcast while a peer without Wi-Fi asked for them (its status
+# packets) within this window. Idle ESP-NOW traffic cost BLE its connection slots:
+# connecting to the Luxafor timed out repeatedly with the mesh on.
+MESH_DEMAND_MS = 15000
 # Devices without Wi-Fi broadcast their status this often; relayed statuses
 # older than PEER_MAX_AGE_MS are dropped.
 STATUS_SEND_MS = 2000
@@ -48,6 +52,7 @@ class Mesh:
         self.heard = None  # Last valid peer packet.
         self.channel = None  # Hotspot channel, or where peers were last heard.
         self.peers = {}  # id -> (status, ticks when received, age_ms at receipt)
+        self.demand = None  # Last status packet: some peer lacks Wi-Fi.
 
     def alive(self, since=None):
         if self.heard is None:
@@ -67,12 +72,16 @@ class Mesh:
                 self.channel = wlan.config("channel")
             kind, data = decoded
             if kind == "status":
+                self.demand = time.ticks_ms()
                 self.store(data)
                 continue
             try:
                 replica.merge(data)
             except (ValueError, KeyError):
                 pass
+
+    def needed(self):
+        return self.demand is not None and time.ticks_diff(time.ticks_ms(), self.demand) < MESH_DEMAND_MS
 
     def age(self, entry):
         return entry[2] + time.ticks_diff(time.ticks_ms(), entry[1])
@@ -126,7 +135,8 @@ class Mesh:
             try:
                 self.receive()
                 if time.ticks_diff(time.ticks_ms(), due) >= 0:
-                    self.send()
+                    if self.needed():
+                        self.send()
                     # Jitter keeps peers from transmitting in lockstep.
                     due = time.ticks_add(time.ticks_ms(), MESH_SEND_MS + random.getrandbits(7))
                 if time.ticks_diff(time.ticks_ms(), status_due) >= 0:
