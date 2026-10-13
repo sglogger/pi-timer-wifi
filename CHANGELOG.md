@@ -9,6 +9,20 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.1.0 – Automatische Kanalwahl (13.10.2026)
+
+Pi-Software 1.1.0, ESP32-Firmware unverändert (1.0.0). Nach dem Update den neuen
+Dienst einmalig installieren (`deploy/direct-wifi.md`, „Automatische Kanalwahl“).
+
+Headend:
+- Neuer Dienst `pi-timer-hotspot-channel`: scannt bei jedem Booten das 2.4-GHz-Band
+  und startet den Hotspot auf dem am wenigsten belegten Kanal (1, 6 oder 11), für
+  maximale Reichweite. Bei fehlgeschlagenem Scan bleibt der bisherige Kanal.
+- `sudo python3 deploy/hotspot_channel.py` wiederholt die Kanalwahl vor Ort.
+
+Noch nicht auf der Hardware geprüft: Scan nach dem Trennen des Hotspots auf dem
+Pi Zero 2 W und Reichweitengewinn.
+
 ## 1.0.0 – WLAN / IP-Übersicht und Versionen (13.10.2026)
 
 Pi-Software 1.0.0, ESP32-Firmware 1.0.0. Nach dem Update auf dem Pi `./install.sh`

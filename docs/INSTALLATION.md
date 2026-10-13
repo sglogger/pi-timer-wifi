@@ -454,6 +454,15 @@ systemctl is-active pi-timer-wifi
 
 Erwartet: `pi-timer-direct` auf `wlan0`, IP `10.42.0.1/24`, Dienst `active`.
 
+Automatische Kanalwahl beim Booten (maximale Reichweite) einschalten, Details in
+[Direktes WLAN](../deploy/direct-wifi.md#automatische-kanalwahl):
+
+```sh
+sudo cp deploy/pi-timer-hotspot-channel.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable pi-timer-hotspot-channel
+```
+
 **Ohne Tastatur am Pi (nur SSH):** Vorher das Hotspot-Passwort notieren und die
 Umschaltung verzögert im Hintergrund starten, damit sie den SSH-Abbruch übersteht.
 Der Rückfall-Timer kehrt nach 10 Minuten ins bisherige WLAN zurück, falls der Hotspot

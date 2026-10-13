@@ -46,7 +46,8 @@ Das Hilfsprogramm legt ausschließlich das neue Profil `pi-timer-direct` an:
 - WLAN-Name `SwiNOG-Timer`, WPA2-Personal/AES, zufälliges Passwort mit 24 Zeichen.
 - PMF (Protected Management Frames) aus: Der WLAN-Chip des Pi beherrscht es im
   AP-Modus nicht; aktuelle macOS-/iOS-Geräte scheitern sonst beim Verbinden.
-- 2.4 GHz, Kanal 6, WLAN-Energiesparen am Pi deaktiviert.
+- 2.4 GHz, anfangs Kanal 6, WLAN-Energiesparen am Pi deaktiviert. Den Kanal wählt
+  danach bei jedem Booten die [automatische Kanalwahl](#automatische-kanalwahl).
 - Pi-Adresse `10.42.0.1/24`; NetworkManager vergibt per DHCP eigene dynamische
   Adressen an ESP32, Handys und weitere WLAN-Clients, auch ohne Internet.
 - Kein Standard-Gateway für den Pi auf dieser Verbindung, IPv6 deaktiviert.
@@ -92,6 +93,49 @@ verwenden. `autoconnect yes` erst setzen, wenn ein Client den Hotspot erreicht:
 Danach startet der Pi bei jedem Booten als Hotspot und ist über das Heim-WLAN
 nicht mehr erreichbar.
 
+### Automatische Kanalwahl
+
+Für maximale Reichweite scannt der Pi bei jedem Booten das 2.4-GHz-Band und startet
+den Hotspot auf dem am wenigsten belegten der überlappungsfreien Kanäle 1, 6 und 11.
+Jedes fremde Netz zählt mit seiner Signalstärke, Nachbarkanäle (z. B. 3 oder 9)
+anteilig nach Überlappung. Schwache Netze zählen ebenfalls, weil sie am Rand der
+Reichweite das ohnehin schwache ESP32-Signal stören. Der ESP32 sucht den Hotspot
+über den Namen auf allen Kanälen und braucht keine Änderung.
+
+Der WLAN-Chip des Pi kann als Hotspot nicht scannen. Der Dienst trennt den Hotspot
+deshalb kurz nach dem Booten, scannt (ca. 10–20 s), speichert den Kanal im Profil
+und startet den Hotspot wieder. Schlägt der Scan fehl, startet der Hotspot auf dem
+bisherigen Kanal. Ist `autoconnect` auf `no` (normales WLAN), ändert der Dienst nichts.
+
+Einmalig installieren (Benutzer `pitimer`; sonst Pfad wie beim Server-Dienst anpassen):
+
+```sh
+sudo cp deploy/pi-timer-hotspot-channel.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable pi-timer-hotspot-channel
+```
+
+Bei anderem Benutzer:
+
+```sh
+sudo sed -e "s#/home/pitimer/#$HOME/#g" deploy/pi-timer-hotspot-channel.service \
+  | sudo tee /etc/systemd/system/pi-timer-hotspot-channel.service >/dev/null
+```
+
+Ergebnis des letzten Scans (Belegung je Kanal, gewählter Kanal):
+
+```sh
+journalctl -u pi-timer-hotspot-channel -b --no-pager
+```
+
+Vor Ort, z. B. nachdem weitere Access Points eingeschaltet wurden, die Wahl ohne
+Neustart wiederholen (unterbricht den Hotspot kurz; ein laufender ESP32-Timer zählt
+lokal weiter):
+
+```sh
+sudo python3 deploy/hotspot_channel.py
+```
+
 Autoconnect-Priorität 999 bevorzugt dieses Profil beim nächsten Booten gegenüber
 normalen gespeicherten WLANs mit Standardpriorität 0. Andere Profile bleiben
 erhalten. Es wird kein gleichzeitiger AP-/Client-Betrieb auf `wlan0` eingerichtet.
@@ -120,7 +164,10 @@ Ein Minuten-Timer muss vollständig bis rot/blinkend laufen und Stop bestätigen
 Danach mit 20–30 m Abstand und Personen im Raum testen. Der integrierte Pi-Hotspot
 garantiert diese Reichweite nicht; Antennenposition und Kanalbelegung sind relevant.
 
-Bei Störungen kann der Kanal am Pi auf 1 oder 11 geändert werden, z. B.:
+Bei Störungen die [Kanalwahl](#automatische-kanalwahl) vor Ort wiederholen
+(`sudo python3 deploy/hotspot_channel.py`). Einen festen Kanal setzt man so; ohne den
+Kanalwahl-Dienst zu deaktivieren (`sudo systemctl disable pi-timer-hotspot-channel`)
+wird er beim nächsten Booten wieder überschrieben:
 
 ```sh
 sudo nmcli connection modify pi-timer-direct 802-11-wireless.channel 1
@@ -128,6 +175,11 @@ sudo nmcli connection up pi-timer-direct
 ```
 
 Dies unterbricht kurz die Verbindung. Ein laufender ESP32-Timer zählt lokal weiter.
+Weitere Reichweitenhebel: WLAN-Land korrekt setzen (bestimmt die erlaubte
+Sendeleistung), Pi und ESP32 erhöht und mit Sichtverbindung aufstellen, das
+Metallgehäuse/Display nicht zwischen die Antennen bringen. Der ESP32 sendet bereits
+mit maximaler Leistung; sein WLAN-Energiesparen ist bei gleichzeitigem BLE-Betrieb
+vorgeschrieben und bleibt aktiv.
 
 ### Hotspot sichtbar, aber Verbinden schlägt fehl
 
