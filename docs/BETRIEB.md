@@ -29,11 +29,12 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 | Timer synchronisiert | ESP32 hat aktuelle Sitzung/Revision gemeldet |
 | Übertragung ausstehend | Start/Stop am Pi vorhanden, ESP32 hat ihn noch nicht bestätigt |
 | ESP32 offline | Mehr als 5 s keine Gerätemeldung; lokaler Countdown kann weiterlaufen |
+| ESP32-Display: MESH OK | Kein eigenes WLAN, Timer kommt per ESP-NOW von einem anderen ESP32; Start/Stop wirken, das Gerät erscheint aber nicht in der Statusanzeige des Pi |
 | Luxafor/BLE offline | Licht kann alte Farbe behalten; Timer/WLAN separat prüfen |
 | BLE verbunden; Befehl gesendet | Befehl an GATT geschickt, tatsächliche LED-Farbe visuell prüfen |
 | Luxafor · USB: Verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
 | Luxafor USB nicht gefunden | Orb nicht eingesteckt/erkannt; Timer läuft trotzdem, alle 2 s neue Suche |
-| Pi startet neu | Hotspot fällt kurz aus, Server startet mit Stop; ESP32 übernimmt nach Reconnect |
+| Pi startet neu | Hotspot fällt kurz aus, Kanalwahl scannt (10–20 s), Server startet mit Stop; ESP32 übernimmt nach Reconnect |
 | ESP32 startet neu | Ohne Pi noch kein gültiger Countdown; nach Sync aktueller Sollzustand |
 
 Bei Netzwerkausfall wird ein neuer Stop **erst nach Wiederverbindung** übernommen.
@@ -58,6 +59,8 @@ curl -I http://127.0.0.1:8000/
 ```
 
 Erwartet: Dienst active, Hotspot auf `wlan0`, IP `10.42.0.1/24`, HTTP 200.
+Gewählter Hotspot-Kanal und Belegung beim letzten Booten:
+`journalctl -u pi-timer-hotspot-channel -b --no-pager`.
 `GET /api/state` ohne Authorization liefert absichtlich 401. Für eine authentisierte
 Abfrage als normaler Benutzer im Projektverzeichnis (Token wird nicht gedruckt):
 
@@ -99,6 +102,7 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | `No module named aioble` | Vom Rechner `mpremote … mip install aioble` ausführen |
 | `incompatible .mpy file` | [Build-/Versionshinweise](BUILD.md#d-mpy-dateien-und-bibliotheken) beachten |
 | WLAN nicht verbunden | Hotspot aktiv? Richtige SSID/WLAN-Passwort? Pi/ESP32 nahe zusammen testen |
+| Display bleibt WIFI OFFLINE trotz ESP32 mit WLAN daneben | Mesh: gleicher `API_TOKEN` auf beiden? `MESH = False` gesetzt? Firmware ab 1.1.0, Pi-Software ab 1.2.0? |
 | Hotspot sichtbar, Verbinden schlägt fehl | PMF im Profil abschalten: [Direktes WLAN](../deploy/direct-wifi.md#hotspot-sichtbar-aber-verbinden-schlägt-fehl) |
 | Touch-App: ESP32/BLE „Unbekannt“ | Noch kein Abgleich vom ESP32 angekommen; BLE-Status kommt nur über den ESP32. Zuerst dessen WLAN prüfen |
 | Dienst: „unavailable resources“ | `User`/Pfade in `/etc/systemd/system/pi-timer-wifi.service` passen nicht zum Benutzer |
@@ -155,7 +159,8 @@ Code lädt. Bei geänderter `native.xinitrc` die lokale Kopie prüfen/aktualisie
 
 Bei lokalen Änderungen oder fehlgeschlagenem Pull zuerst diese Änderungen klären;
 kein `git reset --hard`. Bei Testfehlern die neue Version nicht in den Einsatz
-nehmen. Bei geänderter systemd-Unit diese erneut prüfen/kopieren und
+nehmen. Bei geänderter systemd-Unit (1.1.0: neuer Dienst `pi-timer-hotspot-channel`; 1.2.0:
+`StateDirectory` in `pi-timer-wifi.service`) diese erneut prüfen/kopieren und
 `sudo systemctl daemon-reload` ausführen. `.env` bleibt bei `install.sh` erhalten.
 
 ### 3. ESP32-Firmware aktualisieren
@@ -183,7 +188,7 @@ Programmdateien übertragen und neu starten (`PORT` wie in
 z. B. `/dev/cu.usbmodem2101` oder `auto`):
 
 ```sh
-.venv-board/bin/mpremote connect PORT fs cp firmware/timer_logic.py firmware/http_sync.py \
+.venv-board/bin/mpremote connect PORT fs cp firmware/timer_logic.py firmware/http_sync.py firmware/mesh.py \
   firmware/luxafor.py firmware/st7789.py firmware/display.py firmware/main.py :
 .venv-board/bin/mpremote connect PORT fs cp firmware/config.py :config.py   # nur wenn geändert
 .venv-board/bin/mpremote connect PORT reset

@@ -165,7 +165,7 @@ Die Datei zum USB-Rechner übertragen, dort z. B. als
 [INSTALLATION.md, Schritt 5](INSTALLATION.md#5-esp32-basisfirmware-und-werkzeuge--rechner)
 flashen. `bootloader.bin`, `partitions.bin` und `micropython.bin` nicht einzeln
 mit einer geratenen Adresse flashen. Nach dem Flashen weiterhin **aioble und
-die sieben Timerdateien** installieren; sie sind nicht in diesem Image enthalten.
+die acht Timerdateien** installieren; sie sind nicht in diesem Image enthalten.
 
 ### Prüfung und Grenzen dieses Eigenbaus
 

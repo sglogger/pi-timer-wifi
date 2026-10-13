@@ -12,9 +12,42 @@ from ui_config import COLORS, LABELS, LEGEND, LEGEND_COLORS, PRESETS
 from version import describe as describe_version
 
 
+# 2020-01-01: keeps time-based generations small enough for MicroPython small ints.
+EPOCH = 1577836800
+
+
+def next_generation(directory=None, now=time.time):
+    """Return a number that grows with every server start; ESP32 mesh peers compare it.
+
+    Persisted in systemd's StateDirectory, so it also grows when the Pi has no clock
+    after a power loss. Without that directory the wall clock serves as fallback.
+    """
+    generation = max(1, int(now()) - EPOCH)
+    directory = directory if directory is not None else os.environ.get("STATE_DIRECTORY")
+    if not directory:
+        return generation
+    path = os.path.join(directory, "generation")
+    try:
+        with open(path) as file:
+            generation = max(generation, int(file.read().strip() or 0) + 1)
+    except (OSError, ValueError):
+        pass
+    try:
+        with open(path + ".tmp", "w") as file:
+            file.write(str(generation))
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(path + ".tmp", path)
+    except OSError as exc:
+        print("Generation nicht gespeichert:", exc)
+    return generation
+
+
 class Timer:
-    def __init__(self, clock=time.monotonic):
+    def __init__(self, clock=time.monotonic, generation=0):
         self.clock = clock
+        self.started = clock()
+        self.generation = generation
         self.lock = threading.Lock()
         self.session = str(uuid.uuid4())
         self.revision = 0
@@ -24,8 +57,10 @@ class Timer:
 
     def _snapshot(self):
         remaining = None if self.deadline is None else round((self.deadline - self.clock()) * 1000)
+        # The stamp orders states across ESP32 mesh peers: newest server contact wins.
+        stamp = [self.generation, round((self.clock() - self.started) * 1000)]
         return {"protocol": 1, "session": self.session, "revision": self.revision,
-                "remaining_ms": remaining, "phase": phase(remaining)}
+                "remaining_ms": remaining, "phase": phase(remaining), "stamp": stamp}
 
     def _with_node(self, state):
         age = None if self.seen is None else self.clock() - self.seen
@@ -133,7 +168,7 @@ def create_app(token=None, timer=None, orb=None):
 
 if __name__ == "__main__":
     from waitress import serve
-    timer = Timer()
+    timer = Timer(generation=next_generation())
     orb = None if os.environ.get("PI_TIMER_ORB", "1") == "0" else Orb(timer)
     app = create_app(timer=timer, orb=orb)
     if orb is not None:

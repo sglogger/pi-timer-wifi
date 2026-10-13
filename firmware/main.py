@@ -1,9 +1,11 @@
 import asyncio
 import network
+import random
 import time
 import config
 from timer_logic import FIRMWARE_VERSION, Replica
 from http_sync import exchange
+from mesh import BROADCAST, Codec
 from luxafor import Luxafor
 from display import Display
 
@@ -22,12 +24,107 @@ if HOSTNAME:
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 
+# While peers relay fresh server states, Wi-Fi is retried rarely: scanning for the hotspot
+# hops channels and misses mesh packets meanwhile.
+WIFI_RETRY_MS = 30000
+MESH_TIMEOUT_MS = 5000
+MESH_SEND_MS = 500
+# The hotspot picks one of these at boot (deploy/hotspot_channel.py).
+MESH_CHANNELS = (1, 6, 11)
+
+
+class Mesh:
+    """ESP-NOW side channel between equal peers; see docs/architecture.md."""
+
+    def __init__(self, radio, codec):
+        self.radio, self.codec = radio, codec
+        self.heard = None  # Last valid peer packet.
+        self.channel = None  # Hotspot channel, or where peers were last heard.
+
+    def alive(self, since=None):
+        if self.heard is None:
+            return False
+        if since is not None and time.ticks_diff(self.heard, since) < 0:
+            return False
+        return time.ticks_diff(time.ticks_ms(), self.heard) < MESH_TIMEOUT_MS
+
+    def receive(self):
+        while self.radio.any():
+            _, packet = self.radio.recv(0)
+            state = self.codec.decode(packet) if packet else None
+            if state is None:
+                continue
+            self.heard = time.ticks_ms()
+            if not wlan.isconnected():
+                self.channel = wlan.config("channel")
+            try:
+                replica.merge(state)
+            except (ValueError, KeyError):
+                pass
+
+    def send(self):
+        if replica.stamp is None:
+            return  # Nothing from a server yet, or a server without stamps.
+        packet = self.codec.encode(replica.session, replica.revision, replica.advance(), replica.stamp)
+        try:
+            self.radio.send(BROADCAST, packet, False)
+        except OSError:
+            pass  # Radio busy, e.g. while scanning for the hotspot.
+
+    async def run(self):
+        due = time.ticks_ms()
+        while True:
+            # Any escaping exception would end asyncio.gather and stop the timer.
+            try:
+                self.receive()
+                if time.ticks_diff(time.ticks_ms(), due) >= 0:
+                    self.send()
+                    # Jitter keeps peers from transmitting in lockstep.
+                    due = time.ticks_add(time.ticks_ms(), MESH_SEND_MS + random.getrandbits(7))
+            except Exception as exc:
+                print("Mesh:", exc)
+            await asyncio.sleep_ms(50)
+
+    async def listen(self):
+        """After a failed Wi-Fi attempt, park the radio where peers broadcast."""
+        wlan.disconnect()  # Stops the driver's background reconnect scans.
+        channels = [channel for channel in MESH_CHANNELS if channel != self.channel]
+        if self.channel:
+            channels.insert(0, self.channel)
+        for channel in channels:
+            try:
+                wlan.config(channel=channel)
+            except (OSError, ValueError):
+                continue
+            since = time.ticks_ms()
+            for _ in range(15):
+                await asyncio.sleep_ms(100)
+                if self.alive(since):
+                    return
+
+
+mesh = None
+if getattr(config, "MESH", True):
+    import espnow
+    radio = espnow.ESPNow()
+    radio.active(True)
+    radio.add_peer(BROADCAST)
+    mesh = Mesh(radio, Codec(config.API_TOKEN))
+
 
 async def sync_loop():
     retry = 1
+    attempt = None
     while True:
         try:
             if not wlan.isconnected():
+                # Only fresh server states count: if the Pi is down, peers still
+                # broadcast their stale state and Wi-Fi must be retried quickly.
+                if (mesh and recent(replica.last_mesh) and attempt is not None
+                        and time.ticks_diff(time.ticks_ms(), attempt) < WIFI_RETRY_MS):
+                    await asyncio.sleep_ms(500)
+                    continue
+                attempt = time.ticks_ms()
                 wlan.disconnect()
                 wlan.connect(config.WIFI_SSID, config.WIFI_PASSWORD)
                 for _ in range(100):
@@ -35,7 +132,11 @@ async def sync_loop():
                         break
                     await asyncio.sleep_ms(100)
                 if not wlan.isconnected():
+                    if mesh:
+                        await mesh.listen()
                     raise OSError("WLAN nicht verbunden")
+                if mesh:
+                    mesh.channel = wlan.config("channel")
             report = {"session": replica.session, "revision": replica.revision,
                       "ble_connected": light.connected, "ble_status": light.status,
                       "firmware": FIRMWARE_VERSION}
@@ -51,11 +152,22 @@ async def sync_loop():
             retry = min(5, retry * 2)
 
 
+def recent(ticks):
+    return ticks is not None and time.ticks_diff(time.ticks_ms(), ticks) < 5000
+
+
+def link_text():
+    if recent(replica.last_sync):
+        return "WIFI OK"
+    if recent(replica.last_mesh):
+        return "MESH OK"  # Fresh server state relayed by a peer.
+    return "WIFI OFFLINE"
+
+
 async def render_loop():
     while True:
         remaining = replica.advance()
-        online = replica.last_sync is not None and time.ticks_diff(time.ticks_ms(), replica.last_sync) < 5000
-        display.render(remaining, online, light.connected)
+        display.render(remaining, link_text(), light.connected)
         await asyncio.sleep_ms(100)
 
 
@@ -67,7 +179,10 @@ async def main():
     # MicroPython's str has no isalnum().
     if len(config.API_TOKEN) < 20 or not all(c.isalpha() or c.isdigit() for c in config.API_TOKEN):
         raise ValueError("Invalid API_TOKEN")
-    await asyncio.gather(sync_loop(), light.run(), render_loop())
+    tasks = [sync_loop(), light.run(), render_loop()]
+    if mesh:
+        tasks.append(mesh.run())
+    await asyncio.gather(*tasks)
 
 
 asyncio.run(main())

@@ -5,7 +5,14 @@ Diese Anleitung führt durch den **Direktbetrieb ohne Infrastruktur vor Ort**:
 ```text
 Pi Zero 2 W + Waveshare-Touchscreen <-- eigenes WLAN --> ESP32-C6-LCD-1.47 <-- BLE --> Luxafor Bluetooth Pro
                  10.42.0.1                              DHCP-Adresse
+                                                              ^
+                                                              | ESP-NOW-Mesh
+                                                              v
+                                    weitere ESP32-C6-LCD-1.47 <-- BLE --> Luxafor Bluetooth Pro
 ```
+
+Weitere ESP32 sind optional. Sie erhalten den Timer per WLAN oder, außerhalb der
+Hotspot-Reichweite, über das [ESP-NOW-Mesh](architecture.md#esp-now-mesh-zwischen-den-esp32).
 
 **Einmalige Vorbereitung mit Internet zu Hause; Betrieb anschließend offline.**
 Alle Hardware-Schritte sind als Inbetriebnahmeanleitung beschrieben und noch
@@ -419,12 +426,13 @@ setzen; sie hat Vorrang vor dem Namen. Die Konfiguration auf dem Rechner wird
 nicht automatisch mit `.env` auf dem Pi abgeglichen. Keine Schlüssel ins Repository
 committen.
 
-Aus dem Repository auf dem Rechner diese sieben Dateien übertragen:
+Aus dem Repository auf dem Rechner diese acht Dateien übertragen:
 
 ```sh
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/config.py :config.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/timer_logic.py :timer_logic.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/http_sync.py :http_sync.py
+.venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/mesh.py :mesh.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/luxafor.py :luxafor.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/st7789.py :st7789.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/display.py :display.py
@@ -433,7 +441,7 @@ Aus dem Repository auf dem Rechner diese sieben Dateien übertragen:
 .venv-board/bin/mpremote connect "$ESP_PORT" reset
 ```
 
-Die Dateiliste auf dem Gerät muss diese sieben Dateien und die separat
+Die Dateiliste auf dem Gerät muss diese acht Dateien und die separat
 installierte aioble-Bibliothek in `lib/` enthalten.
 
 `main.py` startet nach Reset automatisch. Zu diesem Zeitpunkt darf das Display

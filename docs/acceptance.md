@@ -36,7 +36,7 @@ und Touch-Bedienung.
 
 ## Hardwareprotokoll – noch offen
 
-Datum, MicroPython-Version, aioble-Version/Commit, Luxafor-Firmware, AP/Kanal,
+Datum, MicroPython-Version, aioble-Version/Commit, Luxafor-Firmware, AP/gewählter Kanal, Anzahl ESP32,
 Abstand und Hindernisse für den Test notieren. Bis alle Punkte geprüft sind,
 diese Version als Prototyp behandeln.
 
@@ -45,6 +45,13 @@ diese Version als Prototyp behandeln.
 - [ ] Kaltstart ohne Router/Internet: erst Pi, dann ESP32; Verbindung entsteht automatisch.
 - [ ] Umgekehrte Einschaltreihenfolge: ESP32 zuerst, Pi später; automatische Verbindung.
 - [ ] Pi-Neustart: Hotspot und Timer-Dienst starten erneut, ESP32 übernimmt neue Sitzung/Stop.
+- [ ] Kanalwahl: `journalctl -u pi-timer-hotspot-channel -b` zeigt Belegung und gewählten
+      Kanal; nach Neustart mit anderem Kanal verbinden sich alle ESP32 wieder.
+- [ ] Mesh: zweiten ESP32 außerhalb der Hotspot-Reichweite (oder mit falschem WLAN-Passwort)
+      betreiben: Display `MESH OK`, Start/Stop kommen innerhalb von 2 s an.
+- [ ] Mesh über zwei Hops: drei ESP32 in Kette, nur der erste mit WLAN.
+- [ ] Mesh: ESP32 mit anderem `API_TOKEN` übernimmt keine Zustände.
+- [ ] Mesh: Pi ausschalten: alle zählen weiter, keiner springt, Displays zeigen `WIFI OFFLINE`.
 - [ ] Luxafor ohne Dongle gefunden, GATT verbunden, Aus funktioniert.
 - [ ] Luxafor Orb per USB am Headend: Farben wie Bluetooth Pro, Blinken bei Überzeit, Aus bei Stop.
 - [ ] Orb bei laufendem Timer abziehen und wieder einstecken: aktuelle Farbe kehrt zurück.

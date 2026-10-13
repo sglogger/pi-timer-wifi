@@ -11,18 +11,22 @@ WLAN ist als alternative Konfiguration möglich.
 
 ```mermaid
 flowchart LR
-  A["Raspberry Pi Zero 2 W\nWaveshare Zero-DISP-7A\nTimer-Server + WLAN-Hotspot\n10.42.0.1"]
+  A["Raspberry Pi Zero 2 W\nWaveshare Zero-DISP-7A\nTimer-Server + WLAN-Hotspot\n10.42.0.1 · Kanal 1/6/11 automatisch"]
   B["ESP32-C6-LCD-1.47\nCountdown + lokale Farbsteuerung"]
   C["Luxafor Bluetooth Pro"]
   A <-->|"Direktes WLAN / HTTP · ohne Router oder Internet"| B
   B -->|"BLE · direkt daneben"| C
+  F["Weiterer ESP32-C6\naußerhalb der WLAN-Reichweite"]
+  G["Luxafor Bluetooth Pro"]
+  B <-.->|"ESP-NOW-Mesh · neuester Zustand gewinnt"| F
+  F -->|"BLE"| G
   D["Handy / Tablet / Laptop\nWeboberfläche im Browser"]
   D <-->|"WLAN · Timer bedienen"| A
   E["Luxafor Orb"]
   A -->|"USB-Kabel"| E
 ```
 
-**Stand: Version 1.0.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
+**Stand: Version 1.2.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
 BLE-Verbindung laufen seit 0.7.1 auf der Hardware; die vollständige
 [Hardware-Abnahme](docs/acceptance.md) steht noch aus. Server, Synchronisation und
 Timerregeln werden automatisiert getestet. BLE-Befehle sind aus einer veröffentlichten Bluetooth-Pro-Implementierung
@@ -36,6 +40,9 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
   `luxafor-linux.py`, jetzt direkt im Timer-Server statt über geplante Einzelbefehle.
   Wird automatisch erkannt, auch nach Abziehen und erneutem Einstecken.
 - Eigenes WPA2-WLAN auf dem Pi; ESP32 verbindet sich direkt mit `SwiNOG-Timer`.
+  Beim Booten wählt der Pi den am wenigsten belegten Kanal (1, 6 oder 11).
+- Mehrere ESP32 synchronisieren sich zusätzlich per ESP-NOW-Mesh untereinander:
+  Ein Gerät ohne WLAN übernimmt den Timer von einem Nachbarn mit WLAN.
 - ESP32 holt alle 500 ms den vollständigen Timerzustand. Keine Befehlswarteschlange,
   die nach einem Ausfall veraltete Starts nachliefert.
 - Lokaler monotoner Countdown und Farbwechsel laufen bei WLAN-Ausfall weiter.
@@ -145,6 +152,13 @@ Start und STOP gelten damit für alle verbundenen Geräte; eine Geräteauswahl o
 unabhängige Timer pro Redner/Raum gibt es in dieser Version nicht. Die Anzeigen
 werden per Polling synchronisiert, nicht auf die Millisekunde gleichzeitig.
 
+**ESP-NOW-Mesh:** Die ESP32 tauschen den Timer zusätzlich untereinander aus. Ein
+Gerät außerhalb der Hotspot-Reichweite übernimmt Start und STOP von einem anderen
+ESP32, der WLAN hat, auch über mehrere Geräte hinweg; sein Display zeigt dann
+`MESH OK`. Es gibt keinen Master: Der Zustand mit dem neuesten Server-Kontakt
+gewinnt. Alle Geräte brauchen denselben `API_TOKEN`. Details:
+[Architektur](docs/architecture.md#esp-now-mesh-zwischen-den-esp32).
+
 **Grenze der aktuellen Statusanzeige:** Der Server speichert nur die zuletzt
 eingegangene ESP32-Meldung, ohne Geräte-ID. WLAN-/BLE-Status und „Timer synchronisiert“
 beziehen sich deshalb bei mehreren Geräten auf den jeweils zuletzt meldenden
@@ -207,7 +221,8 @@ starten. Details: [Direktes WLAN](deploy/direct-wifi.md).
 ## Verhalten bei Ausfällen
 
 - **WLAN / Server nicht erreichbar:** ESP32 zählt weiter und steuert das Licht
-  lokal. Neue Start-/Stop-Befehle erreichen ihn erst nach Wiederverbindung.
+  lokal. Neue Start-/Stop-Befehle erreichen ihn erst nach Wiederverbindung oder
+  über einen anderen ESP32 mit WLAN in Funkreichweite (ESP-NOW-Mesh).
   Die Bedienoberfläche zeigt die fehlende Bestätigung; ein HTTP-Erfolg allein
   bedeutet nicht, dass das Gerät den Befehl übernommen hat.
 - **BLE unterbrochen:** Display und WLAN laufen weiter. Beim Wiederverbinden

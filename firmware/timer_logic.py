@@ -2,7 +2,7 @@
 
 # ESP32 firmware version, reported on every sync; the server compares it with this
 # repository copy. Bump only when files copied to the ESP32 change (see CHANGELOG.md).
-FIRMWARE_VERSION = "1.0.0"
+FIRMWARE_VERSION = "1.1.0"
 
 # Upper bound (inclusive, ms) per phase; the web UI receives these via the server.
 THRESHOLDS = (("overdue", -30000), ("red", 0), ("orange", 60000), ("yellow", 300000))
@@ -35,8 +35,23 @@ def packet_for_phase(value):
     return bytes((0xA1, 0xFF, r, g, b, 0x10, 0x10, 0x10))
 
 
+def stamp_of(value):
+    """Server stamp (generation, ms) as a comparable tuple; None if absent (older server)."""
+    if value is None:
+        return None
+    if (not isinstance(value, (list, tuple)) or len(value) != 2
+            or any(type(part) is not int or part < 0 for part in value)):
+        raise ValueError("Invalid stamp")
+    return (value[0], value[1])
+
+
 class Replica:
-    """Monotonic replica; ticks_diff makes the MicroPython clock wrap safe."""
+    """Monotonic replica; ticks_diff makes the MicroPython clock wrap safe.
+
+    `stamp` marks when the server issued the replicated state. Mesh peers exchange
+    states and keep the one with the newest stamp, so whoever reached the server
+    most recently acts as master.
+    """
 
     def __init__(self, ticks_ms, ticks_diff):
         self.ticks_ms = ticks_ms
@@ -45,7 +60,9 @@ class Replica:
         self.remaining = None
         self.session = None
         self.revision = -1
+        self.stamp = None
         self.last_sync = None
+        self.last_mesh = None
 
     def advance(self):
         now = self.ticks_ms()
@@ -54,7 +71,7 @@ class Replica:
         self.at = now
         return self.remaining
 
-    def apply(self, state, roundtrip_ms):
+    def _identity(self, state):
         if state.get("protocol") != 1:
             raise ValueError("Unsupported protocol")
         session, revision = state["session"], state["revision"]
@@ -63,12 +80,33 @@ class Replica:
             raise ValueError("Invalid state identity")
         if remaining is not None and (type(remaining) is not int or remaining > 7200000):
             raise ValueError("Invalid remaining time")
+        return session, revision, remaining, stamp_of(state.get("stamp"))
+
+    def _set(self, session, revision, remaining, stamp):
+        self.remaining = remaining
+        self.at = self.ticks_ms()
+        self.session, self.revision, self.stamp = session, revision, stamp
+        return self.at
+
+    def apply(self, state, roundtrip_ms):
+        """Direct server answer via HTTP."""
+        session, revision, remaining, stamp = self._identity(state)
         if session == self.session and revision < self.revision:
             return False
+        if session == self.session and stamp is not None and self.stamp is not None and stamp < self.stamp:
+            return False  # A peer already relayed a newer state of this server session.
         if roundtrip_ms > 2000:
             return False
-        self.remaining = None if remaining is None else remaining - roundtrip_ms // 2
-        self.at = self.ticks_ms()
-        self.last_sync = self.at
-        self.session, self.revision = session, revision
+        self.last_sync = self._set(session, revision,
+                                   None if remaining is None else remaining - roundtrip_ms // 2, stamp)
+        return True
+
+    def merge(self, state):
+        """State relayed by a mesh peer; only a strictly newer server stamp wins."""
+        session, revision, remaining, stamp = self._identity(state)
+        if stamp is None or (self.stamp is not None and stamp <= self.stamp):
+            return False
+        if session == self.session and revision < self.revision:
+            return False
+        self.last_mesh = self._set(session, revision, remaining, stamp)
         return True

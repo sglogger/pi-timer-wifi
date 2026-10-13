@@ -9,6 +9,33 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.2.0 – ESP-NOW-Mesh zwischen den ESP32 (13.10.2026)
+
+Pi-Software 1.2.0, ESP32-Firmware 1.1.0. Nach dem Update auf dem Pi die Unit
+`pi-timer-wifi.service` neu kopieren (neu: `StateDirectory`) und
+`sudo systemctl daemon-reload`. Auf jeden ESP32 zusätzlich `firmware/mesh.py`
+kopieren (`docs/BETRIEB.md`, „ESP32-Firmware aktualisieren“). Firmware 1.0.0 läuft
+mit dem neuen Server weiter, nimmt aber nicht am Mesh teil.
+
+Headend:
+- Server-Antworten tragen einen Stempel `stamp: [Generation, ms]`. Die Generation
+  steigt bei jedem Serverstart und liegt in `/var/lib/pi-timer-wifi/generation`.
+
+ESP32-Firmware:
+- ESP-NOW-Mesh zwischen gleichberechtigten ESP32: Jedes Gerät sendet seinen
+  Zustand zweimal pro Sekunde, jedes übernimmt nur einen neueren Server-Stempel.
+  Wer zuletzt den Pi erreicht hat, ist damit automatisch die Quelle; Geräte ohne
+  WLAN erhalten Start/Stop über Nachbarn, auch über mehrere Hops.
+- Pakete mit HMAC-SHA256 (`API_TOKEN`) signiert; alte Pakete verlieren gegen neuere.
+- Ohne WLAN bleibt das Gerät auf dem Hotspot-Kanal bzw. sucht 1/6/11 ab und
+  versucht das WLAN nur alle 30 s, solange das Mesh frische Zustände liefert.
+- Display zeigt `MESH OK`, wenn der Timer über einen anderen ESP32 kommt.
+- Optional `MESH = False` in `config.py`.
+
+Noch nicht auf der Hardware geprüft: ESP-NOW neben WLAN und BLE auf dem ESP32-C6,
+Kanalsuche ohne WLAN und Mesh über mehrere Hops. Geräte, die nur über das Mesh
+synchronisieren, erscheinen nicht in der Statusanzeige des Pi.
+
 ## 1.1.0 – Automatische Kanalwahl (13.10.2026)
 
 Pi-Software 1.1.0, ESP32-Firmware unverändert (1.0.0). Nach dem Update den neuen

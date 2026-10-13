@@ -71,6 +71,7 @@ cp firmware/config.example.py firmware/config.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/config.py :config.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/timer_logic.py :timer_logic.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/http_sync.py :http_sync.py
+.venv-board/bin/mpremote connect PORT fs cp firmware/mesh.py :mesh.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/luxafor.py :luxafor.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/st7789.py :st7789.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/display.py :display.py
@@ -93,7 +94,8 @@ installierten MicroPython- und Luxafor-Firmware ab und sind vor Ort zu prüfen.
 
 | Meldung | Prüfen |
 |---|---|
-| WIFI OFFLINE | SSID/Passwort, 2.4 GHz, Pi-IP, Port 8000, AP-Isolation, gleicher API-Schlüssel |
+| WIFI OFFLINE | SSID/Passwort, 2.4 GHz, Pi-IP, Port 8000, AP-Isolation, gleicher API-Schlüssel; kein anderer ESP32 mit WLAN in Funkreichweite |
+| MESH OK | Kein eigenes WLAN, Timer kommt per ESP-NOW von einem anderen ESP32 ([Mesh](../docs/architecture.md#esp-now-mesh-zwischen-den-esp32)) |
 | Luxafor nicht gefunden | Name/MAC, Lampe eingeschaltet, Dongle/andere Clients getrennt |
 | Service 1234 fehlt | Tatsächlich Bluetooth Pro? Geräte-Firmware und GATT-Scan prüfen |
 | GATT/Auth-Fehler | Pairing-Option, alte Bond-Verknüpfung, andere BLE-Verbindungen |

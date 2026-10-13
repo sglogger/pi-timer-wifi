@@ -11,6 +11,7 @@ import time
 import config
 from timer_logic import Replica, clock_text, packet_for_phase, phase
 from http_sync import exchange
+from mesh import Codec
 
 PORT = config.SERVER_PORT
 failures = 0
@@ -36,6 +37,20 @@ def test_timer_logic():
     replica.apply(dict(protocol=1, session="s", revision=1, remaining_ms=10000), 100)
     ticks[0] = time.ticks_add(0, 500)
     check("replica counts across tick wrap", replica.advance() == 8950)
+
+
+def test_mesh_codec():
+    codec = Codec(config.API_TOKEN)
+    # Produced by CPython (tests/test_mesh.py uses the same token): interop check.
+    cpython = (b'SWT1["s-1", 3, 61000, 7, 1500]'
+               b'\xaf\xe7U\xda-\x0b\xa9)"\xc1\xe2vd\x0b\x91=')
+    state = codec.decode(cpython)
+    check("mesh decodes CPython packet", state is not None and state["session"] == "s-1"
+          and state["remaining_ms"] == 61000 and state["stamp"] == (7, 1500))
+    check("mesh roundtrip", codec.decode(codec.encode("s", 1, None, (2, 3)))["stamp"] == (2, 3))
+    check("mesh rejects tampering", codec.decode(cpython.replace(b"61000", b"91000")) is None)
+    replica = Replica(time.ticks_ms, time.ticks_diff)
+    check("mesh merge", replica.merge(state) and not replica.merge(state))
 
 
 async def respond(response, split=False):
@@ -121,19 +136,32 @@ def test_main():
         main = import_main()
     finally:
         asyncio.gather = gather
-    check("main accepts valid config", started == [3])
+    check("main accepts valid config", started == [4])
     import network
     check("hostname applied", network.hostname() == "timer-test-1")
     check("firmware version", isinstance(main.FIRMWARE_VERSION, str) and main.FIRMWARE_VERSION.count(".") == 2)
     for remaining in (None, 61000, -31000):
         main.display.previous = None
-        main.display.render(remaining, True, False)
+        main.display.render(remaining, main.link_text(), False)
     check("display renders", main.display.previous is not None)
+    check("offline link text", main.link_text() == "WIFI OFFLINE")
+    radio = main.mesh.radio
+    main.mesh.send()
+    check("mesh silent without server state", radio.sent == [])
+    radio.inbox.append((b"\x00" * 6, main.mesh.codec.encode("s", 2, 30000, (5, 10))))
+    radio.inbox.append((b"\x00" * 6, b"foreign"))
+    main.mesh.receive()
+    check("mesh peer state applied", main.replica.session == "s" and main.mesh.alive()
+          and main.mesh.channel == 6 and main.link_text() == "MESH OK")
+    main.mesh.send()
+    relayed = main.mesh.codec.decode(radio.sent[-1][1])
+    check("mesh relays state", relayed["stamp"] == (5, 10) and relayed["revision"] == 2)
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)
 
 
 test_timer_logic()
+test_mesh_codec()
 asyncio.run(test_http())
 test_main()
 print("%d failure(s)" % failures)

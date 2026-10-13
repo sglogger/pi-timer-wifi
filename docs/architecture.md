@@ -72,10 +72,11 @@ Gerätemeldung:
 Antwort an den ESP32 (Beispiel; ohne den Gerätestatus der Bedien-Antworten):
 
 ```json
-{"protocol":1,"session":"a-server-boot-uuid","revision":3,"remaining_ms":1423500,"phase":"green"}
+{"protocol":1,"session":"a-server-boot-uuid","revision":3,"remaining_ms":1423500,"phase":"green","stamp":[214000000,81500]}
 ```
 
-`session` ändert sich bei Serverstart. `revision` steigt bei jedem Start/Stop;
+`session` ändert sich bei Serverstart. `stamp` ordnet Zustände im
+[ESP-NOW-Mesh](#esp-now-mesh-zwischen-den-esp32); ältere Firmware ignoriert ihn. `revision` steigt bei jedem Start/Stop;
 periodische Snapshots derselben Revision korrigieren Zeitdrift. `remaining_ms: null`
 bedeutet Stop, negative Werte Überzeit. Es gibt keine Warteschlange alter Befehle.
 Ein Stop während eines Ausfalls wird beim nächsten Sync angewendet, sofern er
@@ -91,10 +92,54 @@ Geräte gelten nach 5 s ohne Meldung als offline. Ein HTTP-Timeout nach Start/St
 kann trotzdem bedeuten, dass der Server den Befehl übernommen hat; die Bedienoberfläche
 fragt danach den Zustand ab, statt einen Start blind zu wiederholen.
 
+## ESP-NOW-Mesh zwischen den ESP32
+
+Mehrere ESP32 bilden nebenbei ein gleichberechtigtes Mesh über ESP-NOW. Es gibt
+keinen festen Master: **Der aktuellste Zustand gewinnt.** Jede Server-Antwort trägt
+einen Stempel `stamp: [Generation, ms]`. `ms` zählt seit dem Serverstart, die
+Generation steigt bei jedem Serverstart und liegt in
+`/var/lib/pi-timer-wifi/generation` (systemd `StateDirectory`). So bleibt sie auch
+nach Stromausfall ohne Uhr monoton.
+
+- Jeder ESP32 mit Zustand sendet alle 0,5–0,63 s einen Broadcast mit Session,
+  Revision, aktueller Restzeit und dem Stempel seines Zustands.
+- Ein Empfänger übernimmt nur einen **strikt neueren Stempel**. Geräte mit WLAN
+  erhalten alle 500 ms einen frischen Stempel vom Server und sind dadurch automatisch
+  die Quelle. Geräte ohne WLAN geben den übernommenen Stempel unverändert weiter;
+  so erreicht der Zustand auch Geräte, die nur einen anderen ESP32 ohne WLAN hören
+  (Multi-Hop, etwa eine Sendeperiode pro Hop).
+- Fällt der Pi aus, haben alle denselben letzten Stempel; niemand übernimmt etwas,
+  alle zählen lokal weiter und zeigen `WIFI OFFLINE`.
+- Das Display zeigt `WIFI OK` (eigene Server-Verbindung), `MESH OK` (frischer
+  Server-Zustand über einen anderen ESP32 innerhalb von 5 s) oder `WIFI OFFLINE`.
+
+**Sicherheit:** Broadcasts lassen sich mit ESP-NOW nicht verschlüsseln. Jedes Paket
+trägt deshalb ein HMAC-SHA256-Tag (16 Bytes) mit `API_TOKEN` als Schlüssel; fremde
+oder veränderte Pakete werden verworfen. Ein mitgeschnittenes altes Paket verliert
+gegen jeden neueren Stempel. Nur ein frisch gestartetes Gerät ohne jeden Zustand
+könnte es kurz übernehmen, bis das nächste echte Paket eintrifft. Der Timerinhalt
+selbst ist nicht vertraulich.
+
+**Kanal:** ESP-NOW und WLAN teilen sich das Funkmodul. Geräte mit WLAN senden auf
+dem Hotspot-Kanal. Ein Gerät ohne WLAN bleibt nach einem Fehlversuch auf dem
+zuletzt bekannten Hotspot-Kanal oder sucht 1, 6 und 11 ab (je 1,5 s), bis es Pakete
+hört. Solange das Mesh frische Server-Zustände liefert, versucht es das WLAN nur alle 30 s erneut, weil der
+Verbindungsversuch (bis 10 s) die Kanäle wechselt und ESP-NOW-Pakete verpasst.
+Wählt der Pi nach einem Neustart einen anderen Kanal, finden die Geräte ihn so wieder.
+
+**Empfang mit WLAN:** Mit WLAN-Verbindung ist auf dem ESP32 wegen BLE der
+WLAN-Energiesparmodus vorgeschrieben; Mesh-Pakete kommen dann unzuverlässig an.
+Diese Geräte brauchen sie nicht, sie senden nur. Die Weiterleitung hängt an Geräten
+ohne WLAN, die ständig empfangen.
+
+`MESH = False` in `config.py` schaltet das Mesh pro Gerät ab. Server ohne Stempel
+(vor Pi-Software 1.2.0) deaktivieren es automatisch.
+
 ## Grenzen
 
-- Ein Headend, ein ESP32 und ein Luxafor; mehrere Nodes benötigen eigene IDs und
-  separate Statusverwaltung.
+- Ein Headend; mehrere ESP32 zeigen denselben Timer, die Statusanzeige zeigt aber
+  nur das zuletzt per WLAN meldende Gerät. Geräte, die nur über das Mesh
+  synchronisieren, melden dem Server nichts.
 - Timer überlebt WLAN-Ausfall, aber keinen Neustart des ESP32 ohne erreichbaren Pi.
 - Serverzustand liegt im RAM und wird bei Prozess-Neustart auf Stop gesetzt.
 - BLE Write-without-response bestätigt nur das lokale Absenden, keine LED-Farbe.

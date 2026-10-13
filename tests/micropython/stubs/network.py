@@ -25,3 +25,8 @@ class WLAN:
 
     def disconnect(self):
         pass
+
+    def config(self, name=None, **settings):
+        if "channel" in settings:
+            self.channel = settings["channel"]
+        return getattr(self, "channel", 6)

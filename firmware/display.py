@@ -29,11 +29,11 @@ class Display:
                         self.tft.fill_rect(x + (index * 8 + px) * scale,
                                            y + py * scale, scale, scale, color)
 
-    def render(self, remaining, online, ble):
+    def render(self, remaining, link, ble):
         current = phase(remaining)
         blink = current == "overdue" and (time.ticks_ms() // 500) % 2 == 1
         label = clock_text(remaining)
-        key = (label, current, online, ble, blink)
+        key = (label, current, link, ble, blink)
         if key == self.previous:
             return
         self.previous = key
@@ -45,7 +45,7 @@ class Display:
         scale = min(6, 300 // (len(label) * 8))
         self.text(label, (320 - len(label) * 8 * scale) // 2, 60, scale, color)
         self.text("SwiNOG", 8, 10, 2, 0xFFFF)
-        status = "WIFI %s   BLE %s" % ("OK" if online else "OFFLINE", "OK" if ble else "OFFLINE")
+        status = "%s   BLE %s" % (link, "OK" if ble else "OFFLINE")
         self.text(status, 8, 145, 1, 0xFFFF)
         # Same 8 px size as the status line, right-aligned to the 320 px width.
         if self.hostname:

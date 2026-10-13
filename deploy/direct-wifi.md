@@ -9,6 +9,11 @@ benötigt. Die native Touch-App auf dem Pi verwendet `http://127.0.0.1:8000`.
 Waveshare / Pi Zero 2 W       ESP32-C6             Luxafor Bluetooth Pro
 Hotspot: SwiNOG-Timer  <----> WLAN-Client   -----> BLE-Lampe
 Pi-IP: 10.42.0.1              IP via DHCP         direkt neben ESP32
+Kanal 1/6/11 (Scan)               ^
+                                  | ESP-NOW-Mesh (optional, weitere ESP32)
+                                  v
+                              ESP32-C6      -----> BLE-Lampe
+                              ohne WLAN-Empfang
 ```
 
 Dies verwendet den Access-Point-Modus des Pi und den normalen WLAN-Client-Modus
@@ -100,7 +105,8 @@ den Hotspot auf dem am wenigsten belegten der überlappungsfreien Kanäle 1, 6 u
 Jedes fremde Netz zählt mit seiner Signalstärke, Nachbarkanäle (z. B. 3 oder 9)
 anteilig nach Überlappung. Schwache Netze zählen ebenfalls, weil sie am Rand der
 Reichweite das ohnehin schwache ESP32-Signal stören. Der ESP32 sucht den Hotspot
-über den Namen auf allen Kanälen und braucht keine Änderung.
+über den Namen auf allen Kanälen und braucht keine Änderung. ESP32 ohne WLAN, die
+den Timer per ESP-NOW-Mesh erhalten, suchen den neuen Kanal ebenfalls selbst.
 
 Der WLAN-Chip des Pi kann als Hotspot nicht scannen. Der Dienst trennt den Hotspot
 deshalb kurz nach dem Booten, scannt (ca. 10–20 s), speichert den Kanal im Profil

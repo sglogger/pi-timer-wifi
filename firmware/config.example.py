@@ -11,6 +11,9 @@ API_TOKEN = "REPLACE-WITH-TOKEN-FROM-PI"
 # ESP32 display (first 25 characters), e.g. "timer-saal-1".
 # Letters, digits and "-" only; empty keeps MicroPython's default name.
 HOSTNAME = ""
+# ESP-NOW mesh: devices without Wi-Fi take the timer from peers that have it.
+# All devices need the same API_TOKEN. False disables it.
+MESH = True
 # Run scan.py, then enter the exact device name (or MAC below).
 LUXAFOR_NAME = "LUX DOT YOUR-DEVICE"
 LUXAFOR_MAC = ""
