@@ -30,6 +30,11 @@ ESP32-Firmware:
 - Der SPI-Bus des Touch-Boards bekommt GPIO3 als MISO. Ohne Angabe belegt
   MicroPython auf dem C6 GPIO2 als MISO-Eingang; das ist hier die Datenleitung zum
   Display, das dann trotz Beleuchtung schwarz blieb.
+- Auf der Hardware geprüft: Erkennung, Anzeige, Phasenfarben und Drehung mit
+  `FLIP` auf dem ESP32-C6-Touch-LCD-1.47.
+
+Abnahme: Grundbetrieb, Mesh mit zwei ESP32, Ausfälle und native App auf der
+Hardware geprüft ([Hardwareprotokoll](docs/acceptance.md#hardwareprotokoll)).
 
 ## 1.4.2 – BLE im reinen Mesh-Betrieb (13.10.2026)
 

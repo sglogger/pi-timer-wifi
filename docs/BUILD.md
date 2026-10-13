@@ -75,6 +75,9 @@ Touch-Zielgrößen und Tastenfunktionen. Sie ersetzt keinen Test auf dem Pi-Disp
 
 ## B. Fertige ESP32-C6-Basisfirmware verwenden — empfohlen
 
+Gilt für das ESP32-C6-LCD-1.47 und das ESP32-C6-Touch-LCD-1.47 (gleicher Chip,
+gleiches Image).
+
 Die [offizielle ESP32_GENERIC_C6-Downloadseite](https://micropython.org/download/ESP32_GENERIC_C6/)
 stellt kombinierte Images bereit. Der dokumentierte Ausgangspunkt dieses Projekts
 ist v1.28.0 aus dem bisherigen Timer; zum Recherchezeitpunkt ist auch v1.29.0

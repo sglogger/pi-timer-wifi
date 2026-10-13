@@ -123,7 +123,11 @@ Display schwarz. Der JD9853 versteht die vom Timer benutzten ST7789-Befehle;
 [`st7789.py`](st7789.py) schickt ihm zusätzlich die Initialisierungssequenz aus
 Waveshares Democode (`esp_lcd_jd9853.c`). Bildschirmaufteilung, Offset und Farben
 sind dieselben wie beim C6-Board ohne Touch. Touch, Lagesensor und TF-Slot nutzt
-die Firmware nicht.
+die Firmware nicht. MicroPython-Image wie beim C6-Board ohne Touch
+(`ESP32_GENERIC_C6`).
+
+Auf der Hardware geprüft mit Firmware 1.4.0 und MicroPython 1.28: Erkennung,
+Anzeige, Phasenfarben und Drehung mit `FLIP`.
 
 | Funktion | GPIO |
 |---|---|
@@ -142,10 +146,9 @@ umgekehrt erzwingt `BOARD = "c6-touch-147"` das Touch-Profil.
 | Beobachtung | Prüfen |
 |---|---|
 | Display schwarz, REPL zeigt `… c6-147` | Erkennung fehlgeschlagen: `BOARD = "c6-touch-147"` in `config.py` |
-| Display schwarz trotz Beleuchtung, REPL zeigt `… c6-touch-147` | `boards.py` und `display.py` ab Firmware 1.4.0 übertragen? Ohne `miso` im Profil belegt MicroPython GPIO2 (MOSI) als MISO-Eingang, und das Display bekommt keine Daten |
+| Display schwarz trotz Beleuchtung, REPL zeigt `… c6-touch-147` | Alle Dateien aus Firmware 1.4.0 übertragen? Ohne `miso` im Profil belegt MicroPython GPIO2 (MOSI) als MISO-Eingang, und das Display bekommt keine Daten |
 | Display schwarz, auch ohne Beleuchtung | Hintergrundbeleuchtung allein testen: `mpremote connect PORT exec "from machine import Pin; Pin(23, Pin.OUT).value(1)"` |
 | Bild steht auf dem Kopf | `FLIP = True` in `config.py` |
-| Rot und Blau vertauscht | `madctl` im Profil `c6-touch-147` von `0x68` auf `0x60` |
 | Bild um 34 px verschoben | `offset` (eingetragen: `(0, 34)`) |
 
 ## ESP32-S3-LCD-1.69

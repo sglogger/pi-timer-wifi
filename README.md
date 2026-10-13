@@ -80,8 +80,8 @@ hier gelten die Grenzen aus dieser Tabelle.
 | Raspberry Pi Zero 2 W | Timer-Server, WLAN-Hotspot, native Touch-App |
 | [Waveshare Zero-DISP-7A](https://www.waveshare.com/zero-disp-7a.htm) ([Wiki](https://www.waveshare.com/wiki/Zero-DISP-7A)) | 7-Zoll-Touchdisplay als Träger für den Pi |
 | [Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/wiki/ESP32-C6-LCD-1.47) | Countdown-Anzeige beim Redner, steuert die Lampe per BLE |
-| [Waveshare ESP32-C6-Touch-LCD-1.47](https://docs.waveshare.com/ESP32-C6-Touch-LCD-1.47) | Alternative zum C6-Board, gleiche Firmware, Touch ungenutzt ([Hinweise](firmware/README.md#esp32-c6-touch-lcd-147)) |
-| [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69) | Alternative zum C6-Board, gleiche Firmware ([Hinweise](firmware/README.md#esp32-s3-lcd-169)) |
+| [Waveshare ESP32-C6-Touch-LCD-1.47](https://docs.waveshare.com/ESP32-C6-Touch-LCD-1.47) | Alternative zum ESP32-C6-LCD-1.47, gleiche Firmware, Touch ungenutzt ([Hinweise](firmware/README.md#esp32-c6-touch-lcd-147)) |
+| [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69) | Alternative zum ESP32-C6-LCD-1.47, gleiche Firmware ([Hinweise](firmware/README.md#esp32-s3-lcd-169)) |
 | Luxafor Bluetooth Pro | Farbsignal beim Redner |
 | Luxafor Orb | Farbsignal am Headend, per USB-Kabel am Zero-DISP-7A |
 

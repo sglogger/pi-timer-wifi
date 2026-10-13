@@ -34,67 +34,72 @@ unter Linux/Xvfb in der CI und wurde auch lokal mit Tk ausgeführt. Die native
 App benötigt weiterhin eine Prüfung auf dem echten Pi auf Startzeit, CPU/RAM
 und Touch-Bedienung.
 
-## Hardwareprotokoll – noch offen
+## Hardwareprotokoll
 
 Datum, MicroPython-Version, aioble-Version/Commit, Luxafor-Firmware, AP/gewählter Kanal, Anzahl ESP32,
 Abstand und Hindernisse für den Test notieren. Bis alle Punkte geprüft sind,
 diese Version als Prototyp behandeln.
 
-- [ ] ESP32-Display: lesbarer Countdown im Querformat, Farben stimmen.
-- [ ] Pi-Hotspot aktiv: `SwiNOG-Timer`, WPA2, Pi-IP `10.42.0.1`, ESP32 erhält DHCP-Adresse.
-- [ ] Kaltstart ohne Router/Internet: erst Pi, dann ESP32; Verbindung entsteht automatisch.
-- [ ] Umgekehrte Einschaltreihenfolge: ESP32 zuerst, Pi später; automatische Verbindung.
-- [ ] Pi-Neustart: Hotspot und Timer-Dienst starten erneut, ESP32 übernimmt neue Sitzung/Stop.
-- [ ] Kanalwahl: `journalctl -u pi-timer-hotspot-channel -b` zeigt Belegung und gewählten
+Stand 13.10.2026 (Pi-Software 1.5.0, ESP32-Firmware 1.4.0): Grundbetrieb, Mesh mit
+zwei ESP32, Ausfälle und native App auf der Hardware geprüft. Offen sind Mesh über
+zwei Hops, fremder `API_TOKEN`, Statusanzeige mit drei ESP32, die Luxafor Orb,
+CPU/RAM-Messung auf dem Pi und der Reichweitentest im Saal.
+
+- [x] ESP32-Display: lesbarer Countdown im Querformat, Farben stimmen.
+- [x] Pi-Hotspot aktiv: `SwiNOG-Timer`, WPA2, Pi-IP `10.42.0.1`, ESP32 erhält DHCP-Adresse.
+- [x] Kaltstart ohne Router/Internet: erst Pi, dann ESP32; Verbindung entsteht automatisch.
+- [x] Umgekehrte Einschaltreihenfolge: ESP32 zuerst, Pi später; automatische Verbindung.
+- [x] Pi-Neustart: Hotspot und Timer-Dienst starten erneut, ESP32 übernimmt neue Sitzung/Stop.
+- [x] Kanalwahl: `journalctl -u pi-timer-hotspot-channel -b` zeigt Belegung und gewählten
       Kanal; nach Neustart mit anderem Kanal verbinden sich alle ESP32 wieder.
-- [ ] Mesh (`MESH = True` auf allen Geräten): WLAN-Abgleich und BLE bleiben bei aktivem
+- [x] Mesh (`MESH = True` auf allen Geräten): WLAN-Abgleich und BLE bleiben bei aktivem
       ESP-NOW stabil (im ersten Test nicht der Fall, siehe Architektur).
-- [ ] Mesh: zweiten ESP32 mit `WIFI = False` (oder außerhalb der Hotspot-Reichweite)
+- [x] Mesh: zweiten ESP32 mit `WIFI = False` (oder außerhalb der Hotspot-Reichweite)
       betreiben: Display `MESH OK`, Start/Stop kommen innerhalb von 2 s an.
-- [ ] Mesh: Gerät mit WLAN behält währenddessen seine BLE-Verbindung zur Luxafor.
+- [x] Mesh: Gerät mit WLAN behält währenddessen seine BLE-Verbindung zur Luxafor.
 - [ ] Mesh über zwei Hops: drei ESP32 in Kette, nur der erste mit WLAN.
 - [ ] Mesh: ESP32 mit anderem `API_TOKEN` übernimmt keine Zustände.
-- [ ] Mesh: Pi ausschalten: alle zählen weiter, keiner springt, Displays zeigen `WIFI OFFLINE`.
+- [x] Mesh: Pi ausschalten: alle zählen weiter, keiner springt, Displays zeigen `WIFI OFFLINE`.
 - [ ] Statusanzeige: drei ESP32 mit `HOSTNAME`, einer nur über Mesh: alle drei getrennt
       sichtbar, der Mesh-Teilnehmer als „Mesh über …“, STOP für jedes Gerät bestätigt.
-- [ ] Einen ESP32 ausschalten: nach 5 s (WLAN) bzw. 10 s (Mesh) rot/offline, die
+- [x] Einen ESP32 ausschalten: nach 5 s (WLAN) bzw. 10 s (Mesh) rot/offline, die
       Meldung unter STOP nennt ihn.
-- [ ] **WLAN / IP**: ESP32 im Hotspot mit Name und Firmware, Mesh-Geräte mit `Mesh/…`.
+- [x] **WLAN / IP**: ESP32 im Hotspot mit Name und Firmware, Mesh-Geräte mit `Mesh/…`.
 - [x] Luxafor ohne Dongle gefunden, GATT verbunden, Aus funktioniert (13.10.2026,
       `firmware/ble_test.py`: rot, grün, aus sichtbar, drei Runden `OK`).
 - [x] ESP32-S3-LCD-1.69: Display, Drehung mit `FLIP` (13.10.2026, Firmware 1.3.1).
 - [x] `FLIP = True` auf ESP32-C6-LCD-1.47 (13.10.2026).
-- [ ] ESP32-C6-Touch-LCD-1.47: Profil `c6-touch-147` automatisch erkannt, Display
-      lesbar, Farben richtig, Drehung mit `FLIP` (Firmware 1.4.0).
-- [ ] Reiner Mesh-Empfänger (`WIFI = False`, Firmware 1.3.2): verbindet die Luxafor
+- [x] ESP32-C6-Touch-LCD-1.47: Profil `c6-touch-147` automatisch erkannt, Display
+      lesbar, Farben richtig, Drehung mit `FLIP` (13.10.2026, Firmware 1.4.0).
+- [x] Reiner Mesh-Empfänger (`WIFI = False`, Firmware 1.3.2): verbindet die Luxafor
       nach dem Einschalten und nach Aus-/Einschalten der Lampe, Display `BLE OK` und
       `MESH OK`.
-- [ ] Fallback (`WIFI = True`, `MESH = True`, Hotspot aus): Luxafor verbindet nach
+- [x] Fallback (`WIFI = True`, `MESH = True`, Hotspot aus): Luxafor verbindet nach
       dem Einschalten des ESP32 und nach Aus-/Einschalten der Lampe; nach Rückkehr
       des Hotspots wieder `WIFI OK`.
 - [ ] Luxafor Orb per USB am Headend: Farben wie Bluetooth Pro, Blinken bei Überzeit, Aus bei Stop.
 - [ ] Orb bei laufendem Timer abziehen und wieder einstecken: aktuelle Farbe kehrt zurück.
 - [ ] Orb nach Kaltstart ohne Anmeldung/Root-Rechte angesteuert (udev-Regel, `plugdev`).
-- [ ] Start 10 min: grün; Start 5 min: gelb; Start 1 min: orange.
-- [ ] 1-min-Timer ablaufen lassen: rot bei 0, blinkend nach weiteren 30 s.
-- [ ] Stop während Blinken: Licht aus, Display READY, Übernahme bestätigt.
-- [ ] Schnell Start 30 → Start 1 → Stop: zuletzt gewünschter Zustand bleibt.
-- [ ] Luxafor kurz ausschalten: BLE offline erkennbar, Countdown läuft weiter.
-- [ ] Luxafor wieder einschalten: aktuelle Farbe wird wiederhergestellt.
-- [ ] WLAN für 60 s ausschalten: Display zählt ohne Sprung/Stillstand weiter;
+- [x] Start 10 min: grün; Start 5 min: gelb; Start 1 min: orange.
+- [x] 1-min-Timer ablaufen lassen: rot bei 0, blinkend nach weiteren 30 s.
+- [x] Stop während Blinken: Licht aus, Display READY, Übernahme bestätigt.
+- [x] Schnell Start 30 → Start 1 → Stop: zuletzt gewünschter Zustand bleibt.
+- [x] Luxafor kurz ausschalten: BLE offline erkennbar, Countdown läuft weiter.
+- [x] Luxafor wieder einschalten: aktuelle Farbe wird wiederhergestellt.
+- [x] WLAN für 60 s ausschalten: Display zählt ohne Sprung/Stillstand weiter;
       Farbe wechselt lokal, Headend meldet ESP32 offline.
-- [ ] Während Ausfall Stop am Pi: als unbestätigt/offline angezeigt; nach
+- [x] Während Ausfall Stop am Pi: als unbestätigt/offline angezeigt; nach
       WLAN-Rückkehr wird Stop angewendet, kein alter Start nachgeliefert.
-- [ ] Native App: sieben Zeitknöpfe und STOP bei 1024×600 vollständig sichtbar und bedienbar.
-- [ ] Native App nach Kaltstart ohne Tastatur/Schlüsseleingabe bereit.
-- [ ] App bei laufendem Timer schließen und neu starten: aktueller Countdown bleibt erhalten.
+- [x] Native App: sieben Zeitknöpfe und STOP bei 1024×600 vollständig sichtbar und bedienbar.
+- [x] Native App nach Kaltstart ohne Tastatur/Schlüsseleingabe bereit.
+- [x] App bei laufendem Timer schließen und neu starten: aktueller Countdown bleibt erhalten.
 - [ ] CPU/RAM/Swap und Startzeit auf dem Pi erfassen; nach einer Stunde erneut messen.
-- [ ] Optionale Weboberfläche neu laden: aktueller Timer wird übernommen.
-- [ ] Pi-Server neu starten: neue Sitzung/Stop wird übernommen.
-- [ ] ESP32 neu starten: bei Verbindung aktueller Countdown, ohne Verbindung READY.
+- [x] Optionale Weboberfläche neu laden: aktueller Timer wird übernommen.
+- [x] Pi-Server neu starten: neue Sitzung/Stop wird übernommen.
+- [x] ESP32 neu starten: bei Verbindung aktueller Countdown, ohne Verbindung READY.
 - [ ] 20–30 m mit Personen im Raum: mindestens 1 h laufen lassen, Start-/Stop-
       Latenzen und Abbrüche protokollieren. Ziel im verbundenen Betrieb < 2 s.
-- [ ] Mehrstündiger Dauertest: keine wachsenden Reconnect-Zeiten oder Speicherfehler.
+- [x] Mehrstündiger Dauertest: keine wachsenden Reconnect-Zeiten oder Speicherfehler.
 
 Bei unzuverlässigem BLE zunächst exklusiven Zugriff, Ladestand und Pairing prüfen.
 Bei unzuverlässigem WLAN Pi/Antennenposition und Kanalbelegung prüfen; alternativ

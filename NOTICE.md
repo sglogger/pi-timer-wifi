@@ -6,6 +6,9 @@ Dieses Projekt ist eine Neufassung des Konferenztimers von
 `firmware/st7789.py` wurde aus `ESP32-C6/st7789.py` dieses ursprünglichen Projekts
 übernommen. Display-Pinbelegung und Farbwerte stammen ebenfalls aus der dort
 vorhandenen, auf das Waveshare ESP32-C6-LCD-1.47 abgestimmten Implementierung.
+Die JD9853-Initialisierungssequenz für das ESP32-C6-Touch-LCD-1.47 in
+`firmware/st7789.py` stammt aus Waveshares Democode zu diesem Board
+(`esp_lcd_jd9853.c`, [Download](https://docs.waveshare.com/ESP32-C6-Touch-LCD-1.47/Resources-And-Documents)).
 Das ursprüngliche Repository enthielt zum Zeitpunkt der Übernahme keine
 separate Lizenzdatei. Hier wird keine neue Lizenz für fremde Bestandteile erklärt.
 
