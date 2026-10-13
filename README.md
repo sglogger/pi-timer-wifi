@@ -80,6 +80,7 @@ hier gelten die Grenzen aus dieser Tabelle.
 | Raspberry Pi Zero 2 W | Timer-Server, WLAN-Hotspot, native Touch-App |
 | [Waveshare Zero-DISP-7A](https://www.waveshare.com/zero-disp-7a.htm) ([Wiki](https://www.waveshare.com/wiki/Zero-DISP-7A)) | 7-Zoll-Touchdisplay als Träger für den Pi |
 | [Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/wiki/ESP32-C6-LCD-1.47) | Countdown-Anzeige beim Redner, steuert die Lampe per BLE |
+| [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69) | Alternative zum C6-Board, gleiche Firmware ([noch nicht abgenommen](firmware/README.md#esp32-s3-lcd-169)) |
 | Luxafor Bluetooth Pro | Farbsignal beim Redner |
 | Luxafor Orb | Farbsignal am Headend, per USB-Kabel am Zero-DISP-7A |
 
@@ -177,7 +178,7 @@ Firmware-Versionen stehen unter **WLAN / IP** bei den Geräten im Hotspot.
 
 ### Zusätzliches Gerät einrichten
 
-1. Für jedes Rednergerät einen eigenen **ESP32-C6-LCD-1.47** und ein eigenes
+1. Für jedes Rednergerät einen eigenen **ESP32-C6-LCD-1.47** (oder ESP32-S3-LCD-1.69) und ein eigenes
    **Luxafor Bluetooth Pro** direkt daneben vorsehen. Nicht mehrere ESP32 auf
    dieselbe Lampe konfigurieren.
 2. Jeden ESP32 nach [Installation, Schritte 5 und 6](docs/INSTALLATION.md)

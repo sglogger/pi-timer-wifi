@@ -3,19 +3,23 @@ import network
 import random
 import time
 import config
+import boards
 from timer_logic import FIRMWARE_VERSION, Replica
 from http_sync import exchange
 from mesh import BROADCAST, Codec
 from luxafor import Luxafor
 from display import Display
 
-print("Pi Timer Firmware", FIRMWARE_VERSION)
+# First: on battery the S3 board powers off unless its hold pin goes high.
+BOARD, board = boards.select(getattr(config, "BOARD", ""))
+boards.setup(board)
+print("Pi Timer Firmware", FIRMWARE_VERSION, BOARD)
 # Optional DHCP name; the headend lists hotspot clients by this name.
 HOSTNAME = getattr(config, "HOSTNAME", "")
 if len(HOSTNAME) > 32 or not all(c.isalpha() or c.isdigit() or c == "-" for c in HOSTNAME):
     raise ValueError("Invalid HOSTNAME")
-# Allocate the 30 KB display strip buffer before Wi-Fi/BLE fragment the heap.
-display = Display(HOSTNAME, FIRMWARE_VERSION)
+# Allocate the display strip buffer (30 KB on the C6) before Wi-Fi/BLE fragment the heap.
+display = Display(board, HOSTNAME, FIRMWARE_VERSION)
 replica = Replica(time.ticks_ms, time.ticks_diff)
 light = Luxafor(config, replica)
 # Must be set before the station interface is activated.

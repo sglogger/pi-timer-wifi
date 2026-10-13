@@ -251,6 +251,50 @@ def test_main():
     main = import_main_quiet(fake_gather, gather)
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)
+    check("C6 board by default", main.BOARD == "c6-147")
+    test_s3_board(fake_gather, gather)
+
+
+def test_s3_board(fake_gather, gather):
+    import machine
+    config.BOARD, config.HOSTNAME = "s3-169", "saal-mit-langem-namen-1"
+    try:
+        main = import_main_quiet(fake_gather, gather)
+    finally:
+        config.BOARD, config.HOSTNAME = "", "timer-test-1"
+    display = main.display
+    check("S3 power held, buzzer off", machine.Pin.pins[41].value() == 1
+          and machine.Pin.pins[42].value() == 0)
+    # Every text must stay inside the margins, clear of the rounded corners.
+    drawn, blits, overlaps = [], [], []
+    text = display.text
+    display.text = lambda target, label, x, y, scale, color: drawn.append(
+        (target, y, x, x + len(label) * 8 * scale))
+    display.tft.blit = lambda buffer, x, y, w, h: blits.append((x, y, w, h))
+    for remaining, link in ((None, "WIFI OFFLINE"), (61000, "MESH OFFLINE"), (-31000, "WIFI OK")):
+        display.previous = None
+        start = len(drawn)
+        display.render(remaining, link, False)
+        frame = drawn[start:]
+        # Texts on the same line of the same strip must not overlap.
+        overlaps += [a for i, a in enumerate(frame) for b in frame[i + 1:]
+                     if a[0] is b[0] and a[1] == b[1] and a[2] < b[3] and b[2] < a[3]]
+    display.text = text
+    check("S3 text within margins", all(display.margin <= left and right <= 280 - display.margin
+                                        for _, _, left, right in drawn))
+    check("S3 texts do not overlap", overlaps == [])
+    check("S3 regions on the 280 x 240 screen", all(x + w <= 280 and y + h <= 240
+                                                    for x, y, w, h in blits))
+    check("S3 hostname shortened", display.hostname == "saal-mit-langem-n")
+    check("S3 strip buffer", len(display.buffer) == 280 * 48 * 2)
+    try:
+        config.BOARD = "unknown"
+        import_main_quiet(fake_gather, gather)
+        check("unknown board rejected", False)
+    except ValueError as exc:
+        check("unknown board rejected", str(exc) == "Invalid BOARD")
+    finally:
+        config.BOARD = ""
 
 
 test_timer_logic()

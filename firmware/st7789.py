@@ -9,8 +9,11 @@ class ST7789:
     Callers draw small strips and blit them to a screen region instead.
     """
 
-    def __init__(self, spi, width, height, reset, dc, cs, backlight, rotation=1):
+    def __init__(self, spi, width, height, reset, dc, cs, backlight, rotation=1,
+                 offset=(0, 34), madctl=0x68):
         self.spi = spi
+        # Panel position in the controller's 240 x 320 RAM, landscape (x, y).
+        self.offset = offset
         self._width = width   # Physikalisch 172
         self._height = height # Physikalisch 320
         self.reset = reset
@@ -33,7 +36,7 @@ class ST7789:
         time.sleep_ms(50)
 
         # MADCTL (0x36): 0x60 = Landscape, 0x08 = BGR-Farbreihenfolge
-        madctl = 0x68 if rotation == 1 else 0x08
+        madctl = madctl if rotation == 1 else 0x08
 
         for cmd, data in [
             (0x01, None),
@@ -60,8 +63,8 @@ class ST7789:
             self.cs.value(1)
 
     def _window(self, x, y, w, h):
-        # Offset-Korrektur für Waveshare 1.47" (Landscape: Y-Offset 34)
-        ox, oy = 0, 34
+        # Offset-Korrektur, z. B. Waveshare 1.47" im Querformat: Y-Offset 34
+        ox, oy = self.offset
         self._write(0x2A, struct.pack(">HH", ox + x, ox + x + w - 1))
         self._write(0x2B, struct.pack(">HH", oy + y, oy + y + h - 1))
 

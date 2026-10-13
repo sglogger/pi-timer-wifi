@@ -84,6 +84,11 @@ Die richtige Datei ist die kombinierte **`.bin` für ESP32_GENERIC_C6**. Diese w
 ab Adresse `0x0` geschrieben. Die Einzeldatei `.app-bin` ist dafür nicht austauschbar.
 Konkrete Flash-/Sicherungsbefehle stehen in [Installation, Schritt 5](INSTALLATION.md#5-esp32-basisfirmware-und-werkzeuge--rechner).
 
+Für das **ESP32-S3-LCD-1.69** stattdessen auf der
+[ESP32_GENERIC_S3-Downloadseite](https://micropython.org/download/ESP32_GENERIC_S3/)
+die kombinierte `.bin` der Variante **SPIRAM_OCT** wählen (Octal-PSRAM des ESP32-S3R8),
+ebenfalls ab Adresse `0x0`.
+
 ## C. MicroPython-Basisfirmware selbst kompilieren — optional
 
 Dieser Weg ist nur nötig, wenn du die Laufzeit selbst bauen oder später anpassen
@@ -156,6 +161,9 @@ ls -lh ports/esp32/build-ESP32_GENERIC_C6/firmware.bin
 sha256sum ports/esp32/build-ESP32_GENERIC_C6/firmware.bin
 ```
 
+Für das ESP32-S3-LCD-1.69 `BOARD=ESP32_GENERIC_S3 BOARD_VARIANT=SPIRAM_OCT` setzen;
+das Ergebnis liegt dann unter `ports/esp32/build-ESP32_GENERIC_S3-SPIRAM_OCT/firmware.bin`.
+
 Erwartet: erfolgreiche Build-Zusammenfassung und die kombinierte `firmware.bin`.
 Den SHA256-Wert zusammen mit MicroPython-/ESP-IDF-Commit speichern. Unter macOS
 statt `sha256sum` den Befehl `shasum -a 256` verwenden.
@@ -165,7 +173,7 @@ Die Datei zum USB-Rechner übertragen, dort z. B. als
 [INSTALLATION.md, Schritt 5](INSTALLATION.md#5-esp32-basisfirmware-und-werkzeuge--rechner)
 flashen. `bootloader.bin`, `partitions.bin` und `micropython.bin` nicht einzeln
 mit einer geratenen Adresse flashen. Nach dem Flashen weiterhin **aioble und
-die acht Timerdateien** installieren; sie sind nicht in diesem Image enthalten.
+die neun Timerdateien** installieren; sie sind nicht in diesem Image enthalten.
 
 ### Prüfung und Grenzen dieses Eigenbaus
 

@@ -1,4 +1,4 @@
-# ESP32-C6-LCD-1.47
+# ESP32-Firmware (ESP32-C6-LCD-1.47 und ESP32-S3-LCD-1.69)
 
 Für die vollständige Erstinstallation einschließlich Sicherung und Flash-Befehlen
 der [Schritt-für-Schritt-Anleitung](../docs/INSTALLATION.md) folgen.
@@ -6,7 +6,8 @@ Eigenbau der MicroPython-Laufzeit: [Build-Anleitung](../docs/BUILD.md).
 Die folgenden Schritte dienen als Kurzreferenz für ein bereits vorbereitetes Board.
 
 Ziel ist dasselbe Waveshare-Board wie im ursprünglichen Projekt (172 × 320 Pixel,
-ST7789, Querformat). MicroPython bleibt erhalten; der ESP32 wird jetzt WLAN-Client
+ST7789, Querformat); dieselben Dateien laufen auch auf dem
+[ESP32-S3-LCD-1.69](#esp32-s3-lcd-169). MicroPython bleibt erhalten; der ESP32 wird jetzt WLAN-Client
 und BLE-Central statt BLE-Peripheral. Standardmäßig verbindet er sich direkt mit
 dem [WLAN-Hotspot des Pi](../deploy/direct-wifi.md); Internet wird im Betrieb nicht
 benötigt. Firmware und Bibliotheken vor der Veranstaltung installieren.
@@ -21,7 +22,8 @@ oben rechts hängt per USB am Headend und wird vom Pi angesteuert, nicht vom ESP
 ## 1. MicroPython und aioble
 
 Passende Firmware von [MicroPython ESP32_GENERIC_C6](https://micropython.org/download/ESP32_GENERIC_C6/)
-installieren. Ausgangspunkt des alten Projekts: MicroPython 1.28.0. Keine Binärdatei
+installieren, für das S3-Board [ESP32_GENERIC_S3](https://micropython.org/download/ESP32_GENERIC_S3/)
+in der Variante **SPIRAM_OCT** (siehe [unten](#esp32-s3-lcd-169)). Ausgangspunkt des alten Projekts: MicroPython 1.28.0. Keine Binärdatei
 wird hier erneut mitgeliefert. Vor Flashen vorhandene Dateien/Konfiguration sichern.
 Ein Flash-Löschen ist bei bereits funktionierendem MicroPython nicht nötig.
 
@@ -79,6 +81,7 @@ cp firmware/config.example.py firmware/config.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/http_sync.py :http_sync.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/mesh.py :mesh.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/luxafor.py :luxafor.py
+.venv-board/bin/mpremote connect PORT fs cp firmware/boards.py :boards.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/st7789.py :st7789.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/display.py :display.py
 .venv-board/bin/mpremote connect PORT fs cp firmware/main.py :main.py
@@ -90,6 +93,43 @@ Ctrl-C wird die laufende Firmware gestoppt; danach Ctrl-D für Neustart.
 Optional kann Thonny dieselben Dateien ins Wurzelverzeichnis übertragen.
 
 Spätere Updates und Versionsprüfung: [Betrieb, ESP32-Firmware aktualisieren](../docs/BETRIEB.md#3-esp32-firmware-aktualisieren).
+
+## ESP32-S3-LCD-1.69
+
+Das [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69)
+(ST7789V2, 240 × 280 Pixel, abgerundete Ecken, 8 MB PSRAM) verwendet dieselben
+Dateien und dieselbe `config.py` wie das C6-Board. Die Firmware erkennt den Chip
+beim Start und wählt das passende Profil aus [`boards.py`](boards.py): Pins,
+Display-Offset und Layout. Die REPL zeigt das gewählte Profil in der ersten Zeile,
+z. B. `Pi Timer Firmware 1.3.0 s3-169`.
+
+| Profil | Board | Auswahl |
+|---|---|---|
+| `c6-147` | ESP32-C6-LCD-1.47 | automatisch (jeder Chip außer S3) |
+| `s3-169` | ESP32-S3-LCD-1.69, Revision V2 (Aufdruck „V2QC“) | automatisch auf dem S3 |
+| `s3-169-v1` | ESP32-S3-LCD-1.69, erste Revision | `BOARD = "s3-169-v1"` in `config.py` |
+
+Die Revisionen unterscheiden sich im Haltepin SYS_EN (V2: GPIO41, erste Revision:
+GPIO35) und im Buzzer (GPIO42 bzw. GPIO33). Die Firmware setzt SYS_EN sofort beim
+Start auf High; sonst schaltet sich das Board im Akkubetrieb nach dem Loslassen
+der PWR-Taste wieder ab. Den passiven Buzzer zieht sie auf Low.
+
+Im Querformat (280 × 240) sitzen Titel, Countdown und Statuszeile mit 20 px
+Rand wegen der runden Ecken. Statuszeile und Version stehen zentriert auf zwei
+Zeilen, der Hostname ist auf 17 Zeichen gekürzt.
+
+**Noch nicht auf der Hardware abgenommen.** Beim ersten Start prüfen:
+
+| Beobachtung | Anpassung in `boards.py`, Profil `s3-169` |
+|---|---|
+| Display bleibt dunkel | SPI-Pins mit dem Pinout im Waveshare-Wiki vergleichen (eingetragen: SCK 6, MOSI 7, CS 5, DC 4, RST 8, Backlight 15) |
+| Bild um 20 px verschoben oder Streifen am Rand | `offset` (eingetragen: `(20, 0)`) |
+| Bild steht auf dem Kopf | `madctl` von `0x68` auf `0xA8` |
+| Rot und Blau vertauscht | `madctl` ohne BGR-Bit: `0x60` statt `0x68` |
+
+Das C6 hatte mit aktivem Mesh zu wenig Speicher für WLAN und BLE gleichzeitig
+(siehe `MESH` in `config.example.py`). Mit dem PSRAM des S3 ist das vermutlich
+kein Problem mehr; das ist aber ebenfalls noch ungetestet.
 
 ## Pairing / Diagnose
 

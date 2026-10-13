@@ -19,6 +19,9 @@ MESH = False
 # mesh from a nearby ESP32 that has Wi-Fi (MESH is then on automatically).
 # WIFI_SSID/WIFI_PASSWORD/SERVER_IP are ignored; API_TOKEN must still match.
 WIFI = True
+# Board: empty = detected from the chip (ESP32-C6-LCD-1.47 or ESP32-S3-LCD-1.69 V2).
+# "s3-169-v1" for the first S3 revision without the "V2QC" label (other power pin).
+BOARD = ""
 # Run scan.py, then enter the exact device name (or MAC below).
 LUXAFOR_NAME = "LUX DOT YOUR-DEVICE"
 LUXAFOR_MAC = ""

@@ -5,6 +5,8 @@ SERVER_IP = "127.0.0.1"
 SERVER_PORT = 18765
 API_TOKEN = "microPythonTestToken1234"
 HOSTNAME = "timer-test-1"
+# Empty: detected; the unix port counts as C6.
+BOARD = ""
 # Off by default on devices; the tests exercise the mesh code.
 MESH = True
 LUXAFOR_NAME = "LUX TEST"

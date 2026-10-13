@@ -194,7 +194,7 @@ z. B. `/dev/cu.usbmodem2101` oder `auto`):
 
 ```sh
 .venv-board/bin/mpremote connect PORT fs cp firmware/timer_logic.py firmware/http_sync.py firmware/mesh.py \
-  firmware/luxafor.py firmware/st7789.py firmware/display.py firmware/main.py :
+  firmware/luxafor.py firmware/boards.py firmware/st7789.py firmware/display.py firmware/main.py :
 .venv-board/bin/mpremote connect PORT fs cp firmware/config.py :config.py   # nur wenn geändert
 .venv-board/bin/mpremote connect PORT reset
 ```

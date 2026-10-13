@@ -45,6 +45,9 @@ MicroPython-Binärdatei; die Timer-Quelldateien werden direkt ausgeführt.
 - Waveshare **ESP32-C6-LCD-1.47**, USB-Datenkabel und Stromversorgung.
   Die Variante **ESP32-C6-Touch-LCD-1.47** verwendet einen anderen Display-Controller
   und andere Pins; dafür ist diese Firmware nicht vorgesehen.
+  Alternativ das Waveshare **ESP32-S3-LCD-1.69**; die Firmware erkennt es automatisch,
+  ist darauf aber noch nicht abgenommen ([Hinweise](../firmware/README.md#esp32-s3-lcd-169)).
+  Die Befehle unten gelten für das C6; Abweichungen für das S3 stehen jeweils dabei.
 - Luxafor **Bluetooth Pro**, geladen und direkt neben dem ESP32.
 - Optional **Luxafor Orb** mit USB-Kabel am Zero-DISP-7A (USB-A-Buchse) als
   Farbsignal am Headend, wie im ursprünglichen Projekt.
@@ -344,7 +347,7 @@ Bei schon installiertem MicroPython:
 .venv-board/bin/mpremote connect "$ESP_PORT" fs ls
 ```
 
-Ist eine passende ESP32-C6-Version vorhanden, kann das Neuflashen übersprungen
+Ist eine passende ESP32-C6- bzw. ESP32-S3-Version vorhanden, kann das Neuflashen übersprungen
 werden. Ausgangspunkt ist MicroPython **1.28.0**; andere Versionen benötigen
 erneute Hardwareprüfung. Das Ausführen von Diagnose-/Dateibefehlen stoppt ggf.
 die laufende Anwendung; anschließend explizit `reset` ausführen.
@@ -356,6 +359,9 @@ mkdir -p ~/pi-timer-backups
 .venv-board/bin/python -m esptool --chip esp32c6 --port "$ESP_PORT" \
   read-flash 0 0x400000 ~/pi-timer-backups/esp32-before-pi-timer.bin
 ```
+
+Beim **ESP32-S3-LCD-1.69** (16 MB Flash) `--chip esp32s3` und die Länge `0x1000000`
+verwenden.
 
 Falls bereits eine Sicherung dieses Namens existiert, einen neuen Namen verwenden.
 Das Abbild enthält auch WLAN-Passwörter/Bondingdaten; außerhalb des Git-Repositories
@@ -383,6 +389,10 @@ nun im Download-Modus.
 
 `erase-flash` löscht Programm, Dateien und Zugangsdaten auf dem ESP32. Für normale
 Timer-Updates später nur die `.py`-Dateien kopieren, nicht erneut löschen.
+Beim **ESP32-S3-LCD-1.69** stattdessen von der
+[Downloadseite für ESP32_GENERIC_S3](https://micropython.org/download/ESP32_GENERIC_S3/)
+die kombinierte `.bin` der Variante **SPIRAM_OCT** laden, z. B. als
+`~/Downloads/micropython-s3.bin`, und in beiden Befehlen `--chip esp32s3` angeben.
 Bei Übertragungsfehlern Baudrate auf 115200 reduzieren. Nach erfolgreichem Flash
 RESET drücken, Port erneut prüfen und die obige MicroPython-Versionsabfrage ausführen.
 
@@ -426,7 +436,9 @@ setzen; sie hat Vorrang vor dem Namen. Die Konfiguration auf dem Rechner wird
 nicht automatisch mit `.env` auf dem Pi abgeglichen. Keine Schlüssel ins Repository
 committen.
 
-Aus dem Repository auf dem Rechner diese acht Dateien übertragen:
+Aus dem Repository auf dem Rechner diese neun Dateien übertragen (auf beiden
+Boards dieselben; `BOARD` in `config.py` leer lassen, außer bei der ersten Revision
+des S3-Boards, siehe [Board-Profile](../firmware/README.md#esp32-s3-lcd-169)):
 
 ```sh
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/config.py :config.py
@@ -434,6 +446,7 @@ Aus dem Repository auf dem Rechner diese acht Dateien übertragen:
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/http_sync.py :http_sync.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/mesh.py :mesh.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/luxafor.py :luxafor.py
+.venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/boards.py :boards.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/st7789.py :st7789.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/display.py :display.py
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/main.py :main.py
@@ -441,7 +454,7 @@ Aus dem Repository auf dem Rechner diese acht Dateien übertragen:
 .venv-board/bin/mpremote connect "$ESP_PORT" reset
 ```
 
-Die Dateiliste auf dem Gerät muss diese acht Dateien und die separat
+Die Dateiliste auf dem Gerät muss diese neun Dateien und die separat
 installierte aioble-Bibliothek in `lib/` enthalten.
 
 `main.py` startet nach Reset automatisch. Zu diesem Zeitpunkt darf das Display
@@ -524,3 +537,5 @@ beschreiben die nächsten Schritte.
 - [mpremote: Portwahl, Dateitransfer, mip und Reset](https://docs.micropython.org/en/latest/reference/mpremote.html)
 - [esptool: Flash lesen, löschen und schreiben](https://docs.espressif.com/projects/esptool/en/latest/esp32c6/esptool/basic-commands.html)
 - [Waveshare ESP32-C6-LCD-1.47: Hardware und Download-Modus](https://www.waveshare.com/wiki/ESP32-C6-LCD-1.47)
+- [MicroPython ESP32-S3: Varianten und Flash-Datei](https://micropython.org/download/ESP32_GENERIC_S3/)
+- [Waveshare ESP32-S3-LCD-1.69: Pinout und Stromversorgung](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69)

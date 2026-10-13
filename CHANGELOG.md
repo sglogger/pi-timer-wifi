@@ -9,6 +9,25 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.4.0 – ESP32-S3-LCD-1.69 als zweites Board (13.10.2026)
+
+Pi-Software 1.4.0, ESP32-Firmware 1.3.0. Auf die ESP32 die neue Datei
+`firmware/boards.py` sowie `firmware/st7789.py`, `firmware/display.py`,
+`firmware/main.py` und `firmware/timer_logic.py` kopieren. Die Dateien gehören
+zusammen; nur ein Teil davon startet nicht.
+
+ESP32-Firmware:
+- Dieselben Dateien laufen auf dem ESP32-C6-LCD-1.47 und dem
+  [ESP32-S3-LCD-1.69](firmware/README.md#esp32-s3-lcd-169). Die Firmware erkennt
+  den Chip und wählt Pins, Display-Offset und Layout aus `boards.py`. Die erste
+  REPL-Zeile nennt das Profil, z. B. `Pi Timer Firmware 1.3.0 s3-169`.
+- Neue Option `BOARD` in `config.py`, nur für die erste Revision des S3-Boards
+  nötig (`"s3-169-v1"`, anderer Haltepin für den Akkubetrieb).
+- Auf dem S3 hält die Firmware die Stromversorgung im Akkubetrieb (SYS_EN) und
+  schaltet den Buzzer stumm. Layout mit breiterem Rand für die runden Ecken.
+- Auf dem C6 bleibt die Anzeige unverändert. Das S3 ist noch nicht auf der
+  Hardware abgenommen.
+
 ## 1.3.7 – Reiner Mesh-Empfänger (13.10.2026)
 
 Pi-Software 1.3.7, ESP32-Firmware 1.2.7. Auf die ESP32 `firmware/main.py` und

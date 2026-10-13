@@ -3,9 +3,12 @@
 
 class Pin:
     OUT = 1
+    # Last Pin object per GPIO number, for checks on board setup.
+    pins = {}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, number, *args, **kwargs):
         self.state = 0
+        Pin.pins[number] = self
 
     def value(self, state=None):
         if state is None:
