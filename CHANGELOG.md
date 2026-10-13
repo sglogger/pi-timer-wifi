@@ -9,6 +9,16 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.3.1 – Diagnose für WLAN-Abgleich (13.10.2026)
+
+Pi-Software 1.3.1, ESP32-Firmware 1.2.1. Nur die ESP32-Firmware hat sich geändert
+(`firmware/main.py`, `firmware/timer_logic.py`).
+
+ESP32-Firmware:
+- Fehler beim Abgleich nennen auf der Konsole den Typ (bisher erschien ein Timeout
+  als leeres `Sync:`) und bei bestehender WLAN-Verbindung Signalstärke, Kanal und
+  IP, z. B. `Sync: TimeoutError (RSSI -71 dBm, Kanal 6, IP 10.42.0.23)`.
+
 ## 1.3.0 – Status pro ESP32 (13.10.2026)
 
 Pi-Software 1.3.0, ESP32-Firmware 1.2.0. Nach dem Update auf dem Pi den Dienst neu

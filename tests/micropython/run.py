@@ -149,6 +149,7 @@ def test_main():
         main.display.render(remaining, main.link_text(), False)
     check("display renders", main.display.previous is not None)
     check("offline link text", main.link_text() == "WIFI OFFLINE")
+    check("timeout is named", main.describe_error(asyncio.TimeoutError()) == "TimeoutError")
     radio = main.mesh.radio
     main.mesh.send()
     check("mesh silent without server state", radio.sent == [])

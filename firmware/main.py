@@ -207,9 +207,21 @@ async def sync_loop():
             retry = 1
             await asyncio.sleep_ms(500)
         except Exception as exc:
-            print("Sync:", exc)
+            print("Sync:", describe_error(exc))
             await asyncio.sleep(retry)
             retry = min(5, retry * 2)
+
+
+def describe_error(exc):
+    """asyncio.TimeoutError has an empty message: name the type, add radio details."""
+    detail = ("%s %s" % (type(exc).__name__, exc)).strip()
+    if wlan.isconnected():
+        try:
+            detail += " (RSSI %d dBm, Kanal %d, IP %s)" % (
+                wlan.status("rssi"), wlan.config("channel"), wlan.ifconfig()[0])
+        except Exception:
+            pass
+    return detail
 
 
 def recent(ticks):
