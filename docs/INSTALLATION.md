@@ -11,6 +11,9 @@ Pi Zero 2 W + Waveshare-Touchscreen <-- eigenes WLAN --> ESP32-C6-LCD-1.47 <-- B
                                     weitere ESP32-C6-LCD-1.47 <-- BLE --> Luxafor Bluetooth Pro
 ```
 
+Statt des ESP32-C6-LCD-1.47 lassen sich auch das ESP32-C6-Touch-LCD-1.47 und das
+ESP32-S3-LCD-1.69 verwenden, gemischt und mit denselben Dateien.
+
 Weitere ESP32 sind optional. Sie erhalten den Timer per WLAN oder, außerhalb der
 Hotspot-Reichweite, über das [ESP-NOW-Mesh](architecture.md#esp-now-mesh-zwischen-den-esp32).
 
@@ -43,8 +46,10 @@ MicroPython-Binärdatei; die Timer-Quelldateien werden direkt ausgeführt.
   ([Produkt](https://www.waveshare.com/zero-disp-7a.htm), [Wiki](https://www.waveshare.com/wiki/Zero-DISP-7A)),
   microSD und passende Stromversorgung.
 - Waveshare **ESP32-C6-LCD-1.47**, USB-Datenkabel und Stromversorgung.
-  Die Variante **ESP32-C6-Touch-LCD-1.47** verwendet einen anderen Display-Controller
-  und andere Pins; dafür ist diese Firmware nicht vorgesehen.
+  Alternativ das **ESP32-C6-Touch-LCD-1.47** (anderer Display-Controller und andere
+  Pins, Touch bleibt ungenutzt); die Firmware erkennt es ab Version 1.4.0 automatisch
+  ([Hinweise](../firmware/README.md#esp32-c6-touch-lcd-147)). Für dieses Board gelten
+  die C6-Befehle.
   Alternativ das Waveshare **ESP32-S3-LCD-1.69**; die Firmware erkennt es automatisch
   ([Hinweise](../firmware/README.md#esp32-s3-lcd-169)).
   Die Befehle unten gelten für das C6; Abweichungen für das S3 stehen jeweils dabei.
@@ -360,7 +365,8 @@ mkdir -p ~/pi-timer-backups
   read-flash 0 0x400000 ~/pi-timer-backups/esp32-before-pi-timer.bin
 ```
 
-Beim **ESP32-S3-LCD-1.69** (16 MB Flash) `--chip esp32s3` und die Länge `0x1000000`
+Beim **ESP32-C6-Touch-LCD-1.47** (8 MB Flash) die Länge `0x800000`, beim
+**ESP32-S3-LCD-1.69** (16 MB Flash) `--chip esp32s3` und die Länge `0x1000000`
 verwenden.
 
 Falls bereits eine Sicherung dieses Namens existiert, einen neuen Namen verwenden.
@@ -440,9 +446,9 @@ setzen; sie hat Vorrang vor dem Namen. Die Konfiguration auf dem Rechner wird
 nicht automatisch mit `.env` auf dem Pi abgeglichen. Keine Schlüssel ins Repository
 committen.
 
-Aus dem Repository auf dem Rechner diese neun Dateien übertragen (auf beiden
+Aus dem Repository auf dem Rechner diese neun Dateien übertragen (auf allen
 Boards dieselben; `BOARD` in `config.py` leer lassen, außer bei der ersten Revision
-des S3-Boards, siehe [Board-Profile](../firmware/README.md#esp32-s3-lcd-169)):
+des S3-Boards, siehe [Board-Profile](../firmware/README.md#board-profile)):
 
 ```sh
 .venv-board/bin/mpremote connect "$ESP_PORT" fs cp firmware/config.py :config.py
@@ -556,5 +562,6 @@ beschreiben die nächsten Schritte.
 - [mpremote: Portwahl, Dateitransfer, mip und Reset](https://docs.micropython.org/en/latest/reference/mpremote.html)
 - [esptool: Flash lesen, löschen und schreiben](https://docs.espressif.com/projects/esptool/en/latest/esp32c6/esptool/basic-commands.html)
 - [Waveshare ESP32-C6-LCD-1.47: Hardware und Download-Modus](https://www.waveshare.com/wiki/ESP32-C6-LCD-1.47)
+- [Waveshare ESP32-C6-Touch-LCD-1.47: Pinout und Democode](https://docs.waveshare.com/ESP32-C6-Touch-LCD-1.47)
 - [MicroPython ESP32-S3: Varianten und Flash-Datei](https://micropython.org/download/ESP32_GENERIC_S3/)
 - [Waveshare ESP32-S3-LCD-1.69: Pinout und Stromversorgung](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69)

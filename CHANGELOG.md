@@ -9,6 +9,25 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.5.0 – ESP32-C6-Touch-LCD-1.47 als drittes Board (13.10.2026)
+
+Pi-Software 1.5.0, ESP32-Firmware 1.4.0. Auf die ESP32 `firmware/boards.py`,
+`firmware/st7789.py`, `firmware/display.py` und `firmware/timer_logic.py` kopieren.
+Die Dateien gehören zusammen; auf allen Boards aktualisieren.
+
+ESP32-Firmware:
+- Dieselben Dateien laufen auch auf dem
+  [ESP32-C6-Touch-LCD-1.47](firmware/README.md#esp32-c6-touch-lcd-147). Das Board
+  hat einen JD9853-Display-Controller statt des ST7789 und andere Pins; mit der
+  bisherigen Firmware blieb sein Display schwarz. Die Touch-Funktion wird nicht
+  genutzt.
+- Die Firmware erkennt das Touch-Board am Touch-Controller bzw. Lagesensor auf dem
+  I2C-Bus (GPIO18/19) und wählt das neue Profil `c6-touch-147`; `BOARD` in
+  `config.py` bleibt leer. Die erste REPL-Zeile nennt es, z. B.
+  `Pi Timer Firmware 1.4.0 c6-touch-147`.
+- Auf dem Touch-Board hält die Firmware die Chip-Select-Leitung des TF-Slots
+  (GPIO4) auf High; er teilt sich SCK und MOSI mit dem Display.
+
 ## 1.4.2 – BLE im reinen Mesh-Betrieb (13.10.2026)
 
 Pi-Software 1.4.2, ESP32-Firmware 1.3.2. Auf die ESP32 `firmware/main.py`,

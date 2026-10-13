@@ -282,6 +282,27 @@ def test_main():
         config.FLIP = False
     check("display flipped by 180 degrees", flipped.display.tft.madctl == 0xA8)
     test_s3_board(fake_gather, gather)
+    test_touch_board(fake_gather, gather)
+
+
+def test_touch_board(fake_gather, gather):
+    import machine
+    # The IMU answers on the touch board's I2C bus: profile without BOARD in config.py.
+    machine.I2C.devices = [0x63, 0x6B]
+    try:
+        main = import_main_quiet(fake_gather, gather)
+    finally:
+        machine.I2C.devices = []
+    check("C6 touch board detected", main.BOARD == "c6-touch-147")
+    check("C6 touch backlight on, TF card deselected", machine.Pin.pins[23].value() == 1
+          and machine.Pin.pins[4].value() == 1)
+    # Lines stuck low answer every address: keep the board without touch.
+    machine.I2C.devices = list(range(8, 120))
+    try:
+        main = import_main_quiet(fake_gather, gather)
+    finally:
+        machine.I2C.devices = []
+    check("I2C bus held low is no touch board", main.BOARD == "c6-147")
 
 
 def test_s3_board(fake_gather, gather):

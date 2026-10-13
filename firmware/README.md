@@ -1,4 +1,4 @@
-# ESP32-Firmware (ESP32-C6-LCD-1.47 und ESP32-S3-LCD-1.69)
+# ESP32-Firmware (ESP32-C6-LCD-1.47, ESP32-C6-Touch-LCD-1.47 und ESP32-S3-LCD-1.69)
 
 Für die vollständige Erstinstallation einschließlich Sicherung und Flash-Befehlen
 der [Schritt-für-Schritt-Anleitung](../docs/INSTALLATION.md) folgen.
@@ -7,6 +7,7 @@ Die folgenden Schritte dienen als Kurzreferenz für ein bereits vorbereitetes Bo
 
 Ziel ist dasselbe Waveshare-Board wie im ursprünglichen Projekt (172 × 320 Pixel,
 ST7789, Querformat); dieselben Dateien laufen auch auf dem
+[ESP32-C6-Touch-LCD-1.47](#esp32-c6-touch-lcd-147) und dem
 [ESP32-S3-LCD-1.69](#esp32-s3-lcd-169). MicroPython bleibt erhalten; der ESP32 wird jetzt WLAN-Client
 und BLE-Central statt BLE-Peripheral. Standardmäßig verbindet er sich direkt mit
 dem [WLAN-Hotspot des Pi](../deploy/direct-wifi.md); Internet wird im Betrieb nicht
@@ -22,7 +23,7 @@ oben rechts hängt per USB am Headend und wird vom Pi angesteuert, nicht vom ESP
 ## 1. MicroPython und aioble
 
 Passende Firmware von [MicroPython ESP32_GENERIC_C6](https://micropython.org/download/ESP32_GENERIC_C6/)
-installieren, für das S3-Board [ESP32_GENERIC_S3](https://micropython.org/download/ESP32_GENERIC_S3/)
+installieren (auch für das C6-Touch-Board), für das S3-Board [ESP32_GENERIC_S3](https://micropython.org/download/ESP32_GENERIC_S3/)
 in der Variante **SPIRAM_OCT** (siehe [unten](#esp32-s3-lcd-169)). Ausgangspunkt des alten Projekts: MicroPython 1.28.0. Keine Binärdatei
 wird hier erneut mitgeliefert. Vor Flashen vorhandene Dateien/Konfiguration sichern.
 Ein Flash-Löschen ist bei bereits funktionierendem MicroPython nicht nötig.
@@ -99,20 +100,58 @@ Optional kann Thonny dieselben Dateien ins Wurzelverzeichnis übertragen.
 
 Spätere Updates und Versionsprüfung: [Betrieb, ESP32-Firmware aktualisieren](../docs/BETRIEB.md#3-esp32-firmware-aktualisieren).
 
+## Board-Profile
+
+Alle Boards verwenden dieselben Dateien und dieselbe `config.py`. Die Firmware
+erkennt das Board beim Start und wählt das passende Profil aus [`boards.py`](boards.py):
+Pins, Display-Controller, Display-Offset und Layout. Die REPL zeigt das gewählte
+Profil in der ersten Zeile, z. B. `Pi Timer Firmware 1.4.0 s3-169`.
+
+| Profil | Board | Auswahl |
+|---|---|---|
+| `c6-147` | ESP32-C6-LCD-1.47 | automatisch (C6 ohne Touch-Bausteine am I2C-Bus) |
+| `c6-touch-147` | ESP32-C6-Touch-LCD-1.47 | automatisch (Touch-Controller oder Lagesensor antwortet) |
+| `s3-169` | ESP32-S3-LCD-1.69, Revision V2 (Aufdruck „V2QC“) | automatisch auf dem S3 |
+| `s3-169-v1` | ESP32-S3-LCD-1.69, erste Revision | `BOARD = "s3-169-v1"` in `config.py` |
+
+## ESP32-C6-Touch-LCD-1.47
+
+Das [Waveshare ESP32-C6-Touch-LCD-1.47](https://docs.waveshare.com/ESP32-C6-Touch-LCD-1.47)
+hat dasselbe Panel (172 × 320 Pixel) wie das C6-Board ohne Touch, aber einen
+**JD9853**-Display-Controller und andere Pins. Mit Firmware vor 1.4.0 bleibt sein
+Display schwarz. Der JD9853 versteht die vom Timer benutzten ST7789-Befehle;
+[`st7789.py`](st7789.py) schickt ihm zusätzlich die Initialisierungssequenz aus
+Waveshares Democode (`esp_lcd_jd9853.c`). Bildschirmaufteilung, Offset und Farben
+sind dieselben wie beim C6-Board ohne Touch. Touch, Lagesensor und TF-Slot nutzt
+die Firmware nicht.
+
+| Funktion | GPIO |
+|---|---|
+| Display SCK / MOSI | 1 / 2 (geteilt mit dem TF-Slot) |
+| Display CS / DC / RST | 14 / 15 / 22 |
+| Hintergrundbeleuchtung | 23 (High = an) |
+| TF-Slot CS | 4, von der Firmware auf High gehalten |
+| I2C SCL / SDA (Touch AXS5106L 0x63, Lagesensor QMI8658 0x6B) | 19 / 18, nur zur Erkennung |
+
+Zur Erkennung fragt die Firmware auf jedem C6 einmal den I2C-Bus an GPIO18/19 ab.
+Beim Board ohne Touch sind diese Pins frei und antworten nicht. Ist dort eigene
+Hardware mit Adresse 0x63 oder 0x6B angeschlossen, `BOARD = "c6-147"` setzen;
+umgekehrt erzwingt `BOARD = "c6-touch-147"` das Touch-Profil.
+
+| Beobachtung | Prüfen |
+|---|---|
+| Display schwarz, REPL zeigt `… c6-147` | Erkennung fehlgeschlagen: `BOARD = "c6-touch-147"` in `config.py` |
+| Display schwarz, REPL zeigt `… c6-touch-147` | Hintergrundbeleuchtung allein testen: `mpremote connect PORT exec "from machine import Pin; Pin(23, Pin.OUT).value(1)"` |
+| Bild steht auf dem Kopf | `FLIP = True` in `config.py` |
+| Rot und Blau vertauscht | `madctl` im Profil `c6-touch-147` von `0x68` auf `0x60` |
+| Bild um 34 px verschoben | `offset` (eingetragen: `(0, 34)`) |
+
 ## ESP32-S3-LCD-1.69
 
 Das [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69)
 (ST7789V2, 240 × 280 Pixel, abgerundete Ecken, 8 MB PSRAM) verwendet dieselben
-Dateien und dieselbe `config.py` wie das C6-Board. Die Firmware erkennt den Chip
-beim Start und wählt das passende Profil aus [`boards.py`](boards.py): Pins,
-Display-Offset und Layout. Die REPL zeigt das gewählte Profil in der ersten Zeile,
-z. B. `Pi Timer Firmware 1.3.0 s3-169`.
-
-| Profil | Board | Auswahl |
-|---|---|---|
-| `c6-147` | ESP32-C6-LCD-1.47 | automatisch (jeder Chip außer S3) |
-| `s3-169` | ESP32-S3-LCD-1.69, Revision V2 (Aufdruck „V2QC“) | automatisch auf dem S3 |
-| `s3-169-v1` | ESP32-S3-LCD-1.69, erste Revision | `BOARD = "s3-169-v1"` in `config.py` |
+Dateien und dieselbe `config.py` wie das C6-Board; die Firmware wählt das Profil
+`s3-169` am Chip ([Board-Profile](#board-profile)).
 
 Die Revisionen unterscheiden sich im Haltepin SYS_EN (V2: GPIO41, erste Revision:
 GPIO35) und im Buzzer (GPIO42 bzw. GPIO33). GPIO33–37 führen beim ESP32-S3R8 die
@@ -138,7 +177,7 @@ abweichen:
 | Bild steht auf dem Kopf | `madctl` von `0x68` auf `0xA8` (gilt dann für alle S3-Boards; für ein einzelnes Gerät stattdessen `FLIP = True` in `config.py`) |
 | Rot und Blau vertauscht | `madctl` ohne BGR-Bit: `0x60` statt `0x68` |
 
-Das C6 hatte mit aktivem Mesh zu wenig Speicher für WLAN und BLE gleichzeitig
+Das C6 (beide Boards: gleicher Chip) hatte mit aktivem Mesh zu wenig Speicher für WLAN und BLE gleichzeitig
 (siehe `MESH` in `config.example.py`). Das S3 hat schon ohne PSRAM mehr RAM; ob das
 SPIRAM_OCT-Image zusätzlich hilft, ist nicht gemessen.
 

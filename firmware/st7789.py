@@ -1,16 +1,60 @@
 import time
 import struct
 
+# (command, data, wait in ms). Without the waits the panel may ignore
+# Sleep Out and stay dark (black screen on the ESP32-S3-LCD-1.69).
+ST7789_INIT = (
+    (0x01, None, 150),  # Software reset
+    (0x11, None, 120),  # Sleep out
+    (0x3A, b'\x05', 0),
+)
+# JD9853 (ESP32-C6-Touch-LCD-1.47): vendor sequence from the Waveshare demo
+# (esp_lcd_jd9853.c) up to the pixel format; 0xDF unlocks the vendor commands.
+JD9853_INIT = (
+    (0x11, None, 120),  # Sleep out
+    (0xDF, b'\x98\x53', 0),
+    (0xDF, b'\x98\x53', 0),
+    (0xB2, b'\x23', 0),
+    (0xB7, b'\x00\x47\x00\x6F', 0),
+    (0xBB, b'\x1C\x1A\x55\x73\x63\xF0', 0),
+    (0xC0, b'\x44\xA4', 0),
+    (0xC1, b'\x16', 0),
+    (0xC3, b'\x7D\x07\x14\x06\xCF\x71\x72\x77', 0),
+    (0xC4, b'\x00\x00\xA0\x79\x0B\x0A\x16\x79\x0B\x0A\x16\x82', 0),
+    (0xC8, b'\x3F\x32\x29\x29\x27\x2B\x27\x28\x28\x26\x25\x17\x12\x0D\x04\x00' * 2, 0),
+    (0xD0, b'\x04\x06\x6B\x0F\x00', 0),
+    (0xD7, b'\x00\x30', 0),
+    (0xE6, b'\x14', 0),
+    (0xDE, b'\x01', 0),
+    (0xB7, b'\x03\x13\xEF\x35\x35', 0),
+    (0xC1, b'\x14\x15\xC0', 0),
+    (0xC2, b'\x06\x3A', 0),
+    (0xC4, b'\x72\x12', 0),
+    (0xBE, b'\x00', 0),
+    (0xDE, b'\x02', 0),
+    (0xE5, b'\x00\x02\x00', 0),
+    (0xE5, b'\x01\x02\x00', 0),
+    (0xDE, b'\x00', 0),
+    (0x35, b'\x00', 0),
+    (0x3A, b'\x05', 0),  # RGB565
+    (0xDE, b'\x02', 0),
+    (0xE5, b'\x00\x02\x00', 0),
+    (0xDE, b'\x00', 0),
+)
+INIT = {"st7789": ST7789_INIT, "jd9853": JD9853_INIT}
+
+
 class ST7789:
     """Driver without a full-screen framebuffer.
 
     A 320x172 RGB565 frame would take 110 KB in one block; on the ESP32-C6 that
     left Wi-Fi and BLE without memory (sync timeouts, BLE ENOMEM, crashes).
     Callers draw small strips and blit them to a screen region instead.
+    Also drives the JD9853, which shares the ST7789 commands used here.
     """
 
     def __init__(self, spi, width, height, reset, dc, cs, backlight, rotation=1,
-                 offset=(0, 34), madctl=0x68):
+                 offset=(0, 34), madctl=0x68, controller="st7789"):
         self.spi = spi
         # Panel position in the controller's 240 x 320 RAM, landscape (x, y).
         self.offset = offset
@@ -41,17 +85,12 @@ class ST7789:
         madctl = madctl if rotation == 1 else 0x08
         self.madctl = madctl
 
-        # (command, data, wait in ms). Without the waits the panel may ignore
-        # Sleep Out and stay dark (black screen on the ESP32-S3-LCD-1.69).
-        for cmd, data, wait in [
-            (0x01, None, 150),  # Software reset
-            (0x11, None, 120),  # Sleep out
-            (0x3A, b'\x05', 0),
+        for cmd, data, wait in INIT[controller] + (
             (0x36, bytes([madctl]), 0),
-            (0x21, None, 0),
+            (0x21, None, 0),    # Inversion on (IPS panels)
             (0x13, None, 10),
             (0x29, None, 20),   # Display on
-        ]:
+        ):
             self._write(cmd, data)
             if wait:
                 time.sleep_ms(wait)

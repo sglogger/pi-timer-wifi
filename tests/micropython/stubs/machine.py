@@ -22,3 +22,14 @@ class SPI:
 
     def write(self, data):
         pass
+
+
+class I2C:
+    # Addresses that answer a scan; the touch board test sets its devices.
+    devices = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def scan(self):
+        return list(I2C.devices)

@@ -12,7 +12,7 @@ WLAN ist als alternative Konfiguration möglich.
 ```mermaid
 flowchart LR
   A["Raspberry Pi Zero 2 W\nWaveshare Zero-DISP-7A\nTimer-Server + WLAN-Hotspot\n10.42.0.1 · Kanal 1/6/11 automatisch"]
-  B["ESP32-C6-LCD-1.47\nCountdown + lokale Farbsteuerung"]
+  B["ESP32-C6-LCD-1.47\n(oder C6-Touch / S3-LCD-1.69)\nCountdown + lokale Farbsteuerung"]
   C["Luxafor Bluetooth Pro"]
   A <-->|"Direktes WLAN / HTTP · ohne Router oder Internet"| B
   B -->|"BLE · direkt daneben"| C
@@ -26,7 +26,7 @@ flowchart LR
   A -->|"USB-Kabel"| E
 ```
 
-**Stand: Version 1.2.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
+**Stand: Version 1.5.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
 BLE-Verbindung laufen seit 0.7.1 auf der Hardware; die vollständige
 [Hardware-Abnahme](docs/acceptance.md) steht noch aus. Server, Synchronisation und
 Timerregeln werden automatisiert getestet. BLE-Befehle sind aus einer veröffentlichten Bluetooth-Pro-Implementierung
@@ -80,6 +80,7 @@ hier gelten die Grenzen aus dieser Tabelle.
 | Raspberry Pi Zero 2 W | Timer-Server, WLAN-Hotspot, native Touch-App |
 | [Waveshare Zero-DISP-7A](https://www.waveshare.com/zero-disp-7a.htm) ([Wiki](https://www.waveshare.com/wiki/Zero-DISP-7A)) | 7-Zoll-Touchdisplay als Träger für den Pi |
 | [Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/wiki/ESP32-C6-LCD-1.47) | Countdown-Anzeige beim Redner, steuert die Lampe per BLE |
+| [Waveshare ESP32-C6-Touch-LCD-1.47](https://docs.waveshare.com/ESP32-C6-Touch-LCD-1.47) | Alternative zum C6-Board, gleiche Firmware, Touch ungenutzt ([Hinweise](firmware/README.md#esp32-c6-touch-lcd-147)) |
 | [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69) | Alternative zum C6-Board, gleiche Firmware ([Hinweise](firmware/README.md#esp32-s3-lcd-169)) |
 | Luxafor Bluetooth Pro | Farbsignal beim Redner |
 | Luxafor Orb | Farbsignal am Headend, per USB-Kabel am Zero-DISP-7A |
@@ -178,7 +179,7 @@ Firmware-Versionen stehen unter **WLAN / IP** bei den Geräten im Hotspot.
 
 ### Zusätzliches Gerät einrichten
 
-1. Für jedes Rednergerät einen eigenen **ESP32-C6-LCD-1.47** (oder ESP32-S3-LCD-1.69) und ein eigenes
+1. Für jedes Rednergerät einen eigenen **ESP32-C6-LCD-1.47** (oder ESP32-C6-Touch-LCD-1.47 bzw. ESP32-S3-LCD-1.69) und ein eigenes
    **Luxafor Bluetooth Pro** direkt daneben vorsehen. Nicht mehrere ESP32 auf
    dieselbe Lampe konfigurieren.
 2. Jeden ESP32 nach [Installation, Schritte 5 und 6](docs/INSTALLATION.md)

@@ -122,7 +122,7 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | GATT-Authentifizierungsfehler | `LUXAFOR_PAIR = True` testen, Konfiguration übertragen und neu starten |
 | Orb: „USB: Access denied“ | udev-Regel `deploy/99-luxafor.rules` installiert? Benutzer in `plugdev`? Orb neu einstecken |
 | Orb: „USB: No backend available“ | `sudo apt install libusb-1.0-0`, dann Dienst neu starten |
-| Display dunkel/verschoben/falsche Farben | Erste REPL-Zeile nennt das Board-Profil (`c6-147`/`s3-169`); Board ohne Touch? Hinweise zum [S3](../firmware/README.md#esp32-s3-lcd-169); nicht durch WLAN-Änderungen lösen |
+| Display dunkel/verschoben/falsche Farben | Erste REPL-Zeile nennt das Board-Profil (`c6-147`/`c6-touch-147`/`s3-169`); Touch-Board erst ab Firmware 1.4.0, Hinweise zum [C6-Touch](../firmware/README.md#esp32-c6-touch-lcd-147) und [S3](../firmware/README.md#esp32-s3-lcd-169); nicht durch WLAN-Änderungen lösen |
 | Display steht auf dem Kopf | `FLIP = True` in `config.py` (ab Firmware 1.3.1) |
 | App zeigt „Server offline“ | Dienst/Port 8000 und `.env` prüfen; App verbindet automatisch neu |
 | `No module named tkinter` | Systempaket `python3-tk` installieren, venv mit System-Python erstellen |
@@ -139,7 +139,7 @@ isolieren, statt Einstellungen zu raten. Port wie oben in `ESP_PORT`.
 1. **Was meldet der Timer?** `mpremote connect "$ESP_PORT" repl`, Ctrl-D, ein bis zwei
    Minuten mitlesen, Ctrl-]. Jede `BLE: …`-Zeile nennt Fehlertyp und Meldung, z. B.
    `TimeoutError`, `DeviceDisconnectedError` (Lampe aus) oder `ENOMEM`. Dazu
-   notieren: Board (erste Zeile, `c6-147`/`s3-169`), `WIFI`/`MESH` aus `config.py`,
+   notieren: Board (erste Zeile, `c6-147`/`c6-touch-147`/`s3-169`), `WIFI`/`MESH` aus `config.py`,
    Display unten (`BLE OK`/`BLE OFFLINE`, `WIFI`/`MESH`).
 2. **Sieht der ESP32 die Lampe?** `mpremote connect "$ESP_PORT" soft-reset run firmware/scan.py`
    zeigt alle Geräte mit Name, MAC und RSSI. Fehlt die Lampe: einschalten, Dongle

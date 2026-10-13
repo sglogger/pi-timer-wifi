@@ -64,6 +64,8 @@ diese Version als Prototyp behandeln.
       `firmware/ble_test.py`: rot, grün, aus sichtbar, drei Runden `OK`).
 - [x] ESP32-S3-LCD-1.69: Display, Drehung mit `FLIP` (13.10.2026, Firmware 1.3.1).
 - [x] `FLIP = True` auf ESP32-C6-LCD-1.47 (13.10.2026).
+- [ ] ESP32-C6-Touch-LCD-1.47: Profil `c6-touch-147` automatisch erkannt, Display
+      lesbar, Farben richtig, Drehung mit `FLIP` (Firmware 1.4.0).
 - [ ] Reiner Mesh-Empfänger (`WIFI = False`, Firmware 1.3.2): verbindet die Luxafor
       nach dem Einschalten und nach Aus-/Einschalten der Lampe, Display `BLE OK` und
       `MESH OK`.

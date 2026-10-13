@@ -31,7 +31,8 @@ class Display:
                                dc=machine.Pin(board["dc"], machine.Pin.OUT),
                                cs=machine.Pin(board["cs"], machine.Pin.OUT),
                                backlight=machine.Pin(board["backlight"], machine.Pin.OUT),
-                               rotation=1, offset=board["offset"], madctl=madctl)
+                               rotation=1, offset=board["offset"], madctl=madctl,
+                               controller=board.get("controller", "st7789"))
         self.buffer = bytearray(self.width * STRIP_HEIGHT * 2)
         # One frame buffer per region height, all on the same bytes.
         self.strips = {height: framebuf.FrameBuffer(self.buffer, self.width, height, framebuf.RGB565)

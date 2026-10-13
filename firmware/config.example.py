@@ -21,7 +21,8 @@ MESH = False
 # Without a Wi-Fi connection (also when the hotspot is unreachable), ESP-NOW is
 # off for 1-3 s while the Luxafor is scanned for (shared radio).
 WIFI = True
-# Board: empty = detected from the chip (ESP32-C6-LCD-1.47 or ESP32-S3-LCD-1.69 V2).
+# Board: empty = detected (ESP32-C6-LCD-1.47, ESP32-C6-Touch-LCD-1.47 or
+# ESP32-S3-LCD-1.69 V2). "c6-touch-147" forces the C6 touch board if not detected.
 # "s3-169-v1" for the first S3 revision without the "V2QC" label (other power pin).
 BOARD = ""
 # True: turn the display by 180 degrees, e.g. when the USB cable has to leave on
