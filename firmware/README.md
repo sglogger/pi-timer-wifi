@@ -128,6 +128,7 @@ die Firmware nicht.
 | Funktion | GPIO |
 |---|---|
 | Display SCK / MOSI | 1 / 2 (geteilt mit dem TF-Slot) |
+| SPI-MISO | 3 (TF-Slot; nur gesetzt, damit MicroPython nicht GPIO2 als MISO belegt) |
 | Display CS / DC / RST | 14 / 15 / 22 |
 | Hintergrundbeleuchtung | 23 (High = an) |
 | TF-Slot CS | 4, von der Firmware auf High gehalten |
@@ -141,7 +142,8 @@ umgekehrt erzwingt `BOARD = "c6-touch-147"` das Touch-Profil.
 | Beobachtung | Prüfen |
 |---|---|
 | Display schwarz, REPL zeigt `… c6-147` | Erkennung fehlgeschlagen: `BOARD = "c6-touch-147"` in `config.py` |
-| Display schwarz, REPL zeigt `… c6-touch-147` | Hintergrundbeleuchtung allein testen: `mpremote connect PORT exec "from machine import Pin; Pin(23, Pin.OUT).value(1)"` |
+| Display schwarz trotz Beleuchtung, REPL zeigt `… c6-touch-147` | `boards.py` und `display.py` ab Firmware 1.4.0 übertragen? Ohne `miso` im Profil belegt MicroPython GPIO2 (MOSI) als MISO-Eingang, und das Display bekommt keine Daten |
+| Display schwarz, auch ohne Beleuchtung | Hintergrundbeleuchtung allein testen: `mpremote connect PORT exec "from machine import Pin; Pin(23, Pin.OUT).value(1)"` |
 | Bild steht auf dem Kopf | `FLIP = True` in `config.py` |
 | Rot und Blau vertauscht | `madctl` im Profil `c6-touch-147` von `0x68` auf `0x60` |
 | Bild um 34 px verschoben | `offset` (eingetragen: `(0, 34)`) |

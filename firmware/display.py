@@ -24,8 +24,10 @@ class Display:
         # 180 degrees: mirror both axes (MADCTL MX and MY). The panel sits centred in
         # the controller RAM on both boards, so the offset stays the same.
         madctl = board["madctl"] ^ 0xC0 if flip else board["madctl"]
-        spi = machine.SPI(1, baudrate=40000000, sck=machine.Pin(board["sck"]),
-                          mosi=machine.Pin(board["mosi"]))
+        pins = dict(sck=machine.Pin(board["sck"]), mosi=machine.Pin(board["mosi"]))
+        if "miso" in board:
+            pins["miso"] = machine.Pin(board["miso"])
+        spi = machine.SPI(1, baudrate=40000000, **pins)
         self.tft = st7789.ST7789(spi, board["panel"][0], board["panel"][1],
                                reset=machine.Pin(board["reset"], machine.Pin.OUT),
                                dc=machine.Pin(board["dc"], machine.Pin.OUT),

@@ -19,6 +19,9 @@ BOARDS = {
     # (ST7789 command set, own init sequence) and other pins. Touch stays unused.
     "c6-touch-147": {
         "sck": 1, "mosi": 2, "cs": 14, "dc": 15, "reset": 22, "backlight": 23,
+        # Without miso, MicroPython takes GPIO2 (the C6's SPI IOMUX MISO) as input
+        # and MOSI never reaches the display. GPIO3 is the TF slot's MISO.
+        "miso": 3,
         "panel": (172, 320), "offset": (0, 34), "madctl": 0x68, "controller": "jd9853",
         "margin": 8, "header": (10, 16), "clock": (60, 48), "status": (145, 8),
         # The TF slot shares SCK/MOSI with the display: keep its CS high.

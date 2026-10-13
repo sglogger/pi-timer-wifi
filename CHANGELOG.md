@@ -27,6 +27,9 @@ ESP32-Firmware:
   `Pi Timer Firmware 1.4.0 c6-touch-147`.
 - Auf dem Touch-Board hält die Firmware die Chip-Select-Leitung des TF-Slots
   (GPIO4) auf High; er teilt sich SCK und MOSI mit dem Display.
+- Der SPI-Bus des Touch-Boards bekommt GPIO3 als MISO. Ohne Angabe belegt
+  MicroPython auf dem C6 GPIO2 als MISO-Eingang; das ist hier die Datenleitung zum
+  Display, das dann trotz Beleuchtung schwarz blieb.
 
 ## 1.4.2 – BLE im reinen Mesh-Betrieb (13.10.2026)
 
