@@ -65,6 +65,9 @@ Ohne `HOSTNAME` erscheint das Gerät am Headend mit seiner MAC-Adresse.
 Mesh (experimentell): `MESH = True` lässt das Gerät per ESP-NOW mit anderen ESP32
 den Timer austauschen. `WIFI = False` macht es zum reinen Mesh-Empfänger ohne
 Hotspot-Verbindung; es braucht einen ESP32 mit WLAN und `MESH = True` in der Nähe.
+Ohne WLAN-Verbindung (so auch, wenn bei `MESH = True` der Hotspot nicht erreichbar
+ist) schaltet der ESP32 für die Suche nach der Luxafor ESP-NOW kurz ab (1–3 s),
+sonst fände der BLE-Scan nichts.
 Details: [Architektur](../docs/architecture.md#esp-now-mesh-zwischen-den-esp32).
 Unten rechts zeigt das Display die Firmware-Version, z. B. `v1.0.0`.
 `FLIP = True` dreht die Anzeige um 180°, etwa wenn das USB-Kabel auf der anderen
@@ -141,6 +144,8 @@ SPIRAM_OCT-Image zusätzlich hilft, ist nicht gemessen.
 
 ## Pairing / Diagnose
 
+Schrittweises Vorgehen bei BLE-Problemen: [Betrieb, BLE-Fehlersuche](../docs/BETRIEB.md#ble-fehlersuche).
+
 Bei Authentifizierungsfehlern `LUXAFOR_PAIR = True` setzen, Konfiguration erneut
 übertragen und Gerät neu starten. aioble speichert Bonds in `ble_secrets.json`.
 Das Datei- und Display-Verhalten sowie die Pairing-Variante hängen von der
@@ -165,13 +170,17 @@ Runde listet es alle GATT-Services und Characteristics. Am Ende steht eine Zeile
 
 Für den Vergleich mit Mesh-Last (wie bei `WIFI = False`) in `ble_test.py`
 `ESPNOW_LOAD = True` setzen und erneut ausführen. Scheitert nur dieser Lauf, liegt
-es an der gemeinsamen Funknutzung, nicht an Lampe oder Konfiguration.
+es an der gemeinsamen Funknutzung, nicht an Lampe oder Konfiguration. Ohne
+WLAN-Verbindung findet der Scan unter dieser Last nichts; zusätzlich
+`PAUSE_FOR_SCAN = True` stellt nach, wie der Timer das seit Firmware 1.3.2 löst
+(ESP-NOW nur während Suche und Verbindungsaufbau aus).
 
 | Meldung | Prüfen |
 |---|---|
 | WIFI OFFLINE | SSID/Passwort, 2.4 GHz, Pi-IP, Port 8000, AP-Isolation, gleicher API-Schlüssel; kein anderer ESP32 mit WLAN in Funkreichweite |
 | MESH OK | Kein eigenes WLAN, Timer kommt per ESP-NOW von einem anderen ESP32 ([Mesh](../docs/architecture.md#esp-now-mesh-zwischen-den-esp32)) |
-| Luxafor nicht gefunden | Name/MAC, Lampe eingeschaltet, Dongle/andere Clients getrennt |
+| Luxafor nicht gefunden | Name/MAC, Lampe eingeschaltet, Dongle/andere Clients getrennt; Vorgehen: [BLE-Fehlersuche](../docs/BETRIEB.md#ble-fehlersuche) |
+| BLE OFFLINE bei `WIFI = False` oder unerreichbarem Hotspot mit Mesh | Firmware ab 1.3.2 nötig: ESP-NOW blockiert ohne WLAN-Verbindung den BLE-Scan |
 | Service 1234 fehlt | Tatsächlich Bluetooth Pro? Geräte-Firmware und GATT-Scan prüfen |
 | GATT/Auth-Fehler | Pairing-Option, alte Bond-Verknüpfung, andere BLE-Verbindungen |
 | BLE OK, Licht falsch | Sichtprüfung/BLE-Protokoll-Abnahme; BLE OK ist keine LED-Rückmeldung |

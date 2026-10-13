@@ -235,7 +235,9 @@ starten. Details: [Direktes WLAN](deploy/direct-wifi.md).
   Die Bedienoberfläche zeigt die fehlende Bestätigung; ein HTTP-Erfolg allein
   bedeutet nicht, dass das Gerät den Befehl übernommen hat.
 - **BLE unterbrochen:** Display und WLAN laufen weiter. Beim Wiederverbinden
-  sendet der ESP32 die aktuell erforderliche Farbe. Bis dahin kann die Lampe ihre
+  sendet der ESP32 die aktuell erforderliche Farbe. Ohne WLAN-Verbindung
+  (`WIFI = False` oder Hotspot unerreichbar) hört der ESP32 während der Suche nach
+  der Lampe 1–3 s kein Mesh. Bis dahin kann die Lampe ihre
   alte Farbe behalten; das wird nicht als erfolgreicher Lichtwechsel ausgegeben.
 - **ESP32-Neustart:** Countdown unbekannt, Licht zunächst aus. Nach WLAN-Sync
   übernimmt er den aktuellen Timer. Ohne Headend kann er ihn nicht rekonstruieren.

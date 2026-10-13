@@ -6,8 +6,12 @@ class ESPNow:
         self.sent = []
         self.inbox = []
 
+    on = True
+
     def active(self, state=None):
-        return True
+        if state is None:
+            return self.on
+        self.on = state
 
     def add_peer(self, mac):
         pass

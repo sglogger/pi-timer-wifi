@@ -12,13 +12,19 @@ def hostname(name=None):
 
 class WLAN:
     def __init__(self, interface):
-        pass
+        self.on = True
 
     def active(self, state=None):
-        return True
+        if state is None:
+            return self.on
+        self.on = state
+        if not state:
+            self.channel = 1  # Like the ESP32: switching off resets the channel.
+
+    connected = False  # Tests set it to simulate a hotspot connection.
 
     def isconnected(self):
-        return False
+        return self.connected
 
     def connect(self, ssid, password):
         pass

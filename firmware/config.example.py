@@ -18,6 +18,8 @@ MESH = False
 # False: this device never joins the hotspot and gets the timer only through the
 # mesh from a nearby ESP32 that has Wi-Fi (MESH is then on automatically).
 # WIFI_SSID/WIFI_PASSWORD/SERVER_IP are ignored; API_TOKEN must still match.
+# Without a Wi-Fi connection (also when the hotspot is unreachable), ESP-NOW is
+# off for 1-3 s while the Luxafor is scanned for (shared radio).
 WIFI = True
 # Board: empty = detected from the chip (ESP32-C6-LCD-1.47 or ESP32-S3-LCD-1.69 V2).
 # "s3-169-v1" for the first S3 revision without the "V2QC" label (other power pin).

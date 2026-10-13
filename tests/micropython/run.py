@@ -248,6 +248,24 @@ def test_main():
         config.WIFI, config.MESH = True, True
     check("mesh-only device", not meshonly.WIFI and meshonly.mesh is not None
           and meshonly.link_text() == "MESH OFFLINE")
+    mesh = meshonly.mesh
+    check("mesh pauses for BLE scan, also in Wi-Fi fallback",
+          meshonly.light.radio is mesh and main.light.radio is main.mesh)
+    mesh.channel = 11
+    mesh.pause()
+    paused = mesh.paused and not mesh.radio.active() and not meshonly.wlan.active()
+    mesh.resume()
+    check("mesh pause and resume keep the channel", paused and not mesh.paused
+          and mesh.radio.active() and meshonly.wlan.active() and meshonly.wlan.config("channel") == 11)
+    # With a hotspot connection the radio stays on: Wi-Fi power save leaves BLE airtime.
+    meshonly.wlan.connected = True
+    try:
+        mesh.pause()
+        check("no pause while Wi-Fi is connected", not mesh.paused and mesh.radio.active()
+              and meshonly.wlan.active())
+        mesh.resume()
+    finally:
+        meshonly.wlan.connected = False
     main = import_main_quiet(fake_gather, gather)
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)

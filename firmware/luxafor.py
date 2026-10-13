@@ -15,6 +15,26 @@ class Luxafor:
         self.config, self.replica = config, replica
         self.connected = False
         self.status = "Suche Luxafor"
+        # Optional object with pause()/resume(): mesh-only devices switch ESP-NOW off
+        # while scanning and connecting. With Wi-Fi and ESP-NOW on but no Wi-Fi
+        # connection, the scan saw no advertisements at all (ble_test.py); an
+        # established connection kept working under the same load.
+        self.radio = None
+
+    async def connect(self):
+        """Scan and connect; None if the lamp is not found."""
+        if self.radio:
+            self.radio.pause()
+        try:
+            device = await self.find()
+            if device is None:
+                self.status = "Luxafor nicht gefunden"
+                return None
+            self.status = "Verbinde Luxafor"
+            return await device.connect(timeout_ms=5000)
+        finally:
+            if self.radio:
+                self.radio.resume()
 
     async def find(self):
         # Reduced scan duty cycle leaves airtime for Wi-Fi on the shared radio.
@@ -67,12 +87,9 @@ class Luxafor:
         delay = 1
         while True:
             try:
-                device = await self.find()
-                if device is None:
-                    self.status = "Luxafor nicht gefunden"
-                else:
-                    self.status = "Verbinde Luxafor"
-                    async with await device.connect(timeout_ms=5000) as connection:
+                connection = await self.connect()
+                if connection is not None:
+                    async with connection:
                         delay = 1
                         await self.control(connection)
             except Exception as exc:

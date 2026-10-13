@@ -9,6 +9,27 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.4.2 – BLE im reinen Mesh-Betrieb (13.10.2026)
+
+Pi-Software 1.4.2, ESP32-Firmware 1.3.2. Auf die ESP32 `firmware/main.py`,
+`firmware/luxafor.py` und `firmware/timer_logic.py` kopieren.
+
+ESP32-Firmware:
+- Ohne WLAN-Verbindung und mit Mesh fand der ESP32 die Luxafor nie (`BLE OFFLINE`):
+  mit `WIFI = False` und ebenso im Fallback, wenn bei `WIFI = True` der Hotspot
+  nicht erreichbar ist. Messung mit
+  `ble_test.py`: Mit WLAN und ESP-NOW an, aber ohne WLAN-Verbindung, sah der
+  BLE-Scan kein einziges Gerät (0 von 3 Runden); ohne diese Last fand er die Lampe
+  jedes Mal nach 0,3–2,3 s. Eine bestehende Verbindung lief unter der Last weiter.
+- Ohne WLAN-Verbindung schaltet der ESP32 ESP-NOW und WLAN deshalb nur für Suche
+  und Verbindungsaufbau zur Luxafor ab (im Test 1–3 s) und stellt danach den
+  Mesh-Kanal wieder her. Ein laufender WLAN-Verbindungsversuch bricht dafür ab und
+  wird danach wiederholt. Der Countdown läuft in der Zeit lokal weiter. Ist die Lampe aus,
+  wiederholt sich das alle paar Sekunden bis 15 s; das Display kann dann kurz
+  `MESH OFFLINE` zeigen.
+- Mit WLAN-Verbindung bleibt alles an, wie bisher. Ohne `MESH` gibt es keine Pause.
+- `ble_test.py`: neue Option `PAUSE_FOR_SCAN` für diesen Ablauf.
+
 ## 1.4.1 – Display um 180° drehbar (13.10.2026)
 
 Pi-Software 1.4.1, ESP32-Firmware 1.3.1. Auf die ESP32 `firmware/main.py`,

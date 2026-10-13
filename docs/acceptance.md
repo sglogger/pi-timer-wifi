@@ -60,7 +60,16 @@ diese Version als Prototyp behandeln.
 - [ ] Einen ESP32 ausschalten: nach 5 s (WLAN) bzw. 10 s (Mesh) rot/offline, die
       Meldung unter STOP nennt ihn.
 - [ ] **WLAN / IP**: ESP32 im Hotspot mit Name und Firmware, Mesh-Geräte mit `Mesh/…`.
-- [ ] Luxafor ohne Dongle gefunden, GATT verbunden, Aus funktioniert.
+- [x] Luxafor ohne Dongle gefunden, GATT verbunden, Aus funktioniert (13.10.2026,
+      `firmware/ble_test.py`: rot, grün, aus sichtbar, drei Runden `OK`).
+- [x] ESP32-S3-LCD-1.69: Display, Drehung mit `FLIP` (13.10.2026, Firmware 1.3.1).
+- [x] `FLIP = True` auf ESP32-C6-LCD-1.47 (13.10.2026).
+- [ ] Reiner Mesh-Empfänger (`WIFI = False`, Firmware 1.3.2): verbindet die Luxafor
+      nach dem Einschalten und nach Aus-/Einschalten der Lampe, Display `BLE OK` und
+      `MESH OK`.
+- [ ] Fallback (`WIFI = True`, `MESH = True`, Hotspot aus): Luxafor verbindet nach
+      dem Einschalten des ESP32 und nach Aus-/Einschalten der Lampe; nach Rückkehr
+      des Hotspots wieder `WIFI OK`.
 - [ ] Luxafor Orb per USB am Headend: Farben wie Bluetooth Pro, Blinken bei Überzeit, Aus bei Stop.
 - [ ] Orb bei laufendem Timer abziehen und wieder einstecken: aktuelle Farbe kehrt zurück.
 - [ ] Orb nach Kaltstart ohne Anmeldung/Root-Rechte angesteuert (udev-Regel, `plugdev`).

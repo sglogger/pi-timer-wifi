@@ -79,6 +79,29 @@ class BLETests(unittest.IsolatedAsyncioTestCase):
         # Initial off, then green once; the acknowledgements cause no further writes.
         self.assertEqual(writes, [timer_logic.packet_for_phase(p) for p in ('off', 'green')])
 
+    async def test_radio_paused_only_while_scanning_and_connecting(self):
+        events = []
+        self.light.radio = SimpleNamespace(pause=lambda: events.append('pause'),
+                                           resume=lambda: events.append('resume'))
+        device = SimpleNamespace(connect=AsyncMock(side_effect=lambda **kw: events.append('connect') or 'link'))
+
+        async def found():
+            events.append('scan')
+            return device
+        self.light.find = found
+        self.assertEqual(await self.light.connect(), 'link')
+        self.assertEqual(events, ['pause', 'scan', 'connect', 'resume'])
+
+        # Also resumed when the scan fails.
+        del events[:]
+
+        async def failing():
+            raise OSError('scan failed')
+        self.light.find = failing
+        with self.assertRaises(OSError):
+            await self.light.connect()
+        self.assertEqual(events, ['pause', 'resume'])
+
     async def test_missing_service_does_not_claim_connected(self):
         connection = SimpleNamespace(service=AsyncMock(return_value=None))
         with self.assertRaisesRegex(ValueError, 'Service'):

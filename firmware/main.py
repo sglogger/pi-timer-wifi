@@ -57,6 +57,34 @@ class Mesh:
         self.channel = None  # Hotspot channel, or where peers were last heard.
         self.peers = {}  # id -> (status, ticks when received, age_ms at receipt)
         self.demand = None  # Last status packet: some peer lacks Wi-Fi.
+        self.paused = False  # Radio off while the Luxafor is scanned for (luxafor.py).
+
+    def pause(self):
+        # Connected: Wi-Fi power save leaves BLE its airtime, and switching off
+        # would drop the hotspot connection. Without it (mesh-only, or hotspot
+        # unreachable) ESP-NOW blocked the BLE scan completely.
+        if wlan.isconnected():
+            return
+        self.paused = True
+        self.radio.active(False)
+        wlan.active(False)
+
+    def resume(self):
+        if not self.paused:
+            return
+        wlan.active(True)
+        self.radio.active(True)
+        try:
+            self.radio.add_peer(BROADCAST)
+        except OSError:
+            pass  # Still registered.
+        # Switching Wi-Fi off and on resets the channel to 1 (ble_test.py).
+        if self.channel:
+            try:
+                wlan.config(channel=self.channel)
+            except (OSError, ValueError):
+                pass
+        self.paused = False
 
     def alive(self, since=None):
         if self.heard is None:
@@ -135,6 +163,9 @@ class Mesh:
     async def run(self):
         due = status_due = time.ticks_ms()
         while True:
+            if self.paused:
+                await asyncio.sleep_ms(50)
+                continue
             # Any escaping exception would end asyncio.gather and stop the timer.
             try:
                 self.receive()
@@ -159,6 +190,8 @@ class Mesh:
         if self.channel:
             channels.insert(0, self.channel)
         for channel in channels:
+            if self.paused:
+                return
             try:
                 wlan.config(channel=channel)
             except (OSError, ValueError):
@@ -186,12 +219,15 @@ if getattr(config, "MESH", False) or not WIFI:
     radio.active(True)
     radio.add_peer(BROADCAST)
     mesh = Mesh(radio, Codec(config.API_TOKEN))
+    # Without a Wi-Fi connection ESP-NOW leaves BLE no time to scan: pause it then
+    # (mesh-only, and the fallback while the hotspot is unreachable).
+    light.radio = mesh
 
 
 async def mesh_only_loop():
     """WIFI = False: stay where peers are heard, search channels 1/6/11 otherwise."""
     while True:
-        if not mesh.alive():
+        if not mesh.alive() and not mesh.paused:
             await mesh.listen()
         await asyncio.sleep_ms(1000)
 
@@ -200,6 +236,9 @@ async def sync_loop():
     retry = 1
     attempt = None
     while True:
+        if mesh and mesh.paused:
+            await asyncio.sleep_ms(100)  # Radio off for the Luxafor scan.
+            continue
         try:
             if not wlan.isconnected():
                 # Only fresh server states count: if the Pi is down, peers still
@@ -212,7 +251,7 @@ async def sync_loop():
                 wlan.disconnect()
                 wlan.connect(config.WIFI_SSID, config.WIFI_PASSWORD)
                 for _ in range(100):
-                    if wlan.isconnected():
+                    if wlan.isconnected() or (mesh and mesh.paused):
                         break
                     await asyncio.sleep_ms(100)
                 if not wlan.isconnected():

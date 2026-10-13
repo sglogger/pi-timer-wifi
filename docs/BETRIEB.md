@@ -113,15 +113,74 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | Dienst: „unavailable resources“ | `User`/Pfade in `/etc/systemd/system/pi-timer-wifi.service` passen nicht zum Benutzer |
 | HTTP 401 | `API_TOKEN` auf ESP32 und `PI_TIMER_TOKEN` in Pi-`.env` vergleichen |
 | HTTP-Verbindung verweigert / Timeout | Pi-IP/Port, Timer-Dienst und lokale Firewall prüfen |
-| Luxafor nicht gefunden | Name/MAC exakt? Dongle und andere BLE-Clients getrennt? Lampe geladen? |
+| Luxafor nicht gefunden | Name/MAC exakt? Dongle und andere BLE-Clients getrennt? Lampe geladen? Vorgehen: [BLE-Fehlersuche](#ble-fehlersuche) |
+| Dauerhaft `BLE OFFLINE` bei `WIFI = False` oder `MESH = True` ohne Hotspot | Firmware vor 1.3.2: Ohne WLAN-Verbindung blockiert ESP-NOW den BLE-Scan. Firmware aktualisieren |
+| `BLE OFFLINE` direkt nach `ble_test.py` | Normal: `soft-reset run` beendet den Timer, das Display zeigt das letzte Bild. `mpremote … reset` |
+| Konsole: `BLE: AttributeError … LUXAFOR_PAIR` | Firmware vor 1.3.1 und Zeile fehlt in `config.py`: `LUXAFOR_PAIR = False` eintragen oder aktualisieren |
+| Konsole: `ImportError: no module named 'boards'`, Display schwarz | `firmware/boards.py` fehlt auf dem ESP32 (ab Firmware 1.3.0 nötig) |
 | GATT-Authentifizierungsfehler | `LUXAFOR_PAIR = True` testen, Konfiguration übertragen und neu starten |
 | Orb: „USB: Access denied“ | udev-Regel `deploy/99-luxafor.rules` installiert? Benutzer in `plugdev`? Orb neu einstecken |
 | Orb: „USB: No backend available“ | `sudo apt install libusb-1.0-0`, dann Dienst neu starten |
-| Display dunkel/verschoben/falsche Farben | Richtiges Board ohne Touch? Stromversorgung und Display-Pins prüfen; nicht durch WLAN-Änderungen lösen |
+| Display dunkel/verschoben/falsche Farben | Erste REPL-Zeile nennt das Board-Profil (`c6-147`/`s3-169`); Board ohne Touch? Hinweise zum [S3](../firmware/README.md#esp32-s3-lcd-169); nicht durch WLAN-Änderungen lösen |
+| Display steht auf dem Kopf | `FLIP = True` in `config.py` (ab Firmware 1.3.1) |
 | App zeigt „Server offline“ | Dienst/Port 8000 und `.env` prüfen; App verbindet automatisch neu |
 | `No module named tkinter` | Systempaket `python3-tk` installieren, venv mit System-Python erstellen |
 | Keine Touch-App nach Boot | Console Autologin, `~/.bash_profile`, `~/.xinitrc` und darin Projektpfad prüfen |
 | Kiosk startet nicht | Lokal tty1 angemeldet? `.bash_profile`, `.xinitrc`, X11/Falkon installiert? Vorhandenen Desktop-Autostart prüfen |
+
+## BLE-Fehlersuche
+
+BLE-Probleme am Timer haben meist eine von drei Ursachen: Lampe nicht erreichbar,
+Konfiguration falsch oder das Funkmodul ist durch WLAN/ESP-NOW belegt. WLAN, Mesh,
+BLE und Display laufen im Timer gleichzeitig; deshalb die Strecke schrittweise
+isolieren, statt Einstellungen zu raten. Port wie oben in `ESP_PORT`.
+
+1. **Was meldet der Timer?** `mpremote connect "$ESP_PORT" repl`, Ctrl-D, ein bis zwei
+   Minuten mitlesen, Ctrl-]. Jede `BLE: …`-Zeile nennt Fehlertyp und Meldung, z. B.
+   `TimeoutError`, `DeviceDisconnectedError` (Lampe aus) oder `ENOMEM`. Dazu
+   notieren: Board (erste Zeile, `c6-147`/`s3-169`), `WIFI`/`MESH` aus `config.py`,
+   Display unten (`BLE OK`/`BLE OFFLINE`, `WIFI`/`MESH`).
+2. **Sieht der ESP32 die Lampe?** `mpremote connect "$ESP_PORT" soft-reset run firmware/scan.py`
+   zeigt alle Geräte mit Name, MAC und RSSI. Fehlt die Lampe: einschalten, Dongle
+   abziehen, Apps trennen (eine verbundene Lampe sendet keine Advertisements).
+   Name/MAC mit `config.py` vergleichen. RSSI schwächer als etwa −80 dBm: näher stellen.
+3. **Funktioniert BLE allein?** `mpremote connect "$ESP_PORT" soft-reset run firmware/ble_test.py`:
+   drei Runden Suche, Verbindung, GATT-Liste, Farben rot/grün/aus mit Zeitstempel und
+   freiem Speicher ([Details](../firmware/README.md#ble-test-ohne-timer)). Lampe dabei
+   beobachten. Danach `mpremote … reset`, sonst bleibt der Timer aus.
+4. **Stört die Funklast?** In `firmware/ble_test.py` `ESPNOW_LOAD = True` setzen und
+   Schritt 3 wiederholen; die lokale Datei wird übertragen, nichts kopieren. Danach
+   zurücksetzen.
+5. **Ergebnis einordnen:**
+
+| Schritt 3 | Schritt 4 | Ursache | Nächster Schritt |
+|---|---|---|---|
+| nicht gefunden | – | Lampe, Name/MAC, andere Verbindung | Schritt 2 |
+| Verbinden: `TimeoutError` | – | Abstand, Lampe belegt | näher, Dongle/Apps trennen, Lampe neu starten |
+| Service/Characteristic fehlt | – | anderes Gerät oder Lampen-Firmware | GATT-Liste mit [BLE-Protokoll](ble-protocol.md) vergleichen |
+| `OK`, Lampe zeigt Farben nicht | – | Protokoll passt nicht | GATT-Liste und Lampen-Firmware dokumentieren |
+| `OK` | nicht gefunden / Fehler | gemeinsames Funkmodul | `ESPNOW_LOAD` und `PAUSE_FOR_SCAN = True` testen; Firmware ab 1.3.2 macht das ohne WLAN-Verbindung selbst |
+| `OK` | `OK` | Zusammenspiel im Timer | Meldungen aus Schritt 1 auswerten; mit `MESH = False` vergleichen |
+
+Bisher so gefundene Fehler (Oktober 2026, Details im CHANGELOG 1.4.1 und 1.4.2):
+
+- **Mesh-only blockiert den Scan:** Mit WLAN und ESP-NOW an, aber ohne
+  WLAN-Verbindung, sah der Scan kein Gerät; ohne Last fand er die Lampe nach
+  0,3–2,3 s. Eine bestehende Verbindung lief unter Last weiter. Betrifft auch den
+  Fallback mit `WIFI = True` bei unerreichbarem Hotspot. Lösung: ohne
+  WLAN-Verbindung ESP-NOW nur für Suche und Verbindungsaufbau aus.
+- **Bestätigung als Ready gedeutet:** Die Lampe beantwortet jeden Schreibbefehl
+  mit `1\r`; die Firmware schickte darauf die Farbe erneut, etwa zehnmal pro Sekunde.
+  Sichtbar im Test als `Notification b'1\r'` etwa 90 ms nach jedem `sende`.
+- **Fehlender Konfigurationseintrag:** Ohne `LUXAFOR_PAIR` brach jede Verbindung
+  mit `AttributeError` ab.
+
+Allgemeine Hinweise: Im Testskript auf Zeiten achten, nicht nur auf `OK`
+(deutlich längere Such-, Verbindungs- oder Antwortzeiten unter Last sind ein
+Frühzeichen). Sinkt der freie Speicher über Runden stetig, liegt ein Leck vor. Neue
+Erkenntnisse mit Board, MicroPython-Version, Firmware-Version und Testausgabe im
+CHANGELOG festhalten und, wo sinnvoll, als Fall in `ble_test.py` oder als Test unter
+`tests/` nachbauen.
 
 ## Software aktualisieren — vor der Veranstaltung mit Internet
 
