@@ -67,6 +67,8 @@ den Timer austauschen. `WIFI = False` macht es zum reinen Mesh-Empfänger ohne
 Hotspot-Verbindung; es braucht einen ESP32 mit WLAN und `MESH = True` in der Nähe.
 Details: [Architektur](../docs/architecture.md#esp-now-mesh-zwischen-den-esp32).
 Unten rechts zeigt das Display die Firmware-Version, z. B. `v1.0.0`.
+`FLIP = True` dreht die Anzeige um 180°, etwa wenn das USB-Kabel auf der anderen
+Seite herausgeführt werden muss.
 
 ```sh
 cp firmware/config.example.py firmware/config.py
@@ -128,7 +130,7 @@ Zeilen, der Hostname ist auf 17 Zeichen gekürzt.
 | Display bleibt dunkel | REPL öffnen (`mpremote connect PORT repl`, Ctrl-D): Erste Zeile muss `… s3-169` lauten; eine Fehlermeldung davor zeigt den Grund. Die Pins (SCK 6, MOSI 7, CS 5, DC 4, RST 8, Backlight 15) entsprechen dem Waveshare-Schaltplan |
 | Display ganz schwarz, auch ohne Leuchten | Hintergrundbeleuchtung allein testen: `mpremote connect PORT exec "from machine import Pin; Pin(15, Pin.OUT).value(1)"` |
 | Bild um 20 px verschoben oder Streifen am Rand | `offset` (eingetragen: `(20, 0)`) |
-| Bild steht auf dem Kopf | `madctl` von `0x68` auf `0xA8` |
+| Bild steht auf dem Kopf | `madctl` von `0x68` auf `0xA8` (gilt dann für alle S3-Boards; für ein einzelnes Gerät stattdessen `FLIP = True` in `config.py`) |
 | Rot und Blau vertauscht | `madctl` ohne BGR-Bit: `0x60` statt `0x68` |
 
 Das C6 hatte mit aktivem Mesh zu wenig Speicher für WLAN und BLE gleichzeitig

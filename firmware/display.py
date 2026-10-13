@@ -13,7 +13,7 @@ TITLE_WIDTH = 104
 
 
 class Display:
-    def __init__(self, board, hostname="", version=""):
+    def __init__(self, board, hostname="", version="", flip=False):
         # Screen regions (y, height) and margins come from the board profile (boards.py).
         self.width = board["panel"][1]
         self.margin = board["margin"]
@@ -21,6 +21,9 @@ class Display:
         # Right of the title: 25 characters on the C6, fewer on narrower screens.
         self.hostname = hostname[:(self.width - 2 * self.margin - TITLE_WIDTH) // 8]
         self.version = "v" + version if version else ""
+        # 180 degrees: mirror both axes (MADCTL MX and MY). The panel sits centred in
+        # the controller RAM on both boards, so the offset stays the same.
+        madctl = board["madctl"] ^ 0xC0 if flip else board["madctl"]
         spi = machine.SPI(1, baudrate=40000000, sck=machine.Pin(board["sck"]),
                           mosi=machine.Pin(board["mosi"]))
         self.tft = st7789.ST7789(spi, board["panel"][0], board["panel"][1],
@@ -28,7 +31,7 @@ class Display:
                                dc=machine.Pin(board["dc"], machine.Pin.OUT),
                                cs=machine.Pin(board["cs"], machine.Pin.OUT),
                                backlight=machine.Pin(board["backlight"], machine.Pin.OUT),
-                               rotation=1, offset=board["offset"], madctl=board["madctl"])
+                               rotation=1, offset=board["offset"], madctl=madctl)
         self.buffer = bytearray(self.width * STRIP_HEIGHT * 2)
         # One frame buffer per region height, all on the same bytes.
         self.strips = {height: framebuf.FrameBuffer(self.buffer, self.width, height, framebuf.RGB565)

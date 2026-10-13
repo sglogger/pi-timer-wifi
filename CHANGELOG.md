@@ -9,6 +9,18 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.4.1 – Display um 180° drehbar (13.10.2026)
+
+Pi-Software 1.4.1, ESP32-Firmware 1.3.1. Auf die ESP32 `firmware/main.py`,
+`firmware/display.py`, `firmware/st7789.py`, `firmware/boards.py` und
+`firmware/timer_logic.py` kopieren; neue Option aus `config.example.py` bei Bedarf
+übernehmen.
+
+ESP32-Firmware:
+- Neue Option `FLIP = True` in `config.py`: Die Anzeige steht um 180° gedreht,
+  auf beiden Boards.
+- Die S3-Erkennung akzeptiert auch die Schreibweise `ESP32-S3` im Chipnamen.
+
 ## 1.4.0 – ESP32-S3-LCD-1.69 als zweites Board (13.10.2026)
 
 Pi-Software 1.4.0, ESP32-Firmware 1.3.0. Auf die ESP32 die neue Datei

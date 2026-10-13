@@ -251,7 +251,13 @@ def test_main():
     main = import_main_quiet(fake_gather, gather)
     check("display shows hostname and version",
           main.display.hostname == "timer-test-1" and main.display.version == "v" + main.FIRMWARE_VERSION)
-    check("C6 board by default", main.BOARD == "c6-147")
+    check("C6 board by default", main.BOARD == "c6-147" and main.display.tft.madctl == 0x68)
+    config.FLIP = True
+    try:
+        flipped = import_main_quiet(fake_gather, gather)
+    finally:
+        config.FLIP = False
+    check("display flipped by 180 degrees", flipped.display.tft.madctl == 0xA8)
     test_s3_board(fake_gather, gather)
 
 

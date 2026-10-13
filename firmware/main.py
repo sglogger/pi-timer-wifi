@@ -19,7 +19,7 @@ HOSTNAME = getattr(config, "HOSTNAME", "")
 if len(HOSTNAME) > 32 or not all(c.isalpha() or c.isdigit() or c == "-" for c in HOSTNAME):
     raise ValueError("Invalid HOSTNAME")
 # Allocate the display strip buffer (30 KB on the C6) before Wi-Fi/BLE fragment the heap.
-display = Display(board, HOSTNAME, FIRMWARE_VERSION)
+display = Display(board, HOSTNAME, FIRMWARE_VERSION, getattr(config, "FLIP", False))
 replica = Replica(time.ticks_ms, time.ticks_diff)
 light = Luxafor(config, replica)
 # Must be set before the station interface is activated.

@@ -22,6 +22,9 @@ WIFI = True
 # Board: empty = detected from the chip (ESP32-C6-LCD-1.47 or ESP32-S3-LCD-1.69 V2).
 # "s3-169-v1" for the first S3 revision without the "V2QC" label (other power pin).
 BOARD = ""
+# True: turn the display by 180 degrees, e.g. when the USB cable has to leave on
+# the other side.
+FLIP = False
 # Run scan.py, then enter the exact device name (or MAC below).
 LUXAFOR_NAME = "LUX DOT YOUR-DEVICE"
 LUXAFOR_MAC = ""

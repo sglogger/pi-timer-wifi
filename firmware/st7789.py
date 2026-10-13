@@ -39,6 +39,7 @@ class ST7789:
 
         # MADCTL (0x36): 0x60 = Landscape, 0x08 = BGR-Farbreihenfolge
         madctl = madctl if rotation == 1 else 0x08
+        self.madctl = madctl
 
         # (command, data, wait in ms). Without the waits the panel may ignore
         # Sleep Out and stay dark (black screen on the ESP32-S3-LCD-1.69).
