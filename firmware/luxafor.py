@@ -28,7 +28,8 @@ class Luxafor:
         return None
 
     async def control(self, connection):
-        if self.config.LUXAFOR_PAIR:
+        # Optional like the other config entries: missing it must not break every connection.
+        if getattr(self.config, "LUXAFOR_PAIR", False):
             await connection.pair(bond=True, mitm=False, timeout_ms=15000)
         service = await connection.service(SERVICE)
         if service is None:

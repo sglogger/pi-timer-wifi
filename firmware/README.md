@@ -144,6 +144,27 @@ Bei Authentifizierungsfehlern `LUXAFOR_PAIR = True` setzen, Konfiguration erneut
 Das Datei- und Display-Verhalten sowie die Pairing-Variante hängen von der
 installierten MicroPython- und Luxafor-Firmware ab und sind vor Ort zu prüfen.
 
+### BLE-Test ohne Timer
+
+[`ble_test.py`](ble_test.py) prüft nur die Strecke zur Luxafor, ohne WLAN, Mesh und
+Display. Es nutzt `LUXAFOR_NAME`, `LUXAFOR_MAC` und `LUXAFOR_PAIR` aus der
+`config.py` auf dem Board und muss nicht kopiert werden:
+
+```sh
+.venv-board/bin/mpremote connect PORT soft-reset run firmware/ble_test.py
+```
+
+`soft-reset` beendet vorher eine noch offene BLE-Verbindung des Timers; eine
+verbundene Lampe sendet keine Advertisements und wäre im Scan unsichtbar. Das
+Skript macht drei Runden aus Scan, Verbinden, Abonnieren und den Farben rot, grün,
+aus, rot, aus und gibt jeden Schritt mit Zeit und freiem Speicher aus. In der ersten
+Runde listet es alle GATT-Services und Characteristics. Am Ende steht eine Zeile wie
+`Ergebnis: ['OK', 'OK', 'OK']`; danach `mpremote connect PORT reset` für den Timer.
+
+Für den Vergleich mit Mesh-Last (wie bei `WIFI = False`) in `ble_test.py`
+`ESPNOW_LOAD = True` setzen und erneut ausführen. Scheitert nur dieser Lauf, liegt
+es an der gemeinsamen Funknutzung, nicht an Lampe oder Konfiguration.
+
 | Meldung | Prüfen |
 |---|---|
 | WIFI OFFLINE | SSID/Passwort, 2.4 GHz, Pi-IP, Port 8000, AP-Isolation, gleicher API-Schlüssel; kein anderer ESP32 mit WLAN in Funkreichweite |

@@ -12,14 +12,19 @@ Dateien ändern, die auf den ESP32 kopiert werden.
 ## 1.4.1 – Display um 180° drehbar (13.10.2026)
 
 Pi-Software 1.4.1, ESP32-Firmware 1.3.1. Auf die ESP32 `firmware/main.py`,
-`firmware/display.py`, `firmware/st7789.py`, `firmware/boards.py` und
-`firmware/timer_logic.py` kopieren; neue Option aus `config.example.py` bei Bedarf
+`firmware/display.py`, `firmware/st7789.py`, `firmware/boards.py`,
+`firmware/luxafor.py` und `firmware/timer_logic.py` kopieren; neue Option aus `config.example.py` bei Bedarf
 übernehmen.
 
 ESP32-Firmware:
 - Neue Option `FLIP = True` in `config.py`: Die Anzeige steht um 180° gedreht,
-  auf beiden Boards.
+  auf beiden Boards (auf C6 und S3 geprüft).
 - Die S3-Erkennung akzeptiert auch die Schreibweise `ESP32-S3` im Chipnamen.
+- Fehlt `LUXAFOR_PAIR` in `config.py`, gilt jetzt `False`. Bisher brach jede
+  BLE-Verbindung direkt nach dem Aufbau mit `BLE: AttributeError` ab.
+- Neues Diagnoseskript `firmware/ble_test.py` (nur ausführen, nicht kopieren): prüft
+  Scan, Verbindung, GATT und Farbbefehle zur Luxafor ohne den restlichen Timer,
+  optional unter ESP-NOW-Last ([BLE-Test](firmware/README.md#ble-test-ohne-timer)).
 
 ## 1.4.0 – ESP32-S3-LCD-1.69 als zweites Board (13.10.2026)
 

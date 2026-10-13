@@ -61,6 +61,13 @@ class BLETests(unittest.IsolatedAsyncioTestCase):
             await self.light.control(connection)
         self.assertFalse(self.light.connected)
 
+    async def test_missing_pair_option_means_no_pairing(self):
+        self.light.config = SimpleNamespace()
+        connection = SimpleNamespace(pair=AsyncMock(), service=AsyncMock(return_value=None))
+        with self.assertRaisesRegex(ValueError, 'Service'):
+            await self.light.control(connection)
+        connection.pair.assert_not_awaited()
+
     async def test_pairing_is_opt_in_and_precedes_discovery(self):
         self.light.config.LUXAFOR_PAIR = True
         connection = SimpleNamespace(pair=AsyncMock(side_effect=OSError('pair failed')),
