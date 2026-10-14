@@ -92,7 +92,7 @@ class TimerWindow:
         self.device_rows = []
         self.device_more = None
         self.device_layout = None
-        self.orb = self.label(status, 'Luxafor · USB', size=14)
+        self.orb = self.label(status, 'LED Light', size=14)
         self.orb.pack(anchor='w')
         self.orb_detail = self.label(status, 'Unbekannt', size=11)
         self.orb_detail.configure(wraplength=180, justify='left')
@@ -159,7 +159,7 @@ class TimerWindow:
         self.update(self.phase, text=LABELS[state['phase']])
         self.update(self.server, text='Headend verbunden' if state['server'] else 'Server offline / suche …')
         self.show_devices(state)
-        self.update(self.orb, text='Luxafor · USB', fg=COLORS['green'] if state['orb'] else COLORS['orange'])
+        self.update(self.orb, text='LED Light', fg=COLORS['green'] if state['orb'] else COLORS['orange'])
         self.update(self.orb_detail, text=state['orb_text'])
         self.update(self.feedback, text='Befehl wird übertragen …' if self.client.busy else state['message'])
         for button in self.buttons:

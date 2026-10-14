@@ -20,7 +20,8 @@ Busy Tag:
   Fehlende Bilder (`static/busytag/`) lädt der Server beim Anschließen hoch.
 - Das Blinken schaltet der Server selbst: Die Musterbefehle der Firmware 1.0
   speicherten im Test fehlerhafte Muster und starteten das Gerät neu.
-- Status „Luxafor · USB“ fasst beide Lampen zusammen; Meldungen nennen das Gerät
+- Touch-App und Weboberfläche heißen den Status jetzt „LED Light“ statt „Luxafor · USB“;
+  er fasst beide Lampen zusammen, die Meldungen nennen das Gerät
   („Luxafor USB verbunden“, „Busy Tag nicht gefunden“).
 - Zugriff über die Gruppe `dialout`. Die Bilder erzeugt `tools/make_busytag_images.py`
   aus den UI-Farben und -Texten, samt Übersicht `images/busytag-display.png` für die Doku.

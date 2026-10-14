@@ -35,8 +35,8 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 | ESP32-Display: MESH OFFLINE | Gerät mit `WIFI = False` hört keinen Nachbarn: Ist ein ESP32 mit WLAN und `MESH = True` in Reichweite? Gleicher `API_TOKEN`? |
 | Luxafor/BLE offline | Licht kann alte Farbe behalten; Timer/WLAN separat prüfen |
 | BLE verbunden; Befehl gesendet | Befehl an GATT geschickt, tatsächliche LED-Farbe visuell prüfen |
-| Luxafor · USB: Luxafor USB verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
-| Luxafor · USB: Busy Tag verbunden; Farbe gesendet | Busy Tag am Headend angesteuert (LEDs und Display) |
+| LED Light: Luxafor USB verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
+| LED Light: Busy Tag verbunden; Farbe gesendet | Busy Tag am Headend angesteuert (LEDs und Display) |
 | Luxafor USB nicht gefunden · Busy Tag nicht gefunden | Keine USB-Lampe eingesteckt/erkannt; Timer läuft trotzdem, alle 2 s neue Suche. Ist eine Lampe verbunden, wird die fehlende andere nicht gemeldet |
 | Pi startet neu | Hotspot fällt kurz aus, Kanalwahl scannt (10–20 s), Server startet mit Stop; ESP32 übernimmt nach Reconnect |
 | ESP32 startet neu | Ohne Pi noch kein gültiger Countdown; nach Sync aktueller Sollzustand |

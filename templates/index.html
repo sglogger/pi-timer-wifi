@@ -25,7 +25,7 @@
     <aside>
       <p>VERBINDUNGEN</p>
       <div id="devices"><div class="status"><i></i><div><strong>ESP32</strong><small>Unbekannt</small></div></div></div>
-      <div class="status"><i id="orb-dot"></i><div><strong>Luxafor · USB</strong><small id="orb-state">Unbekannt</small></div></div>
+      <div class="status"><i id="orb-dot"></i><div><strong>LED Light</strong><small id="orb-state">Unbekannt</small></div></div>
       <div class="legend">{% for phase, line in legend %}<span class="swatch" style="background:{{legend_colors[phase]}}"></span>{{line}}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
       <div class="legend version">Version {{version}}</div>
       <button id="settings">Zugriffsschlüssel</button>
