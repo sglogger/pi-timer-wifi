@@ -4,7 +4,8 @@ Neufassung von [sglogger/pi-timer](https://github.com/sglogger/pi-timer) für de
 SwiNOG-Konferenztimer: Die lange Funkstrecke läuft über WLAN. Der ESP32-C6 neben
 dem Redner zeigt die Zeit und steuert das **Luxafor Bluetooth Pro direkt per BLE**.
 Am Headend zeigt eine per USB-Kabel angeschlossene **Luxafor Orb** weiterhin
-dieselben Farben wie im ursprünglichen Projekt.
+dieselben Farben wie im ursprünglichen Projekt; eine **Busy Tag** ist ebenso möglich
+und zeigt zusätzlich die Phase auf ihrem Display.
 Der Pi stellt standardmäßig sein eigenes WLAN bereit: **kein Router, kein
 Veranstaltungs-WLAN und kein Internet vor Ort nötig**. Ein vorhandenes gemeinsames
 WLAN ist als alternative Konfiguration möglich.
@@ -22,11 +23,11 @@ flowchart LR
   F -->|"BLE"| G
   D["Handy / Tablet / Laptop\nWeboberfläche im Browser"]
   D <-->|"WLAN · Timer bedienen"| A
-  E["Luxafor Orb"]
+  E["Luxafor Orb / Busy Tag"]
   A -->|"USB-Kabel"| E
 ```
 
-**Stand: Version 1.5.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
+**Stand: Version 1.6.0 (siehe [CHANGELOG](CHANGELOG.md)).** Hotspot, ESP32-WLAN und
 BLE-Verbindung laufen seit 0.7.1 auf der Hardware; die vollständige
 [Hardware-Abnahme](docs/acceptance.md) steht noch aus. Server, Synchronisation und
 Timerregeln werden automatisiert getestet. BLE-Befehle sind aus einer veröffentlichten Bluetooth-Pro-Implementierung
@@ -39,6 +40,8 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 - Luxafor Orb am Headend per USB wie bisher: gleiche Farben und USB-Befehle wie
   `luxafor-linux.py`, jetzt direkt im Timer-Server statt über geplante Einzelbefehle.
   Wird automatisch erkannt, auch nach Abziehen und erneutem Einstecken.
+- Alternativ oder zusätzlich Busy Tag per USB: gleiche LED-Farben, Phase als Text
+  auf dem Display, „SwiNOG“ bei gestopptem Timer.
 - Eigenes WPA2-WLAN auf dem Pi; ESP32 verbindet sich direkt mit `SwiNOG-Timer`.
   Beim Booten wählt der Pi den am wenigsten belegten Kanal (1, 6 oder 11).
 - Mehrere ESP32 synchronisieren sich zusätzlich per ESP-NOW-Mesh untereinander:
@@ -68,6 +71,10 @@ dem Einsatz geprüft werden. Das ursprüngliche Repository bleibt erhalten.
 
 Die Orb am Headend folgt denselben Grenzen. Beim Überziehen sendet der Server wie
 im ursprünglichen Projekt einen roten Luxafor-Strobe (Geschwindigkeit 15, 30 Wiederholungen).
+Eine Busy Tag zeigt dieselben LED-Farben, blinkt bei Überzeit rot und schreibt die
+Phase auf ihr Display:
+
+![Display der Busy Tag: SwiNOG, Redezeit, letzte 5 Minuten, letzte Minute, Zeit abgelaufen, überzogen](images/busytag-display.png "Busy Tag")
 
 Ein kurzer Timer beginnt sofort in seiner passenden Warnfarbe. Im bisherigen
 Projekt unterschieden sich manche Grenzwerte zwischen Browser, ESP32 und Licht;
@@ -84,6 +91,7 @@ hier gelten die Grenzen aus dieser Tabelle.
 | [Waveshare ESP32-S3-LCD-1.69](https://www.waveshare.com/wiki/ESP32-S3-LCD-1.69) | Alternative zum ESP32-C6-LCD-1.47, gleiche Firmware ([Hinweise](firmware/README.md#esp32-s3-lcd-169)) |
 | Luxafor Bluetooth Pro | Farbsignal beim Redner |
 | Luxafor Orb | Farbsignal am Headend, per USB-Kabel am Zero-DISP-7A |
+| [Busy Tag](https://www.busy-tag.com/) | Alternative oder Ergänzung zur Orb: Farbsignal und Phasentext am Headend, per USB-Datenkabel |
 
 ![Vorderseite: Touchdisplay, ESP32-C6-LCD-1.47 und Luxafor Bluetooth Pro](images/front.jpg "Vorderseite")
 ![Rückseite: Zero-DISP-7A mit Raspberry Pi Zero 2 W](images/back.jpg "Rückseite")
@@ -278,7 +286,8 @@ Die Simulation meldet absichtlich keine bestehende Luxafor-Verbindung.
 
 - `native_ui.py` / `native_client.py`: native Touch-App und lokaler API-Client.
 - `server.py`: threadsicherer Timer, REST-API und optionale Weboberfläche.
-- `orb.py`: Luxafor Orb per USB am Headend (pyusb, Befehle aus `luxafor-linux.py`).
+- `orb.py`: USB-Lampen am Headend: Luxafor Orb (pyusb, Befehle aus `luxafor-linux.py`)
+  und Busy Tag (serielle AT-Befehle, Bilder aus `static/busytag/`).
 - `ui_config.py`: Presets, Farben und Beschriftungen für Web- und Touch-App.
 - `firmware/`: MicroPython mit aioble, asynchronem HTTP und Waveshare-Display.
 - [Architektur und Protokoll](docs/architecture.md).

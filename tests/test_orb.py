@@ -13,6 +13,13 @@ class Clock:
 
 
 class FakeUSB:
+    name = 'Luxafor USB'
+    error_prefix = 'USB'
+
+    @staticmethod
+    def packet(value, now):
+        return packet_for_phase(value)
+
     def __init__(self):
         self.plugged = []
         self.writes = []
@@ -63,7 +70,7 @@ class OrbTests(unittest.TestCase):
         self.orb.step(700)
         self.assertEqual(self.packets(), [packet_for_phase(p) for p in
                                           ('off', 'green', 'yellow', 'orange', 'red', 'overdue', 'off')])
-        self.assertEqual(self.orb.report(), {'connected': True, 'status': 'Verbunden; Farbe gesendet'})
+        self.assertEqual(self.orb.report(), {'connected': True, 'status': 'Luxafor USB verbunden; Farbe gesendet'})
 
     def test_write_error_drops_device_and_rescans(self):
         self.timer.command(10)
@@ -110,7 +117,7 @@ class OrbTests(unittest.TestCase):
         self.usb.plugged = ['orb', 'flag']
         self.orb.step(0)
         self.assertEqual([device for device, _ in self.usb.writes], ['orb', 'flag'])
-        self.assertIn('2 Lampen', self.orb.report()['status'])
+        self.assertIn('2 × Luxafor USB', self.orb.report()['status'])
 
 
 class APITests(unittest.TestCase):

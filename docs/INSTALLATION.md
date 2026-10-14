@@ -26,7 +26,7 @@ Vortrag erstmals installieren.
 
 | Bezeichnung in dieser Anleitung | Gerät / Umgebung | Aufgabe |
 |---|---|---|
-| **Pi** | Terminal auf dem Raspberry Pi, Benutzer `pitimer` | Server, native Touch-App, Hotspot |
+| **Pi** | Terminal auf dem Raspberry Pi, Timer-Benutzer (frei wählbar, z. B. `steven`) | Server, native Touch-App, Hotspot |
 | **Rechner** | Mac oder Linux-PC mit Internet und USB-Datenkabel | ESP32 flashen und Dateien übertragen |
 | **ESP32** | MicroPython auf dem kleinen Waveshare-Board | Countdown, Display, BLE |
 
@@ -55,7 +55,9 @@ MicroPython-Binärdatei; die Timer-Quelldateien werden direkt ausgeführt.
   Die Befehle unten gelten für das C6; Abweichungen für das S3 stehen jeweils dabei.
 - Luxafor **Bluetooth Pro**, geladen und direkt neben dem ESP32.
 - Optional **Luxafor Orb** mit USB-Kabel am Zero-DISP-7A (USB-A-Buchse) als
-  Farbsignal am Headend, wie im ursprünglichen Projekt.
+  Farbsignal am Headend, wie im ursprünglichen Projekt, und/oder eine **Busy Tag**
+  (Farbsignal und Phasentext). Ein Datenkabel verwenden; reine Ladekabel werden
+  nicht erkannt.
 - Für die erste Einrichtung Tastatur am Pi oder SSH. Die native App liest den
   API-Schlüssel automatisch aus `.env`; im täglichen Betrieb ist keine Eingabe nötig.
 - Internet während der Vorbereitung für apt, pip, Git und aioble.
@@ -81,13 +83,13 @@ Im [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
    X11-Unterbau mit nativer Tk-App wird unten separat installiert. Ein vorhandenes
    Raspberry Pi OS mit Desktop ist ebenfalls möglich; siehe Schritt 3.
 3. Die richtige microSD auswählen. Alle darauf vorhandenen Daten werden ersetzt.
-4. Benutzer `pitimer`, eigenes Passwort und Hostname `pi-timer` konfigurieren.
+4. Benutzername nach Wahl (im Folgenden „Timer-Benutzer“, Beispiele mit `BENUTZER`), eigenes Passwort und Hostname `pi-timer` konfigurieren.
 5. WLAN für die **Vorbereitung** eintragen und SSH aktivieren. Raspberry Pi
    Connect deaktiviert lassen; es wird nicht benötigt.
 6. Land/Zeitzone/Tastatur setzen, z. B. CH, Europe/Zurich und `ch` beim Einsatz in der Schweiz.
 7. Image schreiben, microSD einsetzen, Pi starten.
 
-Am Pi anmelden oder vom Rechner `ssh pitimer@pi-timer.local` verwenden. Wenn mDNS
+Am Pi anmelden oder vom Rechner `ssh BENUTZER@pi-timer.local` verwenden. Wenn mDNS
 nicht verfügbar ist, die vom Heimrouter zugeteilte IP statt des Namens verwenden.
 
 **Pi:**
@@ -157,7 +159,7 @@ gh auth setup-git
 Ein Konto mit Zugriff auf `sglogger/pi-timer-wifi` verwenden. Alternativ einen
 bereits eingerichteten SSH-Schlüssel und die SSH-Clone-URL verwenden.
 
-Als Benutzer `pitimer` im Home-Verzeichnis, nicht als root:
+Als Timer-Benutzer im Home-Verzeichnis, nicht als root:
 
 ```sh
 cd ~
@@ -196,7 +198,32 @@ Die Regel gibt Luxafor-USB-Geräten (`04d8:f372`) der Gruppe `plugdev` Schreibzu
 Nach `usermod` neu anmelden. Die Orb einstecken und prüfen: `lsusb | grep -i 04d8:f372`.
 Mehrere angeschlossene Luxafor-USB-Lampen zeigen alle dieselbe Farbe. Ohne Orb
 läuft der Timer normal; die Oberfläche zeigt dann „Luxafor USB nicht gefunden“.
-Wer keine Orb verwendet, kann die Ansteuerung mit `PI_TIMER_ORB=0` in `.env` abschalten.
+Fehlt die Orb in `lsusb`, beim Einstecken `sudo dmesg -w` beobachten: Erscheint keine
+Zeile, kommt kein USB-Signal an (reines Ladekabel, Buchse ohne Daten oder Orb defekt).
+`deploy/install-services.sh` (Server-Autostart) richtet Regel und Gruppe ebenfalls ein.
+Wer keine USB-Lampe verwendet, kann die Ansteuerung mit `PI_TIMER_ORB=0` in `.env`
+abschalten (gilt für Orb und Busy Tag).
+
+### Busy Tag am Headend
+
+Statt oder zusätzlich zur Orb kann eine [Busy Tag](https://www.busy-tag.com/) per
+USB-Datenkabel am Pi hängen. Ihre 7 LEDs zeigen dieselben Farben wie die Orb und
+blinken bei Überzeit rot; das Display zeigt „SwiNOG“ bei gestopptem Timer und sonst
+die Phase („REDEZEIT“, „LETZTE 5 MINUTEN“ …):
+
+![Display der Busy Tag je Phase](../images/busytag-display.png "Busy Tag")
+
+Der Server erkennt sie als serielles
+Gerät `/dev/ttyACM*` mit dem USB-Produktnamen „BUSY TAG“; andere serielle Geräte,
+etwa ein ESP32 zum Flashen, erhalten keine Befehle. Beim ersten Anschließen lädt er
+die Bilder aus `static/busytag/` hoch (wenige Sekunden); danach schaltet er nur noch um.
+Eigene Bilder auf der Busy Tag bleiben erhalten.
+
+Zugriff braucht die Gruppe `dialout` (Raspberry Pi OS: Standard für den ersten
+Benutzer; `deploy/install-services.sh` ergänzt sie). Prüfen: `ls /dev/ttyACM*` nach
+dem Einstecken; `cat /sys/class/tty/ttyACM0/device/../product` zeigt `BUSY TAG`.
+Die Bilder erzeugt `tools/make_busytag_images.py` (nur bei geänderten Farben oder
+Texten, auf dem Rechner mit Pillow).
 
 Bei Migration den alten Timer-Dienst gezielt stoppen, da beide Port 8000 verwenden:
 
@@ -220,30 +247,20 @@ beenden, bevor der Dienst gestartet wird.
 
 ### Server-Autostart
 
-Die mitgelieferte Unit verwendet `/home/pitimer/pi-timer-wifi` und Benutzer `pitimer`.
-Bei anderem Benutzernamen die Unit statt mit `cp` so installieren (als dieser Benutzer,
-Repository unter `~/pi-timer-wifi`); das passt `User` und alle Pfade an:
+Als Timer-Benutzer (nicht als root) im Repository ausführen:
 
 ```sh
-sudo sed -e "s/^User=pitimer/User=$USER/" -e "s#/home/pitimer/#$HOME/#g" \
-  deploy/pi-timer-wifi.service | sudo tee /etc/systemd/system/pi-timer-wifi.service >/dev/null
+deploy/install-services.sh
 ```
 
-Mit Benutzer `pitimer`:
+Das Skript übernimmt Benutzer und Repository-Pfad vom Aufrufer; Name und Ort des
+Benutzers sind frei. Es installiert `pi-timer-wifi.service` und
+`pi-timer-hotspot-channel.service` nach `/etc/systemd/system`, die udev-Regel der
+Orb samt Gruppen `plugdev` und `dialout` (Busy Tag), aktiviert den Server und startet ihn (neu). Nach einem
+Umzug des Repositories oder Benutzerwechsel erneut ausführen. Die Dateien unter
+`deploy/` sind Vorlagen mit `@USER@`/`@DIR@` und nicht direkt mit `cp` verwendbar.
 
-```sh
-sudo cp deploy/pi-timer-wifi.service /etc/systemd/system/
-```
-
-Anschließend:
-
-```sh
-sudo systemctl daemon-reload
-sudo systemctl enable --now pi-timer-wifi
-systemctl is-active pi-timer-wifi
-```
-
-Erwartet: `active`. Fehler mit `journalctl -u pi-timer-wifi -n 50 --no-pager` lesen.
+Erwartet am Ende: `Dienst pi-timer-wifi läuft als BENUTZER aus PFAD: active`. Fehler mit `journalctl -u pi-timer-wifi -n 50 --no-pager` lesen.
 Meldet `systemctl` „failed because of unavailable resources“, passen Benutzer oder
 Pfade in der Unit nicht (meist fehlt die `.env` unter dem eingetragenen Pfad).
 
@@ -266,7 +283,7 @@ Bei vorhandenem Desktop dort `./run-native.sh` starten und dessen Autostart benu
 nicht zusätzlich eine zweite X11-Sitzung starten. Details und `.desktop`-Beispiel:
 [Native Oberfläche](NATIVE_UI.md). Bestehenden Browser-Kiosk zuerst deaktivieren.
 
-Als Timer-Benutzer (z. B. `pitimer`), aus `~/pi-timer-wifi`. `native.xinitrc`
+Als Timer-Benutzer, aus `~/pi-timer-wifi`. `native.xinitrc`
 startet die App aus `$HOME/pi-timer-wifi` und funktioniert so mit jedem Benutzernamen:
 
 ```sh
@@ -540,12 +557,14 @@ Die Lichtfarbe zusätzlich mit den Augen prüfen: BLE-Verbindung ist keine LED-R
 
 ## 8. Erster vollständiger Funktionstest
 
-1. 10 Minuten starten: ESP32 zählt, Lampe und Orb grün.
-2. 5 Minuten starten: gelb; 1 Minute starten: orange (Lampe und Orb).
+1. 10 Minuten starten: ESP32 zählt, Lampe und Orb/Busy Tag grün, Busy Tag zeigt „REDEZEIT“.
+2. 5 Minuten starten: gelb; 1 Minute starten: orange (Lampe und Orb/Busy Tag).
 3. Die Minute ablaufen lassen: bei Null rot, 30 Sekunden später rot blinkend.
-4. Stop: Lampe und Orb aus, ESP32 READY, Pi-App 00:00; Übernahme muss bestätigt sein.
+4. Stop: Lampe und Orb/Busy Tag aus, Busy Tag zeigt „SwiNOG“, ESP32 READY, Pi-App
+   00:00; Übernahme muss bestätigt sein.
 5. Luxafor kurz aus/einschalten: WLAN/Countdown laufen weiter, BLE verbindet erneut.
-   Orb abziehen und wieder einstecken: nach wenigen Sekunden wieder aktuelle Farbe.
+   Orb bzw. Busy Tag abziehen und wieder einstecken: nach wenigen Sekunden wieder
+   aktuelle Farbe (und Bild).
 6. Netzwerk kurz unterbrechen: ESP32 zählt lokal weiter; Stop während Ausfall wird
    erst nach Wiederverbindung übernommen und muss in der Pi-App als ausstehend erkennbar sein.
 7. Beide Geräte vollständig ausschalten und ohne Heimnetz/Internet einschalten.

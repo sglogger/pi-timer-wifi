@@ -113,19 +113,11 @@ deshalb kurz nach dem Booten, scannt (ca. 10–20 s), speichert den Kanal im Pro
 und startet den Hotspot wieder. Schlägt der Scan fehl, startet der Hotspot auf dem
 bisherigen Kanal. Ist `autoconnect` auf `no` (normales WLAN), ändert der Dienst nichts.
 
-Einmalig installieren (Benutzer `pitimer`; sonst Pfad wie beim Server-Dienst anpassen):
+Einmalig als Timer-Benutzer im Repository installieren (Pfad wird automatisch
+eingesetzt, siehe [Server-Autostart](../docs/INSTALLATION.md#server-autostart)):
 
 ```sh
-sudo cp deploy/pi-timer-hotspot-channel.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable pi-timer-hotspot-channel
-```
-
-Bei anderem Benutzer:
-
-```sh
-sudo sed -e "s#/home/pitimer/#$HOME/#g" deploy/pi-timer-hotspot-channel.service \
-  | sudo tee /etc/systemd/system/pi-timer-hotspot-channel.service >/dev/null
+deploy/install-services.sh --hotspot
 ```
 
 Ergebnis des letzten Scans (Belegung je Kanal, gewählter Kanal):

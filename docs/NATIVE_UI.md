@@ -66,12 +66,12 @@ Wenn der Desktop XDG-Autostart unterstützt, beispielsweise diese Datei als
 [Desktop Entry]
 Type=Application
 Name=Pi Timer
-Exec=/home/pitimer/pi-timer-wifi/run-native.sh
-Path=/home/pitimer/pi-timer-wifi
+Exec=/home/BENUTZER/pi-timer-wifi/run-native.sh
+Path=/home/BENUTZER/pi-timer-wifi
 Terminal=false
 ```
 
-Benutzername/Verzeichnis anpassen und Desktop-Autologin aktivieren. Bei einer
+`BENUTZER` durch den Timer-Benutzer ersetzen (`.desktop` kennt kein `$HOME`) und Desktop-Autologin aktivieren. Bei einer
 Desktop-Umgebung mit eigenem Autostartformat deren Programmeinstellungen benutzen.
 Für geringstmöglichen Grundbedarf bleibt Lite + X11 die Standardinstallation.
 

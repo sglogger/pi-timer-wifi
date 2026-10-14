@@ -7,7 +7,7 @@ Internetverbindung nötig, sofern Installation und Test vorher abgeschlossen wur
 
 1. Pi/Waveshare, ESP32 und Luxafor mit Strom versorgen. Luxafor nah beim ESP32
    platzieren; Pi so aufstellen, dass der WLAN-Weg möglichst frei ist. Luxafor Orb
-   per USB-Kabel am Zero-DISP-7A anschließen.
+   und/oder Busy Tag per USB-Datenkabel am Zero-DISP-7A anschließen.
 2. Pi bootet in das eigene WLAN `SwiNOG-Timer`; Server und native App starten automatisch,
    wenn die Autostart-Schritte der Installation abgeschlossen wurden.
 3. Die native App lädt den API-Schlüssel automatisch aus `.env`. Nur bei Nutzung
@@ -35,8 +35,9 @@ ein 5-Minuten-Timer gelb. Nach 30 s Überzeit blinkt die Lampe rot.
 | ESP32-Display: MESH OFFLINE | Gerät mit `WIFI = False` hört keinen Nachbarn: Ist ein ESP32 mit WLAN und `MESH = True` in Reichweite? Gleicher `API_TOKEN`? |
 | Luxafor/BLE offline | Licht kann alte Farbe behalten; Timer/WLAN separat prüfen |
 | BLE verbunden; Befehl gesendet | Befehl an GATT geschickt, tatsächliche LED-Farbe visuell prüfen |
-| Luxafor · USB: Verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
-| Luxafor USB nicht gefunden | Orb nicht eingesteckt/erkannt; Timer läuft trotzdem, alle 2 s neue Suche |
+| Luxafor · USB: Luxafor USB verbunden; Farbe gesendet | Orb am Headend angesteuert; unabhängig von ESP32 und WLAN |
+| Luxafor · USB: Busy Tag verbunden; Farbe gesendet | Busy Tag am Headend angesteuert (LEDs und Display) |
+| Luxafor USB nicht gefunden · Busy Tag nicht gefunden | Keine USB-Lampe eingesteckt/erkannt; Timer läuft trotzdem, alle 2 s neue Suche. Ist eine Lampe verbunden, wird die fehlende andere nicht gemeldet |
 | Pi startet neu | Hotspot fällt kurz aus, Kanalwahl scannt (10–20 s), Server startet mit Stop; ESP32 übernimmt nach Reconnect |
 | ESP32 startet neu | Ohne Pi noch kein gültiger Countdown; nach Sync aktueller Sollzustand |
 
@@ -122,6 +123,9 @@ Datei-/Diagnosebefehlen abschließend explizit neu starten:
 | GATT-Authentifizierungsfehler | `LUXAFOR_PAIR = True` testen, Konfiguration übertragen und neu starten |
 | Orb: „USB: Access denied“ | udev-Regel `deploy/99-luxafor.rules` installiert? Benutzer in `plugdev`? Orb neu einstecken |
 | Orb: „USB: No backend available“ | `sudo apt install libusb-1.0-0`, dann Dienst neu starten |
+| „Luxafor USB nicht gefunden“, obwohl eingesteckt | `lsusb` zeigt kein `04d8:f372` und `sudo dmesg -w` bleibt beim Einstecken leer: kein USB-Signal. Datenkabel statt Ladekabel, andere Buchse |
+| „Busy Tag: [Errno 13] Permission denied“ | Dienstbenutzer nicht in `dialout`: `deploy/install-services.sh` erneut ausführen |
+| „Busy Tag nicht gefunden“, obwohl eingesteckt | `ls /dev/ttyACM*` leer: Datenkabel, andere Buchse. Aus- und wieder einstecken |
 | Display dunkel/verschoben/falsche Farben | Erste REPL-Zeile nennt das Board-Profil (`c6-147`/`c6-touch-147`/`s3-169`); Touch-Board erst ab Firmware 1.4.0, Hinweise zum [C6-Touch](../firmware/README.md#esp32-c6-touch-lcd-147) und [S3](../firmware/README.md#esp32-s3-lcd-169); nicht durch WLAN-Änderungen lösen |
 | Display steht auf dem Kopf | `FLIP = True` in `config.py` (ab Firmware 1.3.1) |
 | App zeigt „Server offline“ | Dienst/Port 8000 und `.env` prüfen; App verbindet automatisch neu |
@@ -187,7 +191,7 @@ CHANGELOG festhalten und, wo sinnvoll, als Fall in `ble_test.py` oder als Test u
 
 ### 1. Stop und Sicherung
 
-Stop bestätigen. Außerhalb des Repositories eine Sicherung anlegen, als `pitimer`:
+Stop bestätigen. Außerhalb des Repositories eine Sicherung anlegen, als Timer-Benutzer:
 
 ```sh
 cd ~/pi-timer-wifi

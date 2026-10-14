@@ -1,3 +1,4 @@
+# Template: deploy/install-services.sh fills in @USER@ and @DIR@.
 [Unit]
 Description=SwiNOG Pi Timer: Hotspot-Kanal nach WLAN-Scan wählen
 After=NetworkManager.service
@@ -6,7 +7,7 @@ Wants=NetworkManager.service
 [Service]
 # exec instead of oneshot: the scan must not delay the rest of the boot.
 Type=exec
-ExecStart=/usr/bin/python3 /home/pitimer/pi-timer-wifi/deploy/hotspot_channel.py --boot
+ExecStart=/usr/bin/python3 @DIR@/deploy/hotspot_channel.py --boot
 TimeoutStartSec=180
 
 [Install]

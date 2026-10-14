@@ -1,4 +1,4 @@
-"""WLAN headend. One process owns the timer and the optional Luxafor USB light (orb.py)."""
+"""WLAN headend. One process owns the timer and the optional USB lights (orb.py: Luxafor, Busy Tag)."""
 import os
 import secrets
 import threading
@@ -7,7 +7,7 @@ import uuid
 
 from flask import Flask, jsonify, render_template, request
 from firmware.timer_logic import FIRMWARE_VERSION, THRESHOLDS, phase
-from orb import Orb
+from orb import Lights
 from ui_config import COLORS, LABELS, LEGEND, LEGEND_COLORS, PRESETS
 from version import describe as describe_version
 
@@ -238,9 +238,9 @@ def create_app(token=None, timer=None, orb=None):
 if __name__ == "__main__":
     from waitress import serve
     timer = Timer(generation=next_generation())
-    orb = None if os.environ.get("PI_TIMER_ORB", "1") == "0" else Orb(timer)
+    orb = None if os.environ.get("PI_TIMER_ORB", "1") == "0" else Lights(timer)
     app = create_app(timer=timer, orb=orb)
     if orb is not None:
-        orb.thread.start()
+        orb.start()
     serve(app, host=os.environ.get("PI_TIMER_HOST", "0.0.0.0"),
           port=int(os.environ.get("PI_TIMER_PORT", "8000")), threads=4)

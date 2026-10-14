@@ -33,6 +33,18 @@ die Orb, läuft der Timer unverändert weiter. `/api/state`, `/api/start` und
 `/api/stop` enthalten `"orb": {"connected": …, "status": …}`; `PI_TIMER_ORB=0` schaltet
 die Ansteuerung ab. Die Orb meldet keine sichtbare LED-Farbe zurück.
 
+Eine Busy Tag läuft in einer zweiten, gleichartigen Schleife (`orb.Lights`), damit
+ein langsames serielles Gerät die Orb nie verzögert. Gefunden wird sie über sysfs
+(`/sys/class/tty/ttyACM*`, USB-Produkt „BUSY TAG“), angesprochen über die
+AT-Befehle der [USB-CDC-Schnittstelle](https://luxafor.helpscoutdocs.com/article/47-busy-tag-usb-cdc-command-reference-guide):
+`AT+SC=127,RRGGBB` für alle LEDs, `AT+SP=timer-<phase>.png` für das Display,
+`AT+GPL`/`AT+UF` zum Hochladen fehlender Bilder. Firmware 1.0 lehnt das Überschreiben
+des gerade angezeigten Bildes ab (`ERROR:3`); der Server zeigt dafür kurz ein anderes.
+Das Blinken bei Überzeit schaltet der Server im 0,5-s-Takt selbst um: Die
+Musterbefehle (`AT+CP`, `AT+PP`) speicherten im Test teils verkürzte oder fehlerhafte
+Muster, deren Abspielen das Gerät neu startete. Der Status fasst beide Lampen
+zusammen: angezeigt werden die verbundenen, sonst alle Fehlermeldungen.
+
 ## Warum HTTP-Polling
 
 Am Headend läuft standardmäßig eine native Tkinter-Touch-App direkt auf X11.

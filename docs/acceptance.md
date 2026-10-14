@@ -27,6 +27,15 @@ prüft die USB-Befehle gegen `luxafor-linux.py`, Phasenwechsel, Senden nur bei
 Änderung, Abziehen/Einstecken, mehrere Lampen, fehlendes pyusb/libusb und den
 Orb-Status in der API. USB ist dabei nachgebildet; eine echte Orb wurde nicht angesteuert.
 
+Busy Tag am Headend (14.10.2026, **108 Tests erfolgreich**): `tests/test_busytag.py`
+prüft die serielle Ansteuerung gegen ein simuliertes Gerät an einem Pseudo-Terminal:
+Erkennung (`AT+GDN`), Hochladen nur fehlender oder geänderter Bilder, Ersetzen des
+gerade angezeigten Bildes, Phasenfarben und -bilder, Blinken im 0,5-s-Takt über die
+Serverschleife, Fehlerantworten, Zeitüberschreitung und den zusammengefassten Status
+beider Lampen. Zusätzlich am Mac mit einer echten Busy Tag (Firmware 1.0): Hochladen,
+alle Phasen einschließlich Blinken ohne Fehlermeldung. Darstellung am Gerät und
+Betrieb am Pi sind noch abzunehmen (Checkliste unten).
+
 Ein zusätzlicher nativer GUI-Test (`tests/ui_smoke.py`) prüft die 1024×600-
 Darstellung einschließlich negativer dreistelliger Minutenanzeige, alle acht
 Touch-Tasten, deren Mindesthöhe und das Schließen ohne STOP. Er läuft separat
@@ -80,6 +89,9 @@ CPU/RAM-Messung auf dem Pi und der Reichweitentest im Saal.
 - [ ] Luxafor Orb per USB am Headend: Farben wie Bluetooth Pro, Blinken bei Überzeit, Aus bei Stop.
 - [ ] Orb bei laufendem Timer abziehen und wieder einstecken: aktuelle Farbe kehrt zurück.
 - [ ] Orb nach Kaltstart ohne Anmeldung/Root-Rechte angesteuert (udev-Regel, `plugdev`).
+- [ ] Busy Tag am Headend: LED-Farben wie Orb, rotes Blinken bei Überzeit, Display
+      „SwiNOG“ bei Stop und Phasentext während des Vortrags (am Mac geprüft, am Pi offen).
+- [ ] Busy Tag bei laufendem Timer abziehen und wieder einstecken: Farbe und Bild kehren zurück.
 - [x] Start 10 min: grün; Start 5 min: gelb; Start 1 min: orange.
 - [x] 1-min-Timer ablaufen lassen: rot bei 0, blinkend nach weiteren 30 s.
 - [x] Stop während Blinken: Licht aus, Display READY, Übernahme bestätigt.

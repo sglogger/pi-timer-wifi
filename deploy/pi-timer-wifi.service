@@ -1,3 +1,4 @@
+# Template: deploy/install-services.sh fills in @USER@ and @DIR@.
 [Unit]
 Description=SwiNOG Pi Timer WiFi
 After=network-online.target
@@ -5,10 +6,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pitimer
-WorkingDirectory=/home/pitimer/pi-timer-wifi
-EnvironmentFile=/home/pitimer/pi-timer-wifi/.env
-ExecStart=/home/pitimer/pi-timer-wifi/.venv/bin/python /home/pitimer/pi-timer-wifi/server.py
+User=@USER@
+WorkingDirectory=@DIR@
+EnvironmentFile=@DIR@/.env
+ExecStart=@DIR@/.venv/bin/python @DIR@/server.py
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true

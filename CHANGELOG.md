@@ -9,6 +9,35 @@ die Grundfunktion erstmals auf der Hardware (Hotspot, ESP32-WLAN, BLE-Verbindung
 (`FIRMWARE_VERSION` in `firmware/timer_logic.py`); sie wird nur erhöht, wenn sich
 Dateien ändern, die auf den ESP32 kopiert werden.
 
+## 1.6.0 – Busy Tag am Headend, Dienste für beliebigen Benutzer (14.10.2026)
+
+Pi-Software 1.6.0, ESP32-Firmware unverändert.
+
+Busy Tag:
+- Eine [Busy Tag](docs/INSTALLATION.md#busy-tag-am-headend) per USB am Pi wird wie die
+  Orb angesteuert, allein oder zusammen mit ihr: LEDs in der Phasenfarbe, rotes
+  Blinken bei Überzeit, Display mit „SwiNOG“ bei Stop und Phasentext im Vortrag.
+  Fehlende Bilder (`static/busytag/`) lädt der Server beim Anschließen hoch.
+- Das Blinken schaltet der Server selbst: Die Musterbefehle der Firmware 1.0
+  speicherten im Test fehlerhafte Muster und starteten das Gerät neu.
+- Status „Luxafor · USB“ fasst beide Lampen zusammen; Meldungen nennen das Gerät
+  („Luxafor USB verbunden“, „Busy Tag nicht gefunden“).
+- Zugriff über die Gruppe `dialout`. Die Bilder erzeugt `tools/make_busytag_images.py`
+  aus den UI-Farben und -Texten, samt Übersicht `images/busytag-display.png` für die Doku.
+
+Installation:
+- Neues `deploy/install-services.sh` installiert `pi-timer-wifi.service`,
+  `pi-timer-hotspot-channel.service` und die udev-Regel der Luxafor Orb für den
+  aufrufenden Benutzer und den Ort des Repositories. Der feste Benutzer `pitimer`
+  und `/home/pitimer` entfallen; die Unit-Dateien unter `deploy/` sind jetzt
+  Vorlagen mit `@USER@`/`@DIR@`. `--hotspot` aktiviert zusätzlich die Kanalwahl.
+- Anleitungen verwenden einen frei wählbaren Timer-Benutzer.
+- Fehlersuche Orb: Bleibt `sudo dmesg -w` beim Einstecken leer, kommt kein
+  USB-Signal an (Ladekabel ohne Daten, Buchse oder Orb defekt).
+
+Bestehende Installation: `git pull`, dann `deploy/install-services.sh` als
+Timer-Benutzer ausführen (`--hotspot`, falls die Kanalwahl aktiv ist).
+
 ## 1.5.0 – ESP32-C6-Touch-LCD-1.47 als drittes Board (13.10.2026)
 
 Pi-Software 1.5.0, ESP32-Firmware 1.4.0. Auf die ESP32 `firmware/boards.py`,

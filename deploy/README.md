@@ -16,8 +16,6 @@ gh auth setup-git
 git clone https://github.com/sglogger/pi-timer-wifi.git
 cd pi-timer-wifi
 ./install.sh
-sudo cp deploy/99-luxafor.rules /etc/udev/rules.d/  # Luxafor Orb per USB
-sudo udevadm control --reload-rules && sudo udevadm trigger
 ./run.sh
 ```
 
@@ -39,15 +37,13 @@ Den alten Timer-Dienst zuerst ermitteln (`systemctl list-unit-files | grep -i ti
 und gezielt stoppen/deaktivieren; beide Server können nicht Port 8000 belegen.
 Keine pauschalen Systemdienste, Bluetooth, Journald oder Zeitsynchronisation abschalten.
 
-`deploy/pi-timer-wifi.service` verwendet Benutzer `pitimer` und
-`/home/pitimer/pi-timer-wifi`. Bei anderem Benutzer die angepasste Installation aus
-[INSTALLATION.md, Server-Autostart](../docs/INSTALLATION.md#server-autostart) verwenden.
-Mit `pitimer`:
+Als Timer-Benutzer im Repository; Benutzer und Pfad setzt das Skript selbst ein
+(Details: [INSTALLATION.md, Server-Autostart](../docs/INSTALLATION.md#server-autostart)).
+Es richtet auch die udev-Regel der Luxafor Orb ein; `--hotspot` aktiviert zusätzlich
+die Kanalwahl des [Hotspots](direct-wifi.md):
 
 ```sh
-sudo cp deploy/pi-timer-wifi.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now pi-timer-wifi
+deploy/install-services.sh
 journalctl -u pi-timer-wifi -f
 ```
 
